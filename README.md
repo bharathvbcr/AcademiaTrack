@@ -1,5 +1,5 @@
 <div align="center">
-  <!-- Placeholder for AcademiaTrack Logo -->
+  <img src="AcademiaTrack.png" alt="AcademiaTrack Logo" width="150"/>
   <h1>AcademiaTrack</h1>
   <p>A modern, Windows-inspired application tracker to manage your academic pursuits.</p>
 </div>
