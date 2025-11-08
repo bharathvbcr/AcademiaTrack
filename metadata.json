@@ -1,0 +1,5 @@
+{
+  "name": "Application Tracker",
+  "description": "A modern, Windows-inspired tracker to manage your applications. Keep track of universities, programs, deadlines, and submissions all in one place.",
+  "requestFramePermissions": []
+}
