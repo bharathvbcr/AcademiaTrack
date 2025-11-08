@@ -3,7 +3,7 @@
   "private": true,
   "version": "2.0.0",
   "type": "module",
-  "main": "electron/main.js",
+  "main": "electron/main.cjs",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
@@ -34,7 +34,7 @@
     "productName": "Application Tracker",
     "files": [
       "dist/**/*",
-      "electron/main.js",
+      "electron/main.cjs",
       "electron/preload.js"
     ],
     "directories": {
