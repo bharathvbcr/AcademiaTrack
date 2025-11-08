@@ -77,7 +77,9 @@ const App: React.FC = () => {
 
             let comparison = 0;
             if (sortConfig.key === 'deadline') {
-                comparison = new Date(valA as string).getTime() - new Date(valB as string).getTime();
+                const dateA = valA ? new Date(valA as string).getTime() : Infinity;
+                const dateB = valB ? new Date(valB as string).getTime() : Infinity;
+                comparison = dateA - dateB;
             } else {
                 if (valA > valB) {
                     comparison = 1;

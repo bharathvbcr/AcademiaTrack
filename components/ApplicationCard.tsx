@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Application, ApplicationStatus, ProgramType } from '../types';
-import { STATUS_COLORS, STATUS_OPTIONS, FEE_WAIVER_STATUS_COLORS, TEST_STATUS_COLORS, FACULTY_CHART_COLORS, DOCUMENT_LABELS } from '../constants';
+import { STATUS_OPTIONS, FEE_WAIVER_STATUS_COLORS, TEST_STATUS_COLORS, FACULTY_CHART_COLORS, DOCUMENT_LABELS } from '../constants';
 
 interface ApplicationCardProps {
   application: Application;
@@ -23,16 +23,19 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({ application, onEdit, 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
-  const deadlineDate = new Date(deadline + 'T00:00:00');
-  const isPastDeadline = today > deadlineDate;
+  const deadlineDate = deadline ? new Date(deadline + 'T00:00:00') : null;
+  const isPastDeadline = deadlineDate ? today > deadlineDate : false;
 
-  const timeDiff = deadlineDate.getTime() - today.getTime();
-  const daysRemaining = Math.ceil(timeDiff / (1000 * 60 * 60 * 24));
+  const timeDiff = deadlineDate ? deadlineDate.getTime() - today.getTime() : 0;
+  const daysRemaining = deadlineDate ? Math.ceil(timeDiff / (1000 * 60 * 60 * 24)) : 0;
   
   let timeLeftText: string;
   let timeLeftColor: string;
 
-  if (isPastDeadline) {
+  if (!deadlineDate) {
+    timeLeftText = "No deadline set";
+    timeLeftColor = 'text-slate-500 dark:text-slate-400';
+  } else if (isPastDeadline) {
     timeLeftText = "Deadline Passed";
     timeLeftColor = 'text-slate-500 dark:text-slate-400';
   } else if (daysRemaining === 0) {
@@ -80,10 +83,10 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({ application, onEdit, 
             <select
               value={status}
               onChange={handleStatusChange}
-              className={`pl-3 pr-8 py-1 text-xs font-semibold rounded-full border appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-offset-1 dark:focus:ring-offset-slate-800 focus:ring-red-500 ${STATUS_COLORS[status]}`}
+              className={`liquid-glass-dropdown pl-3 pr-8 py-1 text-xs font-semibold appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-offset-1 dark:focus:ring-offset-slate-800 focus:ring-red-500`}
               aria-label="Change application status"
             >
-              {STATUS_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+              {STATUS_OPTIONS.map(opt => <option key={opt} value={opt} className="bg-slate-800 text-white">{opt}</option>)}
             </select>
             <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2 text-inherit opacity-70">
                 <MaterialIcon name="unfold_more" className="text-sm" />
@@ -92,21 +95,26 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({ application, onEdit, 
         </div>
 
         {/* Deadline Info */}
-        <div className="flex items-center justify-between text-sm p-3 rounded-xl bg-slate-50/70 dark:bg-slate-700/50">
-          <div className="flex items-center gap-2 text-slate-600 dark:text-slate-300">
-            <MaterialIcon name="event" className="text-base" />
-            <span>{deadlineDate.toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' })}</span>
+        {deadline && status !== ApplicationStatus.Accepted && (
+          <div className="flex items-center justify-between text-sm p-3 rounded-xl bg-slate-50/70 dark:bg-slate-700/50">
+            <div className="flex items-center gap-2 text-slate-600 dark:text-slate-300">
+              <MaterialIcon name="event" className="text-base" />
+              {deadlineDate && <span>{deadlineDate.toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' })}</span>}
+            </div>
+            <span className={`font-bold ${timeLeftColor} ${!isPastDeadline && daysRemaining <= 7 ? 'animate-pulse' : ''}`}>
+                {timeLeftText}
+            </span>
           </div>
-          <span className={`font-bold ${timeLeftColor} ${!isPastDeadline && daysRemaining <= 7 ? 'animate-pulse' : ''}`}>
-              {timeLeftText}
-          </span>
-        </div>
+        )}
 
         {/* Expandable Details Section */}
         <div className={`transition-all duration-500 ease-in-out overflow-hidden ${isExpanded ? 'max-h-[1000px] opacity-100 pt-4' : 'max-h-0 opacity-0'}`}>
             <div className="space-y-4">
               <DetailsSection title="General Information">
                 <InfoRow icon="school" label="Program Type" value={programTypeValue} />
+                {application.admissionTerm && application.admissionYear && (
+                  <InfoRow icon="calendar_month" label="Admission Intake" value={`${application.admissionTerm} ${application.admissionYear}`} />
+                )}
                 <InfoRow icon="apartment" label="Department" value={application.department} />
                 <InfoRow icon="flag" label="Rankings (U/D)" value={`${application.universityRanking || 'N/A'} / ${application.departmentRanking || 'N/A'}`} />
                 <InfoRow icon="confirmation_number" label="Fee Waiver">

@@ -38,6 +38,39 @@
         outline: 2px solid #ef4444 !important; /* red-500 */
         outline-offset: 2px !important;
       }
+      .liquid-glass-dropdown {
+        position: relative;
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 9999px;
+        color: white;
+        overflow: hidden;
+        transition: all 0.3s ease;
+      }
+      .liquid-glass-dropdown::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: conic-gradient(
+          transparent,
+          rgba(255, 255, 255, 0.2),
+          transparent 30%
+        );
+        animation: rotate 4s linear infinite;
+      }
+      .liquid-glass-dropdown:hover {
+        transform: scale(1.05);
+        box-shadow: 0 0 15px rgba(255, 255, 255, 0.3);
+      }
+      @keyframes rotate {
+        100% {
+          transform: rotate(360deg);
+        }
+      }
     </style>
 <script type="importmap">
 {

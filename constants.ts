@@ -9,6 +9,12 @@ export const PROGRAM_TYPE_OPTIONS: ProgramType[] = [
   ProgramType.Other,
 ];
 
+export const ADMISSION_TERM_OPTIONS: ('Spring' | 'Fall' | 'Summer')[] = [
+  'Fall',
+  'Spring',
+  'Summer',
+];
+
 export const STATUS_OPTIONS: ApplicationStatus[] = [
   ApplicationStatus.NotStarted,
   ApplicationStatus.Pursuing,

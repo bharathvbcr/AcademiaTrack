@@ -66,8 +66,10 @@ export interface Application {
   departmentRanking: string;
   
   status: ApplicationStatus;
-  deadline: string;
+  deadline: string | null;
   preferredDeadline?: string;
+  admissionTerm: 'Spring' | 'Fall' | 'Summer' | null;
+  admissionYear: string | null;
   applicationFee: number;
   feeWaiverStatus: ApplicationFeeWaiverStatus;
   portalLink: string;

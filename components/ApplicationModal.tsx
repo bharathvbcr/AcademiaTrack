@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Application, ApplicationStatus, ApplicationFeeWaiverStatus, FacultyContact, TestStatus, FacultyContactStatus, ProgramType } from '../types';
-import { STATUS_OPTIONS, FEE_WAIVER_STATUS_OPTIONS, TEST_STATUS_OPTIONS, FACULTY_CONTACT_STATUS_OPTIONS, DOCUMENT_LABELS, FACULTY_CONTACT_STATUS_COLORS, PROGRAM_TYPE_OPTIONS } from '../constants';
+import { STATUS_OPTIONS, FEE_WAIVER_STATUS_OPTIONS, TEST_STATUS_OPTIONS, FACULTY_CONTACT_STATUS_OPTIONS, DOCUMENT_LABELS, FACULTY_CONTACT_STATUS_COLORS, PROGRAM_TYPE_OPTIONS, ADMISSION_TERM_OPTIONS } from '../constants';
 import DateInput from './DateInput';
 
 interface ApplicationModalProps {
@@ -24,6 +24,8 @@ const emptyApplication: Omit<Application, 'id'> = {
   status: ApplicationStatus.NotStarted,
   deadline: '',
   preferredDeadline: '',
+  admissionTerm: null,
+  admissionYear: null,
   applicationFee: 0,
   feeWaiverStatus: ApplicationFeeWaiverStatus.NotRequested,
   portalLink: '',
@@ -68,8 +70,8 @@ const ApplicationModal: React.FC<ApplicationModalProps> = ({ isOpen, onClose, on
                 }
             }
         }
-        const { gre, englishTest, ...rest } = applicationToEdit;
-        setAppData({ ...emptyApplication, ...rest, programType: applicationToEdit.programType || ProgramType.PhD, customProgramType: applicationToEdit.customProgramType || '', facultyContacts: migratedFaculty, documents: normalizedDocs, gre: { status: (gre as any)?.status ?? TestStatus.NotApplicable }, englishTest: { type: (englishTest as any)?.type ?? 'Not Required', status: (englishTest as any)?.status ?? TestStatus.NotApplicable }});
+        const { gre, englishTest, admissionTerm, admissionYear, ...rest } = applicationToEdit;
+        setAppData({ ...emptyApplication, ...rest, programType: applicationToEdit.programType || ProgramType.PhD, customProgramType: applicationToEdit.customProgramType || '', facultyContacts: migratedFaculty, documents: normalizedDocs, gre: { status: (gre as any)?.status ?? TestStatus.NotApplicable }, englishTest: { type: (englishTest as any)?.type ?? 'Not Required', status: (englishTest as any)?.status ?? TestStatus.NotApplicable }, admissionTerm: admissionTerm || null, admissionYear: admissionYear || null });
         setIsFacultyOpen(migratedFaculty.map(f => !!f.name));
       } else {
         setAppData({ ...emptyApplication, programType: defaultProgramType });
@@ -183,8 +185,16 @@ const ApplicationModal: React.FC<ApplicationModalProps> = ({ isOpen, onClose, on
                     required 
                   />
                 )}
-                <DateInput label="Deadline" name="deadline" value={appData.deadline} onChange={handleChange} required />
+                <DateInput label="Deadline" name="deadline" value={appData.deadline || ''} onChange={handleChange} />
                 <DateInput label="Early/Preferred Deadline" name="preferredDeadline" value={appData.preferredDeadline || ''} onChange={handleChange} />
+                <Select label="Admission Term" name="admissionTerm" value={appData.admissionTerm || ''} onChange={handleChange}>
+                    <option value="">Select Term</option>
+                    {ADMISSION_TERM_OPTIONS.map(term => <option key={term} value={term}>{term}</option>)}
+                </Select>
+                <Select label="Admission Year" name="admissionYear" value={appData.admissionYear || ''} onChange={handleChange}>
+                    <option value="">Select Year</option>
+                    {Array.from({ length: 8 }, (_, i) => new Date().getFullYear() - 2 + i).map(year => <option key={year} value={year}>{year}</option>)}
+                </Select>
                 <Input label="Location (City, State)" name="location" value={appData.location} onChange={handleChange} className="md:col-span-2" />
             </FieldSet>
             <FieldSet legend="Rankings & Status">
