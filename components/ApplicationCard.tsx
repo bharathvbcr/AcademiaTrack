@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Application, ApplicationStatus, ProgramType } from '../types';
 import { STATUS_COLORS, STATUS_OPTIONS, FEE_WAIVER_STATUS_COLORS, TEST_STATUS_COLORS, FACULTY_CHART_COLORS, DOCUMENT_LABELS } from '../constants';
 
@@ -14,6 +14,9 @@ const MaterialIcon: React.FC<{ name: string; className?: string }> = ({ name, cl
 );
 
 const ApplicationCard: React.FC<ApplicationCardProps> = ({ application, onEdit, onDelete, onUpdate }) => {
+  useEffect(() => {
+    window.performance.mark('my-mark');
+  }, []);
   const [isExpanded, setIsExpanded] = useState(false);
   const { id, universityName, programName, deadline, status, portalLink } = application;
 
