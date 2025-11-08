@@ -58,13 +58,11 @@ This will create a `dist` folder for the web build and a platform-specific insta
 For Windows users, AcademiaTrack is available as a standalone desktop application.
 
 1.  **Download the Installer:**
-    Visit the [Releases page](YOUR_RELEASES_PAGE_URL_HERE) and download the latest `AcademiaTrack-Setup-X.Y.Z.exe` file.
+    Visit the Releases page and download the latest `AcademiaTrack-Setup.exe` file.
 2.  **Run the Installer:**
     Execute the downloaded `.exe` file and follow the on-screen instructions to install AcademiaTrack on your system.
 3.  **Launch AcademiaTrack:**
     Once installed, you can launch AcademiaTrack from your Start Menu or desktop shortcut.
-
-*(Note: Replace `YOUR_RELEASES_PAGE_URL_HERE` with the actual URL to your GitHub releases page or other distribution platform.)*
 
 ## Contributing
 
