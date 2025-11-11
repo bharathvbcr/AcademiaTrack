@@ -7,17 +7,18 @@ interface ApplicationCardProps {
   onEdit: (app: Application) => void;
   onDelete: (id: string) => void;
   onUpdate: (app: Application) => void;
+  isExpanded: boolean;
+  onToggleExpand: () => void;
 }
 
 const MaterialIcon: React.FC<{ name: string; className?: string }> = ({ name, className }) => (
   <span className={`material-symbols-outlined ${className}`}>{name}</span>
 );
 
-const ApplicationCard: React.FC<ApplicationCardProps> = ({ application, onEdit, onDelete, onUpdate }) => {
+const ApplicationCard: React.FC<ApplicationCardProps> = ({ application, onEdit, onDelete, onUpdate, isExpanded, onToggleExpand }) => {
   useEffect(() => {
     window.performance.mark('my-mark');
   }, []);
-  const [isExpanded, setIsExpanded] = useState(false);
   const { id, universityName, programName, deadline, status, portalLink } = application;
 
   const today = new Date();
@@ -63,7 +64,7 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({ application, onEdit, 
   return (
     <div 
         className="bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl rounded-3xl shadow-lg border border-slate-200/50 dark:border-slate-700/50 p-5 flex flex-col justify-between transition-all duration-300 hover:shadow-2xl hover:-translate-y-1"
-        onClick={() => setIsExpanded(!isExpanded)}
+        onClick={onToggleExpand}
     >
       <div className="cursor-pointer">
         {/* Header */}
@@ -185,7 +186,7 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({ application, onEdit, 
       <div className="flex justify-between items-center mt-5 pt-4 border-t border-slate-200/50 dark:border-slate-700/50">
         <button
             type="button"
-            onClick={(e) => { e.stopPropagation(); setIsExpanded(!isExpanded); }}
+            onClick={(e) => { e.stopPropagation(); onToggleExpand(); }}
             className="flex items-center gap-1 text-sm font-medium text-red-600 dark:text-red-400 select-none p-2 -m-2 rounded-full hover:bg-red-500/10 transition-colors"
         >
             <span>{isExpanded ? 'Hide' : 'Show'} Details</span>

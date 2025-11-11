@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Application } from '../types';
 import ApplicationCard from './ApplicationCard';
 
@@ -11,11 +11,25 @@ interface ApplicationListProps {
 }
 
 const ApplicationList: React.FC<ApplicationListProps> = ({ applications, onEdit, onDelete, onUpdate, hasActiveFilter }) => {
+  const [expandedCardId, setExpandedCardId] = useState<string | null>(null);
+
+  const handleToggleExpand = (id: string) => {
+    setExpandedCardId(prevId => (prevId === id ? null : id));
+  };
+
   if (applications.length > 0) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
         {applications.map(app => (
-          <ApplicationCard key={app.id} application={app} onEdit={onEdit} onDelete={onDelete} onUpdate={onUpdate} />
+          <ApplicationCard 
+            key={app.id} 
+            application={app} 
+            onEdit={onEdit} 
+            onDelete={onDelete} 
+            onUpdate={onUpdate}
+            isExpanded={expandedCardId === app.id}
+            onToggleExpand={() => handleToggleExpand(app.id)}
+          />
         ))}
       </div>
     );
