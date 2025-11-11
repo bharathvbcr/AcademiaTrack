@@ -56,6 +56,15 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({ application, onEdit, 
   const handleStatusChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     onUpdate({ ...application, status: e.target.value as ApplicationStatus });
   };
+
+  const handleDocumentToggle = (docKey: keyof Application['documents'], isChecked: boolean) => {
+    const updatedDocuments = { ...application.documents };
+    updatedDocuments[docKey] = {
+      ...updatedDocuments[docKey],
+      submitted: isChecked ? new Date().toISOString().split('T')[0] : null,
+    };
+    onUpdate({ ...application, documents: updatedDocuments });
+  };
   
   const programTypeValue = application.programType === ProgramType.Other
     ? application.customProgramType || 'Other'
@@ -131,12 +140,15 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({ application, onEdit, 
                         if (!doc.required) return null;
                         return (
                             <div key={key} className="flex items-center justify-between">
-                                <div className="flex items-center gap-2">
-                                    {doc.submitted 
-                                        ? <MaterialIcon name="check_box" className="text-green-500 text-base" />
-                                        : <MaterialIcon name="check_box_outline_blank" className="text-slate-400 text-base" />
-                                    }
-                                    <span className="text-slate-600 dark:text-slate-300">{DOCUMENT_LABELS[docKey]}</span>
+                                <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                                    <input
+                                        id={`doc-${id}-${docKey}`}
+                                        type="checkbox"
+                                        checked={!!doc.submitted}
+                                        onChange={(e) => handleDocumentToggle(docKey, e.target.checked)}
+                                        className="h-4 w-4 rounded border-slate-400 text-red-600 focus:ring-red-500"
+                                    />
+                                    <label htmlFor={`doc-${id}-${docKey}`} className="text-slate-600 dark:text-slate-300 cursor-pointer">{DOCUMENT_LABELS[docKey]}</label>
                                 </div>
                                 {doc.submitted && (
                                     <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
