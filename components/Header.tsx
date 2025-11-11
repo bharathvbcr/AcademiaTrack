@@ -4,6 +4,7 @@ import { PROGRAM_TYPE_OPTIONS } from '../constants';
 
 interface HeaderProps {
   onAddNew: () => void;
+  onAddFaculty: () => void;
   defaultProgramType: ProgramType;
   onSetDefaultProgramType: (type: ProgramType) => void;
   onExport: () => void;
@@ -13,7 +14,7 @@ const MaterialIcon: React.FC<{ name: string; className?: string }> = ({ name, cl
   <span className={`material-symbols-outlined ${className}`}>{name}</span>
 );
 
-const Header: React.FC<HeaderProps> = ({ onAddNew, defaultProgramType, onSetDefaultProgramType, onExport }) => {
+const Header: React.FC<HeaderProps> = ({ onAddNew, onAddFaculty, defaultProgramType, onSetDefaultProgramType, onExport }) => {
   return (
     <header className="flex items-center justify-between pb-4 border-b border-slate-200 dark:border-slate-700/50 flex-wrap gap-4">
       <div>
@@ -42,6 +43,14 @@ const Header: React.FC<HeaderProps> = ({ onAddNew, defaultProgramType, onSetDefa
         >
           <MaterialIcon name="download" />
           <span className="hidden sm:inline">Export</span>
+        </button>
+        <button
+          onClick={onAddFaculty}
+          className="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-700/50 rounded-full shadow-md hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 focus:ring-offset-slate-100 dark:focus:ring-offset-slate-900 transition-all"
+          aria-label="Add a new faculty contact"
+        >
+          <MaterialIcon name="person_add" />
+          <span className="hidden sm:inline">Add Faculty</span>
         </button>
         <button
           onClick={onAddNew}

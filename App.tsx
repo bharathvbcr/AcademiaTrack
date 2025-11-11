@@ -1,9 +1,10 @@
 import React, { useState, useMemo } from 'react';
-import { Application, ProgramType } from './types';
+import { Application, ProgramType, FacultyContact } from './types';
 import { useLocalStorage } from './hooks/useLocalStorage';
 import Header from './components/Header';
 import ApplicationList from './components/ApplicationList';
 import ApplicationModal from './components/ApplicationModal';
+import FacultyContactModal from './components/FacultyContactModal';
 import DashboardSummary from './components/DashboardSummary';
 import SortControls from './components/SortControls';
 import { exportToCSV } from './utils';
@@ -13,6 +14,7 @@ type SortKey = 'deadline' | 'universityName' | 'status';
 const App: React.FC = () => {
   const [applications, setApplications] = useLocalStorage<Application[]>('phd-applications', []);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isFacultyModalOpen, setIsFacultyModalOpen] = useState(false);
   const [editingApplication, setEditingApplication] = useState<Application | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [sortConfig, setSortConfig] = useState<{ key: SortKey; direction: 'ascending' | 'descending' }>({
@@ -45,6 +47,21 @@ const App: React.FC = () => {
     }
     setIsModalOpen(false);
     setEditingApplication(null);
+  };
+
+  const handleSaveFacultyContact = (universityName: string, facultyContact: Omit<FacultyContact, 'id'>) => {
+    setApplications(apps => {
+      const appIndex = apps.findIndex(app => app.universityName === universityName);
+      if (appIndex === -1) {
+        return apps;
+      }
+      const newApps = [...apps];
+      const appToUpdate = { ...newApps[appIndex] };
+      appToUpdate.facultyContacts = [...appToUpdate.facultyContacts, { ...facultyContact, id: Date.now() }];
+      newApps[appIndex] = appToUpdate;
+      return newApps;
+    });
+    setIsFacultyModalOpen(false);
   };
 
   const handleUpdateApplication = (updatedApp: Application) => {
@@ -99,6 +116,7 @@ const App: React.FC = () => {
       <div className="max-w-7xl mx-auto">
         <Header 
           onAddNew={handleAddNew}
+          onAddFaculty={() => setIsFacultyModalOpen(true)}
           defaultProgramType={defaultProgramType}
           onSetDefaultProgramType={setDefaultProgramType} 
           onExport={handleExport}
@@ -130,6 +148,12 @@ const App: React.FC = () => {
         onSave={handleSave}
         applicationToEdit={editingApplication}
         defaultProgramType={defaultProgramType}
+      />
+      <FacultyContactModal
+        isOpen={isFacultyModalOpen}
+        onClose={() => setIsFacultyModalOpen(false)}
+        onSave={handleSaveFacultyContact}
+        applications={applications}
       />
     </div>
   );

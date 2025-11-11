@@ -9,6 +9,9 @@ export default defineConfig(({ mode }: { mode: string }) => {
       server: {
         port: 3000,
         host: '0.0.0.0',
+        headers: {
+          'Content-Security-Policy': "default-src 'self'; script-src 'self' https://cdn.tailwindcss.com https://aistudiocdn.com; style-src 'self' https://fonts.googleapis.com 'unsafe-inline'; font-src 'self' https://fonts.gstatic.com; connect-src 'self' http://localhost:3000 ws://localhost:3000 https://*.googleapis.com; img-src 'self' data:; object-src 'none';"
+        }
       },
       plugins: [react()],
       define: {
