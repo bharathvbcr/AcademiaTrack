@@ -105,20 +105,25 @@ const DashboardSummary: React.FC<DashboardSummaryProps> = ({ applications }) => 
           <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-100 mb-4">Faculty Outreach</h2>
           {facultyContactSummary.length > 0 ? (
             <div className="h-64 w-full">
-               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={facultyContactSummary} layout="vertical" margin={{ top: 5, right: 20, left: 20, bottom: 5 }}>
-                  <XAxis type="number" hide />
-                  <YAxis type="category" dataKey="name" hide />
-                  <BarTooltip
-                    cursor={{ fill: 'rgba(125, 125, 125, 0.1)' }}
-                    contentStyle={tooltipStyle}
-                  />
-                  <Bar dataKey="count" barSize={20} radius={[0, 10, 10, 0]}>
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={facultyContactSummary}
+                    cx="50%"
+                    cy="50%"
+                    labelLine={false}
+                    outerRadius={80}
+                    fill="#8884d8"
+                    dataKey="count"
+                    nameKey="name"
+                  >
                     {facultyContactSummary.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={FACULTY_CHART_COLORS[entry.name as FacultyContactStatus]} />
+                      <Cell key={`cell-${index}`} fill={FACULTY_CHART_COLORS[entry.name as FacultyContactStatus]} stroke={isDarkMode ? '#0f172a' : '#f8fafc'} strokeWidth={2} />
                     ))}
-                  </Bar>
-                </BarChart>
+                  </Pie>
+                  <Tooltip contentStyle={tooltipStyle} />
+                  <Legend iconSize={10} wrapperStyle={{ fontSize: '12px' }}/>
+                </PieChart>
               </ResponsiveContainer>
             </div>
           ) : (
