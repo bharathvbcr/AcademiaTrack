@@ -136,7 +136,7 @@ const ApplicationModal: React.FC<ApplicationModalProps> = ({ isOpen, onClose, on
   
   const addFacultyContact = useCallback(() => {
     if (appData.facultyContacts.length >= 3) return;
-    setAppData(prev => ({ ...prev, facultyContacts: [...prev.facultyContacts, { id: Date.now(), name: '', website: '', email: '', researchArea: '', contactStatus: FacultyContactStatus.NotContacted, contactDate: null }]}));
+    setAppData(prev => ({ ...prev, facultyContacts: [...prev.facultyContacts, { id: Date.now(), name: '', website: '', email: '', researchArea: '', contactStatus: FacultyContactStatus.NotContacted, contactDate: null, interviewDate: null }]}));
     setIsFacultyOpen(prev => [...prev, true]);
   }, [appData.facultyContacts]);
 
@@ -266,6 +266,9 @@ const ApplicationModal: React.FC<ApplicationModalProps> = ({ isOpen, onClose, on
                                     {FACULTY_CONTACT_STATUS_OPTIONS.map(s => <option key={s} value={s}>{s}</option>)}
                                 </Select>
                                 <Input label="Contact Date" name="contactDate" type="date" value={faculty.contactDate || ''} onChange={e => handleFacultyChange(index, e)} disabled={faculty.contactStatus === FacultyContactStatus.NotContacted} />
+                                {faculty.contactStatus === FacultyContactStatus.MeetingScheduled && (
+                                    <Input label="Interview Date" name="interviewDate" type="date" value={faculty.interviewDate || ''} onChange={e => handleFacultyChange(index, e)} className="md:col-span-2"/>
+                                )}
                             </div>
                         </div>
                         )}

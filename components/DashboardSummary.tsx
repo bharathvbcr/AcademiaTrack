@@ -58,6 +58,23 @@ const DashboardSummary: React.FC<DashboardSummaryProps> = ({ applications }) => 
       .filter(item => item.count > 0);
   }, [applications]);
 
+  const upcomingInterviews = React.useMemo(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const interviews: any[] = [];
+    applications.forEach(app => {
+      app.facultyContacts.forEach(contact => {
+        if (contact.contactStatus === FacultyContactStatus.MeetingScheduled && contact.interviewDate && new Date(contact.interviewDate + 'T00:00:00') >= today) {
+          interviews.push({
+            app,
+            contact,
+          });
+        }
+      });
+    });
+    return interviews.sort((a, b) => new Date(a.contact.interviewDate!).getTime() - new Date(b.contact.interviewDate!).getTime());
+  }, [applications]);
+
   if (applications.length === 0) {
     return (
        <div className="text-center py-16 px-6 bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl rounded-3xl shadow-lg border border-slate-200/50 dark:border-slate-700/50 mb-8">
@@ -74,7 +91,7 @@ const DashboardSummary: React.FC<DashboardSummaryProps> = ({ applications }) => 
           <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-100 mb-4">Application Status ({applications.length})</h2>
           {applicationStatusData.length > 0 ? (
             <div className="h-64 w-full">
-              <ResponsiveContainer minWidth={0} minHeight={0}>
+              <ResponsiveContainer>
                 <PieChart>
                   <Pie
                     data={applicationStatusData}
@@ -105,7 +122,7 @@ const DashboardSummary: React.FC<DashboardSummaryProps> = ({ applications }) => 
           <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-100 mb-4">Faculty Outreach ({facultyContactSummary.reduce((acc, curr) => acc + curr.count, 0)})</h2>
           {facultyContactSummary.length > 0 ? (
             <div className="h-64 w-full">
-              <ResponsiveContainer minWidth={0} minHeight={0}>
+              <ResponsiveContainer>
                 <PieChart>
                   <Pie
                     data={facultyContactSummary}
@@ -133,6 +150,27 @@ const DashboardSummary: React.FC<DashboardSummaryProps> = ({ applications }) => 
           )}
         </div>
       </div>
+      {upcomingInterviews.length > 0 && (
+        <div className="mt-8">
+          <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-100 mb-4">Upcoming Interviews</h2>
+          <div className="space-y-2">
+            {upcomingInterviews.map(({ app, contact }) => (
+              <div key={`${app.id}-${contact.id}`} className="p-3 rounded-lg bg-slate-100 dark:bg-slate-700/50">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <p className="font-bold text-slate-800 dark:text-slate-100">{app.universityName}</p>
+                    <p className="text-sm text-slate-600 dark:text-slate-300">{contact.name}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-semibold text-slate-800 dark:text-slate-100">{new Date(contact.interviewDate! + 'T00:00:00').toLocaleDateString(undefined, { month: 'long', day: 'numeric' })}</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">{new Date(contact.interviewDate! + 'T00:00:00').toLocaleDateString(undefined, { weekday: 'long' })}</p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 };

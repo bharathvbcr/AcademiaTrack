@@ -47,6 +47,10 @@ export const FACULTY_CONTACT_STATUS_OPTIONS: FacultyContactStatus[] = [
   FacultyContactStatus.NotContacted,
   FacultyContactStatus.Emailed,
   FacultyContactStatus.Replied,
+  FacultyContactStatus.PositiveReply,
+  FacultyContactStatus.NegativeReply,
+  FacultyContactStatus.PendingReview,
+  FacultyContactStatus.FollowUpRequired,
   FacultyContactStatus.MeetingScheduled,
 ];
 
@@ -81,14 +85,22 @@ export const TEST_STATUS_COLORS: { [key in TestStatus]: string } = {
 export const FACULTY_CONTACT_STATUS_COLORS: { [key in FacultyContactStatus]: string } = {
   [FacultyContactStatus.NotContacted]: 'bg-slate-200 text-slate-700 border-slate-300 dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600',
   [FacultyContactStatus.Emailed]: 'bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-500/20 dark:text-blue-200 dark:border-blue-500/30',
-  [FacultyContactStatus.Replied]: 'bg-green-100 text-green-800 border-green-200 dark:bg-green-500/20 dark:text-green-200 dark:border-green-500/30',
+  [FacultyContactStatus.Replied]: 'bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-500/20 dark:text-gray-200 dark:border-gray-500/30',
+  [FacultyContactStatus.PositiveReply]: 'bg-green-100 text-green-800 border-green-200 dark:bg-green-500/20 dark:text-green-200 dark:border-green-500/30',
+  [FacultyContactStatus.NegativeReply]: 'bg-red-100 text-red-800 border-red-200 dark:bg-red-500/20 dark:text-red-200 dark:border-red-500/30',
+  [FacultyContactStatus.PendingReview]: 'bg-yellow-100 text-yellow-800 border-yellow-200 dark:bg-yellow-500/20 dark:text-yellow-200 dark:border-yellow-500/30',
+  [FacultyContactStatus.FollowUpRequired]: 'bg-cyan-100 text-cyan-800 border-cyan-200 dark:bg-cyan-500/20 dark:text-cyan-200 dark:border-cyan-500/30',
   [FacultyContactStatus.MeetingScheduled]: 'bg-purple-100 text-purple-800 border-purple-200 dark:bg-purple-500/20 dark:text-purple-200 dark:border-purple-500/30',
 };
 
 export const FACULTY_CHART_COLORS: { [key in FacultyContactStatus]: string } = {
   [FacultyContactStatus.NotContacted]: '#94a3b8', // slate-400
   [FacultyContactStatus.Emailed]: '#60a5fa', // blue-400
-  [FacultyContactStatus.Replied]: '#4ade80', // green-400
+  [FacultyContactStatus.Replied]: '#9ca3af', // gray-400
+  [FacultyContactStatus.PositiveReply]: '#4ade80', // green-400
+  [FacultyContactStatus.NegativeReply]: '#f87171', // red-400
+  [FacultyContactStatus.PendingReview]: '#facc15', // yellow-400
+  [FacultyContactStatus.FollowUpRequired]: '#22d3ee', // cyan-400
   [FacultyContactStatus.MeetingScheduled]: '#c084fc', // purple-400
 };
 
