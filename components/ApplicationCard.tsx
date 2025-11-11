@@ -1,23 +1,24 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { Application, ApplicationStatus, ProgramType } from '../types';
-import { STATUS_OPTIONS, FEE_WAIVER_STATUS_COLORS, TEST_STATUS_COLORS, FACULTY_CHART_COLORS, DOCUMENT_LABELS } from '../constants';
+import { STATUS_OPTIONS, FEE_WAIVER_STATUS_COLORS, TEST_STATUS_COLORS, FACULTY_CHART_COLORS, DOCUMENT_LABELS, STATUS_COLORS } from '../constants';
 
 interface ApplicationCardProps {
   application: Application;
   onEdit: (app: Application) => void;
   onDelete: (id: string) => void;
   onUpdate: (app: Application) => void;
+  isExpanded: boolean;
+  onToggleExpand: () => void;
 }
 
 const MaterialIcon: React.FC<{ name: string; className?: string }> = ({ name, className }) => (
   <span className={`material-symbols-outlined ${className}`}>{name}</span>
 );
 
-const ApplicationCard: React.FC<ApplicationCardProps> = ({ application, onEdit, onDelete, onUpdate }) => {
+const ApplicationCard: React.FC<ApplicationCardProps> = ({ application, onEdit, onDelete, onUpdate, isExpanded, onToggleExpand }) => {
   useEffect(() => {
     window.performance.mark('my-mark');
   }, []);
-  const [isExpanded, setIsExpanded] = useState(false);
   const { id, universityName, programName, deadline, status, portalLink } = application;
 
   const today = new Date();
@@ -63,7 +64,7 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({ application, onEdit, 
   return (
     <div 
         className="bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl rounded-3xl shadow-lg border border-slate-200/50 dark:border-slate-700/50 p-5 flex flex-col justify-between transition-all duration-300 hover:shadow-2xl hover:-translate-y-1"
-        onClick={() => setIsExpanded(!isExpanded)}
+        onClick={onToggleExpand}
     >
       <div className="cursor-pointer">
         {/* Header */}
@@ -83,10 +84,10 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({ application, onEdit, 
             <select
               value={status}
               onChange={handleStatusChange}
-              className={`liquid-glass-dropdown pl-3 pr-8 py-1 text-xs font-semibold appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-offset-1 dark:focus:ring-offset-slate-800 focus:ring-red-500`}
+              className={`rounded-full pl-3 pr-8 py-1 text-xs font-semibold appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-offset-1 dark:focus:ring-offset-slate-800 focus:ring-red-500 ${STATUS_COLORS[status]}`}
               aria-label="Change application status"
             >
-              {STATUS_OPTIONS.map(opt => <option key={opt} value={opt} className="bg-slate-800 text-white">{opt}</option>)}
+              {STATUS_OPTIONS.map(opt => <option key={opt} value={opt} className="bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-white">{opt}</option>)}
             </select>
             <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2 text-inherit opacity-70">
                 <MaterialIcon name="unfold_more" className="text-sm" />
@@ -128,18 +129,33 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({ application, onEdit, 
                         const docKey = key as keyof typeof application.documents;
                         const doc = application.documents[docKey];
                         if (!doc.required) return null;
+
+                        const handleToggle = (e: React.ChangeEvent<HTMLInputElement>) => {
+                            e.stopPropagation();
+                            const newSubmittedDate = e.target.checked ? new Date().toISOString().split('T')[0] : null;
+                            const updatedDocuments = {
+                                ...application.documents,
+                                [docKey]: { ...doc, submitted: newSubmittedDate }
+                            };
+                            onUpdate({ ...application, documents: updatedDocuments });
+                        };
+
                         return (
-                            <div key={key} className="flex items-center justify-between">
-                                <div className="flex items-center gap-2">
-                                    {doc.submitted 
-                                        ? <MaterialIcon name="check_box" className="text-green-500 text-base" />
-                                        : <MaterialIcon name="check_box_outline_blank" className="text-slate-400 text-base" />
-                                    }
+                            <div key={key} className="flex items-center justify-between" onClick={e => e.stopPropagation()}>
+                                <label htmlFor={`doc-${id}-${docKey}`} className="flex items-center gap-2 cursor-pointer">
+                                    <input
+                                        type="checkbox"
+                                        id={`doc-${id}-${docKey}`}
+                                        checked={!!doc.submitted}
+                                        onChange={handleToggle}
+                                        className="sr-only peer"
+                                    />
+                                    <div className="relative w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-gray-600 peer-checked:bg-red-600"></div>
                                     <span className="text-slate-600 dark:text-slate-300">{DOCUMENT_LABELS[docKey]}</span>
-                                </div>
+                                </label>
                                 {doc.submitted && (
                                     <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
-                                        {new Date(doc.submitted + 'T00:00:00').toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })}
+                                        {new Date(doc.submitted + 'T00:00:00').toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
                                     </span>
                                 )}
                             </div>
@@ -185,7 +201,7 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({ application, onEdit, 
       <div className="flex justify-between items-center mt-5 pt-4 border-t border-slate-200/50 dark:border-slate-700/50">
         <button
             type="button"
-            onClick={(e) => { e.stopPropagation(); setIsExpanded(!isExpanded); }}
+            onClick={(e) => { e.stopPropagation(); onToggleExpand(); }}
             className="flex items-center gap-1 text-sm font-medium text-red-600 dark:text-red-400 select-none p-2 -m-2 rounded-full hover:bg-red-500/10 transition-colors"
         >
             <span>{isExpanded ? 'Hide' : 'Show'} Details</span>
