@@ -1,5 +1,6 @@
-import React, { useEffect } from 'react';
-import { Application, ApplicationStatus, ProgramType } from '../types';
+import React, { useEffect, useRef, useMemo } from 'react';
+import confetti from 'canvas-confetti';
+import { Application, ApplicationStatus, ProgramType, FacultyContactStatus } from '../types';
 import { STATUS_OPTIONS, FEE_WAIVER_STATUS_COLORS, TEST_STATUS_COLORS, FACULTY_CHART_COLORS, DOCUMENT_LABELS, STATUS_COLORS } from '../constants';
 
 interface ApplicationCardProps {
@@ -15,51 +16,97 @@ const MaterialIcon: React.FC<{ name: string; className?: string }> = ({ name, cl
   <span className={`material-symbols-outlined ${className}`}>{name}</span>
 );
 
+const DetailsSection: React.FC<{ title: string; children: React.ReactNode }> = ({ title, children }) => (
+    <div>
+        <h4 className="text-sm font-bold text-slate-700 dark:text-slate-200 mb-2">{title}</h4>
+        <div className="space-y-1.5 pl-1 border-l-2 border-slate-200 dark:border-slate-700 ml-1">
+          <div className="pl-3">
+            {children}
+          </div>
+        </div>
+    </div>
+);
+
+const InfoRow: React.FC<{ icon: string; label: string; value?: string; children?: React.ReactNode }> = ({ icon, label, value, children }) => (
+    <div className="flex justify-between items-start text-sm">
+        <div className="flex items-center gap-2 shrink-0 pr-4">
+            <MaterialIcon name={icon} className="text-base text-slate-400 dark:text-slate-500" />
+            <span className="font-medium text-slate-500 dark:text-slate-400">{label}</span>
+        </div>
+        <div className="text-right">
+          {value ? <span className="font-semibold text-slate-700 dark:text-slate-200">{value}</span> : children}
+        </div>
+    </div>
+);
+
 const ApplicationCard: React.FC<ApplicationCardProps> = ({ application, onEdit, onDelete, onUpdate, isExpanded, onToggleExpand }) => {
-  useEffect(() => {
-    window.performance.mark('my-mark');
-  }, []);
   const { id, universityName, programName, deadline, status, portalLink } = application;
+  const prevStatusRef = useRef<ApplicationStatus>(status);
+
+  const upcomingInterview = useMemo(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const scheduled = application.facultyContacts.find(f => 
+      f.contactStatus === FacultyContactStatus.MeetingScheduled && 
+      f.interviewDate && 
+      new Date(f.interviewDate + 'T00:00:00') >= today
+    );
+    return scheduled;
+  }, [application.facultyContacts]);
+  const hasUpcomingInterview = !!upcomingInterview;
+
+  useEffect(() => {
+    if (prevStatusRef.current !== ApplicationStatus.Accepted && status === ApplicationStatus.Accepted) {
+      // Celebratory burst
+      const end = Date.now() + (3 * 1000);
+      const colors = ['#FFD700', '#FFA500', '#FF8C00'];
+
+      (function frame() {
+        confetti({
+          particleCount: 2,
+          angle: 60,
+          spread: 55,
+          origin: { x: 0 },
+          colors: colors
+        });
+        confetti({
+          particleCount: 2,
+          angle: 120,
+          spread: 55,
+          origin: { x: 1 },
+          colors: colors
+        });
+
+        if (Date.now() < end) {
+          requestAnimationFrame(frame);
+        }
+      }());
+      
+      // School pride effect
+       setTimeout(() => {
+        confetti({
+            particleCount: 100,
+            spread: 70,
+            origin: { y: 0.6 },
+            colors: ['#bb0000', '#ffffff']
+        });
+    }, 500);
+    }
+    prevStatusRef.current = status;
+  }, [status]);
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
   const deadlineDate = deadline ? new Date(deadline + 'T00:00:00') : null;
-  const isPastDeadline = deadlineDate ? today > deadlineDate : false;
-
-  const timeDiff = deadlineDate ? deadlineDate.getTime() - today.getTime() : 0;
-  const daysRemaining = deadlineDate ? Math.ceil(timeDiff / (1000 * 60 * 60 * 24)) : 0;
-  
-  let timeLeftText: string;
-  let timeLeftColor: string;
-
-  if (!deadlineDate) {
-    timeLeftText = "No deadline set";
-    timeLeftColor = 'text-slate-500 dark:text-slate-400';
-  } else if (isPastDeadline) {
-    timeLeftText = "Deadline Passed";
-    timeLeftColor = 'text-slate-500 dark:text-slate-400';
-  } else if (daysRemaining === 0) {
-    timeLeftText = "Due Today";
-    timeLeftColor = 'text-red-600 dark:text-red-400';
-  } else if (daysRemaining <= 7) {
-    timeLeftText = `${daysRemaining} day${daysRemaining > 1 ? 's' : ''} left`;
-    timeLeftColor = 'text-red-600 dark:text-red-400';
-  } else if (daysRemaining <= 30) {
-    timeLeftText = `${daysRemaining} days left`;
-    timeLeftColor = 'text-amber-600 dark:text-amber-400';
-  } else {
-    timeLeftText = `${daysRemaining} days left`;
-    timeLeftColor = 'text-green-600 dark:text-green-400';
-  }
-  
-  const handleStatusChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    onUpdate({ ...application, status: e.target.value as ApplicationStatus });
-  };
   
   const programTypeValue = application.programType === ProgramType.Other
     ? application.customProgramType || 'Other'
     : application.programType;
+
+  const handleStatusChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    onUpdate({ ...application, status: e.target.value as ApplicationStatus });
+  };
 
   return (
     <div 
@@ -69,7 +116,7 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({ application, onEdit, 
       <div className="cursor-pointer">
         {/* Header */}
         <div className="flex justify-between items-start mb-3">
-          <div className="flex-1 pr-2">
+          <div className="flex-1">
             {portalLink ? (
               <a href={portalLink} target="_blank" rel="noopener noreferrer" className="group inline-flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
                 <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100 group-hover:text-red-600 dark:group-hover:text-red-400 transition-colors">{universityName}</h3>
@@ -80,33 +127,53 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({ application, onEdit, 
             )}
             <p className="text-sm text-slate-600 dark:text-slate-300">{programName}</p>
           </div>
-          <div className="relative shrink-0" onClick={e => e.stopPropagation()}>
-            <select
-              value={status}
-              onChange={handleStatusChange}
-              className={`rounded-full pl-3 pr-8 py-1 text-xs font-semibold appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-offset-1 dark:focus:ring-offset-slate-800 focus:ring-red-500 ${STATUS_COLORS[status]}`}
-              aria-label="Change application status"
-            >
-              {STATUS_OPTIONS.map(opt => <option key={opt} value={opt} className="bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-white">{opt}</option>)}
-            </select>
-            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2 text-inherit opacity-70">
-                <MaterialIcon name="unfold_more" className="text-sm" />
+          <div className="flex items-center gap-2 shrink-0">
+            {hasUpcomingInterview && (
+              <div className="text-red-500 animate-pulse" title="Upcoming Interview">
+                <MaterialIcon name="event_upcoming" className="text-2xl" />
+              </div>
+            )}
+            <div className="relative" onClick={e => e.stopPropagation()}>
+              <select
+                value={status}
+                onChange={handleStatusChange}
+                className={`rounded-full pl-3 pr-8 py-1 text-xs font-semibold appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-offset-1 dark:focus:ring-offset-slate-800 focus:ring-red-500 ${STATUS_COLORS[status]}`}
+                aria-label="Change application status"
+              >
+                {STATUS_OPTIONS.map(opt => <option key={opt} value={opt} className="bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-white">{opt}</option>)}
+              </select>
+              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2 text-inherit opacity-70">
+                  <MaterialIcon name="unfold_more" className="text-sm" />
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Deadline Info */}
-        {deadline && status !== ApplicationStatus.Accepted && (
-          <div className="flex items-center justify-between text-sm p-3 rounded-xl bg-slate-50/70 dark:bg-slate-700/50">
-            <div className="flex items-center gap-2 text-slate-600 dark:text-slate-300">
-              <MaterialIcon name="event" className="text-base" />
-              {deadlineDate && <span>{deadlineDate.toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' })}</span>}
-            </div>
-            <span className={`font-bold ${timeLeftColor} ${!isPastDeadline && daysRemaining <= 7 ? 'animate-pulse' : ''}`}>
-                {timeLeftText}
-            </span>
+        {/* At-a-glance Details */}
+        <div className="flex flex-wrap gap-x-4 gap-y-2 text-xs text-slate-600 dark:text-slate-300 mb-4">
+          <div className="flex items-center gap-1.5">
+            <MaterialIcon name="school" className="text-sm" />
+            <span>{programTypeValue}</span>
           </div>
-        )}
+          {application.admissionTerm && application.admissionYear && (
+            <div className="flex items-center gap-1.5">
+              <MaterialIcon name="calendar_month" className="text-sm" />
+              <span>{application.admissionTerm} {application.admissionYear}</span>
+            </div>
+          )}
+          {deadlineDate && (
+            <div className="flex items-center gap-1.5">
+              <MaterialIcon name="event" className="text-sm" />
+              <span>Deadline: {deadlineDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span>
+            </div>
+          )}
+          {upcomingInterview && (
+            <div className="flex items-center gap-1.5 text-red-600 dark:text-red-400 font-semibold">
+              <MaterialIcon name="event_upcoming" className="text-sm" />
+              <span>Interview: {new Date(upcomingInterview.interviewDate! + 'T00:00:00').toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span>
+            </div>
+          )}
+        </div>
 
         {/* Expandable Details Section */}
         <div className={`transition-all duration-500 ease-in-out overflow-hidden ${isExpanded ? 'max-h-[1000px] opacity-100 pt-4' : 'max-h-0 opacity-0'}`}>
@@ -177,12 +244,20 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({ application, onEdit, 
                 <DetailsSection title="Faculty Outreach">
                     <div className="space-y-2">
                     {application.facultyContacts.filter(f => f.name).map(f => (
-                        <div key={f.id} className="flex items-center justify-between text-sm" title={`${f.name} - ${f.contactStatus}`}>
-                            <span className="text-slate-600 dark:text-slate-300 truncate">{f.name}</span>
-                            <div className="flex items-center gap-2">
-                                <span className="text-slate-500 dark:text-slate-400">{f.contactStatus}</span>
-                                <div className={`w-2.5 h-2.5 rounded-full`} style={{backgroundColor: FACULTY_CHART_COLORS[f.contactStatus]}}></div>
+                        <div key={f.id} className="text-sm" title={`${f.name} - ${f.contactStatus}`}>
+                            <div className="flex items-center justify-between">
+                                <span className="text-slate-600 dark:text-slate-300 truncate">{f.name}</span>
+                                <div className="flex items-center gap-2">
+                                    <span className="text-slate-500 dark:text-slate-400">{f.contactStatus}</span>
+                                    <div className={`w-2.5 h-2.5 rounded-full`} style={{backgroundColor: FACULTY_CHART_COLORS[f.contactStatus]}}></div>
+                                </div>
                             </div>
+                            {f.interviewDate && (
+                                <div className="flex items-center gap-2 mt-1 text-xs text-slate-500 dark:text-slate-400">
+                                    <MaterialIcon name="event" className="text-sm" />
+                                    <span>Interview: {new Date(f.interviewDate + 'T00:00:00').toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                                </div>
+                            )}
                         </div>
                     ))}
                     </div>
@@ -227,28 +302,5 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({ application, onEdit, 
     </div>
   );
 };
-
-const DetailsSection: React.FC<{ title: string; children: React.ReactNode }> = ({ title, children }) => (
-    <div>
-        <h4 className="text-sm font-bold text-slate-700 dark:text-slate-200 mb-2">{title}</h4>
-        <div className="space-y-1.5 pl-1 border-l-2 border-slate-200 dark:border-slate-700 ml-1">
-          <div className="pl-3">
-            {children}
-          </div>
-        </div>
-    </div>
-);
-
-const InfoRow: React.FC<{ icon: string; label: string; value?: string; children?: React.ReactNode }> = ({ icon, label, value, children }) => (
-    <div className="flex justify-between items-start text-sm">
-        <div className="flex items-center gap-2 shrink-0 pr-4">
-            <MaterialIcon name={icon} className="text-base text-slate-400 dark:text-slate-500" />
-            <span className="font-medium text-slate-500 dark:text-slate-400">{label}</span>
-        </div>
-        <div className="text-right">
-          {value ? <span className="font-semibold text-slate-700 dark:text-slate-200">{value}</span> : children}
-        </div>
-    </div>
-);
 
 export default ApplicationCard;

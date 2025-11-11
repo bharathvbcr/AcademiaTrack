@@ -40,6 +40,10 @@ export enum FacultyContactStatus {
   NotContacted = 'Not Contacted',
   Emailed = 'Emailed',
   Replied = 'Replied',
+  PositiveReply = 'Positive Reply',
+  NegativeReply = 'Negative Reply',
+  PendingReview = 'Pending Review',
+  FollowUpRequired = 'Follow-up Required',
   MeetingScheduled = 'Meeting Scheduled',
 }
 
@@ -51,6 +55,7 @@ export interface FacultyContact {
   researchArea: string;
   contactStatus: FacultyContactStatus;
   contactDate: string | null;
+  interviewDate?: string | null;
 }
 
 export interface Application {

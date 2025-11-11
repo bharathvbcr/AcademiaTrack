@@ -1,7 +1,7 @@
 {
   "name": "application-tracker",
   "private": true,
-  "version": "2.5.0",
+  "version": "2.5.1",
   "description": "Application Tracker",
   "author": "BHARATH CHANDRA VADDARAM <bharath.vbcr@gmail.com>",
   "type": "module",
@@ -14,11 +14,13 @@
     "build:electron": "npm run build && cross-env NODE_ENV=production electron-builder"
   },
   "dependencies": {
+    "canvas-confetti": "^1.9.3",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "recharts": "^3.3.0"
   },
   "devDependencies": {
+    "@types/canvas-confetti": "^1.6.4",
     "@types/node": "^22.14.0",
     "@types/react": "^19.2.2",
     "@types/react-dom": "^19.2.2",
