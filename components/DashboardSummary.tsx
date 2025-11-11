@@ -58,6 +58,9 @@ const DashboardSummary: React.FC<DashboardSummaryProps> = ({ applications }) => 
       .filter(item => item.count > 0);
   }, [applications]);
 
+  const applicationTotal = useMemo(() => applications.length, [applications]);
+  const facultyContactTotal = useMemo(() => facultyContactSummary.reduce((acc, curr) => acc + curr.count, 0), [facultyContactSummary]);
+
   if (applications.length === 0) {
     return (
        <div className="text-center py-16 px-6 bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl rounded-3xl shadow-lg border border-slate-200/50 dark:border-slate-700/50 mb-8">
@@ -67,11 +70,19 @@ const DashboardSummary: React.FC<DashboardSummaryProps> = ({ applications }) => 
     );
   }
 
+  const renderLegendText = (value: string, entry: any) => {
+    const { color, payload } = entry;
+    return <span style={{ color: isDarkMode ? '#e2e8f0' : '#1e293b' }}>{value} ({payload.value})</span>;
+  };
+
   return (
     <div className="bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl p-4 sm:p-6 rounded-3xl shadow-lg border border-slate-200/50 dark:border-slate-700/50 mb-8">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-8 gap-y-6">
         <div>
-          <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-100 mb-4">Application Status</h2>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-100">Application Status</h2>
+            <span className="px-2.5 py-1 text-xs font-semibold text-slate-600 dark:text-slate-300 bg-slate-200 dark:bg-slate-700 rounded-full">{applicationTotal} Total</span>
+          </div>
           {applicationStatusData.length > 0 ? (
             <div className="h-64 w-full">
               <ResponsiveContainer>
@@ -91,7 +102,7 @@ const DashboardSummary: React.FC<DashboardSummaryProps> = ({ applications }) => 
                     ))}
                   </Pie>
                   <Tooltip contentStyle={tooltipStyle} />
-                  <Legend iconSize={10} wrapperStyle={{ fontSize: '12px' }}/>
+                  <Legend iconSize={10} wrapperStyle={{ fontSize: '12px' }} formatter={renderLegendText} />
                 </PieChart>
               </ResponsiveContainer>
             </div>
@@ -102,7 +113,10 @@ const DashboardSummary: React.FC<DashboardSummaryProps> = ({ applications }) => 
           )}
         </div>
         <div className="border-t lg:border-t-0 lg:border-l border-slate-200/50 dark:border-slate-700/50 lg:pl-8 pt-6 lg:pt-0">
-          <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-100 mb-4">Faculty Outreach</h2>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-100">Faculty Outreach</h2>
+            <span className="px-2.5 py-1 text-xs font-semibold text-slate-600 dark:text-slate-300 bg-slate-200 dark:bg-slate-700 rounded-full">{facultyContactTotal} Total</span>
+          </div>
           {facultyContactSummary.length > 0 ? (
             <div className="h-64 w-full">
               <ResponsiveContainer width="100%" height="100%">
@@ -122,7 +136,7 @@ const DashboardSummary: React.FC<DashboardSummaryProps> = ({ applications }) => 
                     ))}
                   </Pie>
                   <Tooltip contentStyle={tooltipStyle} />
-                  <Legend iconSize={10} wrapperStyle={{ fontSize: '12px' }}/>
+                  <Legend iconSize={10} wrapperStyle={{ fontSize: '12px' }} formatter={(value, entry: any) => renderLegendText(value, { ...entry, payload: { ...entry.payload, value: entry.payload.count }})} />
                 </PieChart>
               </ResponsiveContainer>
             </div>
