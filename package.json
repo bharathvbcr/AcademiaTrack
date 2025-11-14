@@ -1,7 +1,7 @@
 {
   "name": "application-tracker",
   "private": true,
-  "version": "2.5.2",
+  "version": "2.5.3",
   "description": "Application Tracker",
   "author": "BHARATH CHANDRA VADDARAM <bharath.vbcr@gmail.com>",
   "type": "module",
