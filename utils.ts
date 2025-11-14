@@ -91,3 +91,13 @@ export const chunk = <T>(arr: T[], size: number): T[][] =>
     arr.slice(i * size, i * size + size)
   );
 
+export const sanitizeURL = (url: string): string => {
+  if (!url) {
+    return '';
+  }
+  const trimmedUrl = url.trim();
+  if (trimmedUrl.startsWith('http://') || trimmedUrl.startsWith('https://') || trimmedUrl.startsWith('mailto:')) {
+    return trimmedUrl;
+  }
+  return `https://${trimmedUrl}`;
+};
