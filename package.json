@@ -36,6 +36,7 @@
   "build": {
     "appId": "com.example.application-tracker",
     "productName": "Application Tracker",
+    "icon": "AcademiaTrack.png",
     "files": [
       "dist/**/*",
       "electron/main.cjs",
