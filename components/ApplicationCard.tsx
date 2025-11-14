@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useMemo } from 'react';
 import confetti from 'canvas-confetti';
 import { Application, ApplicationStatus, ProgramType, FacultyContactStatus } from '../types';
 import { STATUS_OPTIONS, FEE_WAIVER_STATUS_COLORS, TEST_STATUS_COLORS, FACULTY_CHART_COLORS, DOCUMENT_LABELS, STATUS_COLORS } from '../constants';
+import { sanitizeURL } from '../utils';
 
 interface ApplicationCardProps {
   application: Application;
@@ -118,7 +119,7 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({ application, onEdit, 
         <div className="flex justify-between items-start mb-3">
           <div className="flex-1">
             {portalLink ? (
-              <a href={portalLink} target="_blank" rel="noopener noreferrer" className="group inline-flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+              <a href={sanitizeURL(portalLink)} target="_blank" rel="noopener noreferrer" className="group inline-flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
                 <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100 group-hover:text-red-600 dark:group-hover:text-red-400 transition-colors">{universityName}</h3>
                 <MaterialIcon name="open_in_new" className="text-sm text-slate-400 group-hover:text-red-500" />
               </a>
@@ -246,7 +247,12 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({ application, onEdit, 
                     {application.facultyContacts.filter(f => f.name).map(f => (
                         <div key={f.id} className="text-sm" title={`${f.name} - ${f.contactStatus}`}>
                             <div className="flex items-center justify-between">
-                                <span className="text-slate-600 dark:text-slate-300 truncate">{f.name}</span>
+                                <div className="flex items-center gap-2">
+                                    <span className={`truncate ${f.contactStatus === FacultyContactStatus.FollowUpRequired ? 'text-cyan-600 dark:text-cyan-400 font-semibold' : 'text-slate-600 dark:text-slate-300'}`}>{f.name}</span>
+                                    {f.contactStatus === FacultyContactStatus.FollowUpRequired && (
+                                        <MaterialIcon name="notification_important" className="text-sm text-cyan-500" />
+                                    )}
+                                </div>
                                 <div className="flex items-center gap-2">
                                     <span className="text-slate-500 dark:text-slate-400">{f.contactStatus}</span>
                                     <div className={`w-2.5 h-2.5 rounded-full`} style={{backgroundColor: FACULTY_CHART_COLORS[f.contactStatus]}}></div>
