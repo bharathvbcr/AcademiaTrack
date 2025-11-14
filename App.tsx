@@ -1,16 +1,17 @@
-import React from 'react';
+import React, { lazy, Suspense } from 'react';
 import { useApplications } from './hooks/useApplications';
 import { useAppModals } from './hooks/useAppModals';
 import { useSortAndFilter } from './hooks/useSortAndFilter';
 import Header from './components/Header';
 import ApplicationList from './components/ApplicationList';
-import ApplicationModal from './components/ApplicationModal';
-import DashboardSummary from './components/DashboardSummary';
 import SortControls from './components/SortControls';
 import { exportToCSV } from './utils';
-import FacultyContactModal from './components/FacultyContactModal';
 import { useLocalStorage } from './hooks/useLocalStorage';
 import { ProgramType } from './types';
+
+const DashboardSummary = lazy(() => import('./components/DashboardSummary'));
+const ApplicationModal = lazy(() => import('./components/ApplicationModal'));
+const FacultyContactModal = lazy(() => import('./components/FacultyContactModal'));
 
 const App: React.FC = () => {
   const {
@@ -70,7 +71,9 @@ const App: React.FC = () => {
           onExport={handleExport}
         />
         <main className="mt-8">
-          <DashboardSummary applications={applications} />
+          <Suspense fallback={<div>Loading...</div>}>
+            <DashboardSummary applications={applications} />
+          </Suspense>
           
           {applications.length > 0 && (
             <SortControls 
@@ -90,19 +93,21 @@ const App: React.FC = () => {
           />
         </main>
       </div>
-      <ApplicationModal
-        isOpen={isModalOpen}
-        onClose={closeModal}
-        onSave={handleSave}
-        applicationToEdit={editingApplication}
-        defaultProgramType={defaultProgramType}
-      />
-      <FacultyContactModal
-        isOpen={isFacultyModalOpen}
-        onClose={closeFacultyModal}
-        onSave={handleSaveFacultyContact}
-        applications={applications}
-      />
+      <Suspense fallback={<div>Loading...</div>}>
+        <ApplicationModal
+          isOpen={isModalOpen}
+          onClose={closeModal}
+          onSave={handleSave}
+          applicationToEdit={editingApplication}
+          defaultProgramType={defaultProgramType}
+        />
+        <FacultyContactModal
+          isOpen={isFacultyModalOpen}
+          onClose={closeFacultyModal}
+          onSave={handleSaveFacultyContact}
+          applications={applications}
+        />
+      </Suspense>
     </div>
   );
 };
