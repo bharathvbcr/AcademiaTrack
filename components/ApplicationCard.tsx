@@ -1,7 +1,7 @@
-import React, { useEffect, useRef, useMemo } from 'react';
+import React, { useEffect, useRef, useMemo, useState } from 'react';
 import confetti from 'canvas-confetti';
-import { Application, ApplicationStatus, ProgramType, FacultyContactStatus } from '../types';
-import { STATUS_OPTIONS, FEE_WAIVER_STATUS_COLORS, TEST_STATUS_COLORS, FACULTY_CHART_COLORS, DOCUMENT_LABELS, STATUS_COLORS } from '../constants';
+import { Application, ApplicationStatus, ProgramType, FacultyContactStatus, DocumentStatus } from '../types';
+import { STATUS_OPTIONS, FEE_WAIVER_STATUS_COLORS, TEST_STATUS_COLORS, FACULTY_CHART_COLORS, DOCUMENT_LABELS, STATUS_COLORS, DOCUMENT_STATUS_COLORS, DOCUMENT_STATUS_OPTIONS } from '../constants';
 import { sanitizeURL } from '../utils';
 
 interface ApplicationCardProps {
@@ -43,6 +43,35 @@ const InfoRow: React.FC<{ icon: string; label: string; value?: string; children?
 const ApplicationCard: React.FC<ApplicationCardProps> = ({ application, onEdit, onDelete, onUpdate, isExpanded, onToggleExpand }) => {
   const { id, universityName, programName, deadline, status, portalLink } = application;
   const prevStatusRef = useRef<ApplicationStatus>(status);
+  const [logoUrl, setLogoUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchLogo = async () => {
+      const cacheKey = `university_logo_${universityName}`;
+      const cached = localStorage.getItem(cacheKey);
+      if (cached) {
+        setLogoUrl(cached);
+        return;
+      }
+
+      try {
+        const cleanName = universityName.split('(')[0].trim();
+        const response = await fetch(`http://universities.hipolabs.com/search?name=${encodeURIComponent(cleanName)}`);
+        const data = await response.json();
+        
+        if (data && data.length > 0 && data[0].domains && data[0].domains.length > 0) {
+          const domain = data[0].domains[0];
+          const url = `https://logo.clearbit.com/${domain}`;
+          setLogoUrl(url);
+          localStorage.setItem(cacheKey, url);
+        }
+      } catch (e) {
+        console.error("Failed to fetch logo", e);
+      }
+    };
+    
+    if (universityName) fetchLogo();
+  }, [universityName]);
 
   const upcomingInterview = useMemo(() => {
     const today = new Date();
@@ -117,16 +146,26 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({ application, onEdit, 
       <div className="cursor-pointer">
         {/* Header */}
         <div className="flex justify-between items-start mb-3">
-          <div className="flex-1">
-            {portalLink ? (
-              <a href={sanitizeURL(portalLink)} target="_blank" rel="noopener noreferrer" className="group inline-flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
-                <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100 group-hover:text-red-600 dark:group-hover:text-red-400 transition-colors">{universityName}</h3>
-                <MaterialIcon name="open_in_new" className="text-sm text-slate-400 group-hover:text-red-500" />
-              </a>
-            ) : (
-              <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100">{universityName}</h3>
+          <div className="flex-1 flex items-start gap-3">
+             {logoUrl && (
+              <img 
+                src={logoUrl} 
+                alt={`${universityName} logo`} 
+                className="w-10 h-10 object-contain rounded-md bg-white p-0.5 shadow-sm"
+                onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+              />
             )}
-            <p className="text-sm text-slate-600 dark:text-slate-300">{programName}</p>
+            <div>
+              {portalLink ? (
+                <a href={sanitizeURL(portalLink)} target="_blank" rel="noopener noreferrer" className="group inline-flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                  <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100 group-hover:text-red-600 dark:group-hover:text-red-400 transition-colors">{universityName}</h3>
+                  <MaterialIcon name="open_in_new" className="text-sm text-slate-400 group-hover:text-red-500" />
+                </a>
+              ) : (
+                <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100">{universityName}</h3>
+              )}
+              <p className="text-sm text-slate-600 dark:text-slate-300">{programName}</p>
+            </div>
           </div>
           <div className="flex items-center gap-2 shrink-0">
             {hasUpcomingInterview && (
@@ -192,40 +231,44 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({ application, onEdit, 
               </DetailsSection>
               
               <DetailsSection title="Document Checklist">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2 text-sm">
+                <div className="grid grid-cols-1 gap-2 text-sm">
                     {Object.keys(application.documents).map(key => {
                         const docKey = key as keyof typeof application.documents;
                         const doc = application.documents[docKey];
                         if (!doc.required) return null;
 
-                        const handleToggle = (e: React.ChangeEvent<HTMLInputElement>) => {
+                        const handleDocStatusChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
                             e.stopPropagation();
-                            const newSubmittedDate = e.target.checked ? new Date().toISOString().split('T')[0] : null;
+                            const newStatus = e.target.value as DocumentStatus;
+                            const newSubmittedDate = newStatus === DocumentStatus.Submitted 
+                                ? new Date().toISOString().split('T')[0] 
+                                : null;
+                            
                             const updatedDocuments = {
                                 ...application.documents,
-                                [docKey]: { ...doc, submitted: newSubmittedDate }
+                                [docKey]: { ...doc, status: newStatus, submitted: newSubmittedDate }
                             };
                             onUpdate({ ...application, documents: updatedDocuments });
                         };
 
                         return (
-                            <div key={key} className="flex items-center justify-between" onClick={e => e.stopPropagation()}>
-                                <label htmlFor={`doc-${id}-${docKey}`} className="flex items-center gap-2 cursor-pointer">
-                                    <input
-                                        type="checkbox"
-                                        id={`doc-${id}-${docKey}`}
-                                        checked={!!doc.submitted}
-                                        onChange={handleToggle}
-                                        className="sr-only peer"
-                                    />
-                                    <div className="relative w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-gray-600 peer-checked:bg-red-600"></div>
-                                    <span className="text-slate-600 dark:text-slate-300">{DOCUMENT_LABELS[docKey]}</span>
-                                </label>
-                                {doc.submitted && (
-                                    <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
-                                        {new Date(doc.submitted + 'T00:00:00').toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
-                                    </span>
-                                )}
+                            <div key={key} className="flex items-center justify-between p-1" onClick={e => e.stopPropagation()}>
+                                <span className="text-slate-600 dark:text-slate-300 flex-grow">{DOCUMENT_LABELS[docKey]}</span>
+                                <div className="flex items-center gap-2">
+                                  <select
+                                      value={doc.status}
+                                      onChange={handleDocStatusChange}
+                                      className={`rounded-md px-2 py-0.5 text-xs font-semibold appearance-none cursor-pointer focus:outline-none focus:ring-1 focus:ring-offset-0 border-0 ${DOCUMENT_STATUS_COLORS[doc.status]}`}
+                                      aria-label={`Change ${DOCUMENT_LABELS[docKey]} status`}
+                                  >
+                                      {DOCUMENT_STATUS_OPTIONS.map(opt => <option key={opt} value={opt} className="bg-white dark:bg-slate-800 text-slate-800 dark:text-white">{opt}</option>)}
+                                  </select>
+                                  {doc.submitted && (
+                                      <span className="text-xs font-medium text-slate-500 dark:text-slate-400 min-w-[70px] text-right">
+                                          {new Date(doc.submitted + 'T00:00:00').toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                                      </span>
+                                  )}
+                                </div>
                             </div>
                         )
                     })}

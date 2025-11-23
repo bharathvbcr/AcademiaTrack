@@ -26,25 +26,27 @@ export const useSortAndFilter = (applications: Application[]) => {
 
     const sortableItems = [...filtered];
     if (sortConfig.key) {
-        sortableItems.sort((a, b) => {
-            const valA = a[sortConfig.key];
-            const valB = b[sortConfig.key];
+      sortableItems.sort((a, b) => {
+        const valA = a[sortConfig.key];
+        const valB = b[sortConfig.key];
 
-            let comparison = 0;
-            if (sortConfig.key === 'deadline') {
-                const dateA = valA ? new Date(valA as string).getTime() : Infinity;
-                const dateB = valB ? new Date(valB as string).getTime() : Infinity;
-                comparison = dateA - dateB;
-            } else {
-                if (valA > valB) {
-                    comparison = 1;
-                } else if (valA < valB) {
-                    comparison = -1;
-                }
-            }
-            
-            return sortConfig.direction === 'ascending' ? comparison : -comparison;
-        });
+        let comparison = 0;
+        if (sortConfig.key === 'deadline') {
+          const dateA = valA ? new Date(valA as string).getTime() : Infinity;
+          const dateB = valB ? new Date(valB as string).getTime() : Infinity;
+          comparison = dateA - dateB;
+        } else {
+          const strA = String(valA || '');
+          const strB = String(valB || '');
+          if (strA > strB) {
+            comparison = 1;
+          } else if (strA < strB) {
+            comparison = -1;
+          }
+        }
+
+        return sortConfig.direction === 'ascending' ? comparison : -comparison;
+      });
     }
     return sortableItems;
   }, [applications, sortConfig, searchQuery]);
