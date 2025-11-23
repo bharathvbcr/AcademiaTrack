@@ -9,8 +9,8 @@ interface HeaderProps {
   onSetDefaultProgramType: (type: ProgramType) => void;
   onExport: (format: 'csv' | 'json') => void;
   onImport: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  viewMode: 'list' | 'kanban' | 'calendar';
-  onViewChange: (mode: 'list' | 'kanban' | 'calendar') => void;
+  viewMode: 'list' | 'kanban' | 'calendar' | 'budget';
+  onViewChange: (mode: 'list' | 'kanban' | 'calendar' | 'budget') => void;
 }
 
 const MaterialIcon: React.FC<{ name: string; className?: string }> = ({ name, className }) => (
@@ -78,6 +78,13 @@ const Header: React.FC<HeaderProps> = ({
             aria-label="Calendar View"
           >
             <MaterialIcon name="calendar_month" className="text-lg" />
+          </button>
+          <button
+            onClick={() => onViewChange('budget')}
+            className={`px-3 py-1.5 rounded-full text-sm font-medium transition-all ${viewMode === 'budget' ? 'bg-white dark:bg-slate-600 text-slate-800 dark:text-slate-100 shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'}`}
+            aria-label="Budget View"
+          >
+            <MaterialIcon name="attach_money" className="text-lg" />
           </button>
         </div>
 

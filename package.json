@@ -1,7 +1,7 @@
 {
-  "name": "application-tracker",
+  "name": "academia-track",
   "private": true,
-  "version": "3.0.0",
+  "version": "3.1.0",
   "description": "Application Tracker",
   "author": "BHARATH CHANDRA VADDARAM <bharath.vbcr@gmail.com>",
   "type": "module",
@@ -20,7 +20,9 @@
     "framer-motion": "^12.23.24",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
-    "recharts": "^3.3.0"
+    "react-markdown": "^10.1.0",
+    "recharts": "^3.3.0",
+    "remark-gfm": "^4.0.1"
   },
   "devDependencies": {
     "@types/canvas-confetti": "^1.6.4",
@@ -37,8 +39,8 @@
     "wait-on": "^9.0.1"
   },
   "build": {
-    "appId": "com.example.application-tracker",
-    "productName": "Application Tracker",
+    "appId": "com.example.academia-track",
+    "productName": "AcademiaTrack",
     "icon": "AcademiaTrack.png",
     "files": [
       "dist/**/*",

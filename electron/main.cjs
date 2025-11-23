@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, Notification } = require('electron');
+const { app, BrowserWindow, ipcMain, Notification, dialog, shell } = require('electron');
 const path = require('path');
 const fs = require('fs');
 
@@ -53,6 +53,19 @@ app.whenReady().then(() => {
 
   ipcMain.handle('show-notification', async (event, { title, body }) => {
     new Notification({ title, body }).show();
+  });
+
+  ipcMain.handle('select-file', async () => {
+    const result = await dialog.showOpenDialog({
+      properties: ['openFile'],
+      filters: [{ name: 'Documents', extensions: ['pdf', 'doc', 'docx', 'txt'] }]
+    });
+    if (result.canceled) return null;
+    return result.filePaths[0];
+  });
+
+  ipcMain.handle('open-file', async (event, path) => {
+    await shell.openPath(path);
   });
 });
 

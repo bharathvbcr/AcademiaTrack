@@ -1,7 +1,16 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Application, ApplicationStatus, ApplicationFeeWaiverStatus, FacultyContact, TestStatus, FacultyContactStatus, ProgramType, DocumentStatus } from '../types';
+import { Application, ApplicationStatus, ApplicationFeeWaiverStatus, FacultyContact, TestStatus, FacultyContactStatus, ProgramType, DocumentStatus, Reminder, LocationDetails } from '../types';
 import { STATUS_OPTIONS, FEE_WAIVER_STATUS_OPTIONS, TEST_STATUS_OPTIONS, FACULTY_CONTACT_STATUS_OPTIONS, DOCUMENT_LABELS, FACULTY_CONTACT_STATUS_COLORS, PROGRAM_TYPE_OPTIONS, ADMISSION_TERM_OPTIONS, POPULAR_UNIVERSITIES, DOCUMENT_STATUS_OPTIONS, DOCUMENT_STATUS_COLORS } from '../constants';
 import DateInput from './DateInput';
+import MarkdownEditor from './MarkdownEditor';
+import { searchLocation, getLocationTimezone } from '../utils/locationService';
+import { useDebounce } from '../hooks/useDebounce';
+
+interface UniversityResult {
+  name: string;
+  web_pages: string[];
+  country: string;
+}
 
 interface ApplicationModalProps {
   isOpen: boolean;
@@ -43,6 +52,7 @@ const emptyApplication: Omit<Application, 'id'> = {
   facultyContacts: [],
   preferredFaculty: '',
   notes: '',
+  reminders: [],
 };
 
 const MaterialIcon: React.FC<{ name: string; className?: string }> = ({ name, className }) => (
@@ -52,6 +62,62 @@ const MaterialIcon: React.FC<{ name: string; className?: string }> = ({ name, cl
 const ApplicationModal: React.FC<ApplicationModalProps> = ({ isOpen, onClose, onSave, applicationToEdit, defaultProgramType }) => {
   const [appData, setAppData] = useState<Omit<Application, 'id'>>({ ...emptyApplication });
   const [isFacultyOpen, setIsFacultyOpen] = useState<boolean[]>([]);
+  const [universitySuggestions, setUniversitySuggestions] = useState<UniversityResult[]>([]);
+  const [allUniversities, setAllUniversities] = useState<UniversityResult[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
+
+  const [locationSuggestions, setLocationSuggestions] = useState<LocationDetails[]>([]);
+  const [showLocationSuggestions, setShowLocationSuggestions] = useState(false);
+  const debouncedLocation = useDebounce(appData.location, 500);
+
+  useEffect(() => {
+      const search = async () => {
+        if (debouncedLocation.length < 3) {
+            setLocationSuggestions([]);
+            setShowLocationSuggestions(false);
+            return;
+        }
+        // Only search if the user is actively typing/searching and it's not just setting the value from selection
+        // However, distinguishing selection vs typing is hard with just debounced value.
+        // We can rely on the fact that selecting hides the dropdown.
+        // But if I select "Boston, MA", this effect runs again.
+        // We can skip if the value exactly matches a selected one? No, the user might edit it.
+        
+        // Better approach: The `handleLocationChange` updates `appData.location`.
+        // `debouncedLocation` updates later.
+        // We trigger search here.
+        
+        try {
+            // Optimization: Don't search if it matches the currently selected location to avoid re-opening
+            if (appData.locationDetails && appData.location.startsWith(`${appData.locationDetails.city}`)) {
+                 // This is tricky. Let's just search. The dropdown only shows on focus/typing.
+                 // But we need to manage `showLocationSuggestions` carefully.
+            }
+            
+            // Only search if the input is focused? We don't have that ref handy easily.
+            // Let's just search and update suggestions. Visibility is controlled by onFocus/onBlur.
+             const results = await searchLocation(debouncedLocation);
+             setLocationSuggestions(results);
+             // Don't auto-show here, let onFocus/onChange handle it? 
+             // No, if I type, I want it to show.
+             if (document.activeElement?.id === 'location') {
+                 setShowLocationSuggestions(true);
+             }
+        } catch (error) {
+            console.error('Error searching locations:', error);
+        }
+      };
+
+      search();
+  }, [debouncedLocation]);
+
+  useEffect(() => {
+    fetch('/universities.json')
+      .then(res => res.json())
+      .then(data => setAllUniversities(data))
+      .catch(err => console.error('Failed to load universities:', err));
+  }, []);
 
   useEffect(() => {
     if (isOpen) {
@@ -63,25 +129,24 @@ const ApplicationModal: React.FC<ApplicationModalProps> = ({ isOpen, onClose, on
           for (const key in normalizedDocs) {
             const docKey = key as keyof typeof normalizedDocs;
             const oldDocValue = (applicationToEdit.documents as any)[docKey];
-            
+
             if (typeof oldDocValue === 'object' && oldDocValue !== null) {
-               // Migration logic: check if status exists, if not infer from submitted
-               const hasStatus = 'status' in oldDocValue;
-               const submittedDate = oldDocValue.submitted || null;
-               
-               normalizedDocs[docKey] = {
-                 required: oldDocValue.required ?? true,
-                 status: hasStatus ? oldDocValue.status : (submittedDate ? DocumentStatus.Submitted : DocumentStatus.NotStarted),
-                 submitted: submittedDate
-               };
+              const hasStatus = 'status' in oldDocValue;
+              const submittedDate = oldDocValue.submitted || null;
+
+              normalizedDocs[docKey] = {
+                required: oldDocValue.required ?? true,
+                status: hasStatus ? oldDocValue.status : (submittedDate ? DocumentStatus.Submitted : DocumentStatus.NotStarted),
+                submitted: submittedDate,
+                filePath: oldDocValue.filePath
+              };
             } else {
-               // Legacy format support if needed (though types suggest object)
-               normalizedDocs[docKey] = { required: true, status: oldDocValue ? DocumentStatus.Submitted : DocumentStatus.NotStarted, submitted: oldDocValue ? (typeof oldDocValue === 'string' ? oldDocValue : today) : null };
+              normalizedDocs[docKey] = { required: true, status: oldDocValue ? DocumentStatus.Submitted : DocumentStatus.NotStarted, submitted: oldDocValue ? (typeof oldDocValue === 'string' ? oldDocValue : today) : null };
             }
           }
         }
         const { gre, englishTest, admissionTerm, admissionYear, ...rest } = applicationToEdit;
-        setAppData({ ...emptyApplication, ...rest, programType: applicationToEdit.programType || ProgramType.PhD, customProgramType: applicationToEdit.customProgramType || '', facultyContacts: migratedFaculty, documents: normalizedDocs, gre: { status: (gre as any)?.status ?? TestStatus.NotApplicable }, englishTest: { type: (englishTest as any)?.type ?? 'Not Required', status: (englishTest as any)?.status ?? TestStatus.NotApplicable }, admissionTerm: admissionTerm || null, admissionYear: admissionYear || null });
+        setAppData({ ...emptyApplication, ...rest, programType: applicationToEdit.programType || ProgramType.PhD, customProgramType: applicationToEdit.customProgramType || '', facultyContacts: migratedFaculty, documents: normalizedDocs, gre: { status: (gre as any)?.status ?? TestStatus.NotApplicable }, englishTest: { type: (englishTest as any)?.type ?? 'Not Required', status: (englishTest as any)?.status ?? TestStatus.NotApplicable }, admissionTerm: admissionTerm || null, admissionYear: admissionYear || null, reminders: applicationToEdit.reminders || [] });
         setIsFacultyOpen(migratedFaculty.map(f => !!f.name));
       } else {
         setAppData({ ...emptyApplication, programType: defaultProgramType });
@@ -113,26 +178,61 @@ const ApplicationModal: React.FC<ApplicationModalProps> = ({ isOpen, onClose, on
       if (field === 'required') {
         doc.required = value;
         if (!value) {
-            doc.status = DocumentStatus.NotStarted;
-            doc.submitted = null;
+          doc.status = DocumentStatus.NotStarted;
+          doc.submitted = null;
         }
       } else if (field === 'status') {
         doc.status = value;
         if (value === DocumentStatus.Submitted && !doc.submitted) {
-            doc.submitted = new Date().toISOString().split('T')[0];
+          doc.submitted = new Date().toISOString().split('T')[0];
         } else if (value !== DocumentStatus.Submitted) {
-             doc.submitted = null;
+          doc.submitted = null;
         }
       } else if (field === 'submitted') {
         doc.submitted = value;
         if (value && doc.status !== DocumentStatus.Submitted) {
-            doc.status = DocumentStatus.Submitted;
+          doc.status = DocumentStatus.Submitted;
         }
       }
 
       newDocuments[docKey] = doc;
       return { ...prev, documents: newDocuments };
     });
+  }, []);
+
+  const handleAttachFile = useCallback(async (docKey: keyof Application['documents']) => {
+    try {
+      const filePath = await window.electron.selectFile();
+      if (filePath) {
+        setAppData(prev => ({
+          ...prev,
+          documents: {
+            ...prev.documents,
+            [docKey]: { ...prev.documents[docKey], filePath }
+          }
+        }));
+      }
+    } catch (error) {
+      console.error('Error selecting file:', error);
+    }
+  }, []);
+
+  const handleOpenFile = useCallback(async (filePath: string) => {
+    try {
+      await window.electron.openFile(filePath);
+    } catch (error) {
+      console.error('Error opening file:', error);
+    }
+  }, []);
+
+  const handleRemoveFile = useCallback((docKey: keyof Application['documents']) => {
+    setAppData(prev => ({
+      ...prev,
+      documents: {
+        ...prev.documents,
+        [docKey]: { ...prev.documents[docKey], filePath: undefined }
+      }
+    }));
   }, []);
 
   const handleTestChange = useCallback((test: 'gre' | 'englishTest', field: string, value: any) => {
@@ -153,15 +253,115 @@ const ApplicationModal: React.FC<ApplicationModalProps> = ({ isOpen, onClose, on
     setAppData(prev => ({ ...prev, facultyContacts: updatedFaculty }));
   }, [appData.facultyContacts]);
 
+  const handleFacultyMarkdownChange = useCallback((index: number, field: string, value: string) => {
+    const updatedFaculty = [...appData.facultyContacts];
+    const facultyToUpdate = { ...updatedFaculty[index], [field]: value };
+    updatedFaculty[index] = facultyToUpdate;
+    setAppData(prev => ({ ...prev, facultyContacts: updatedFaculty }));
+  }, [appData.facultyContacts]);
+
   const addFacultyContact = useCallback(() => {
     if (appData.facultyContacts.length >= 3) return;
-    setAppData(prev => ({ ...prev, facultyContacts: [...prev.facultyContacts, { id: Date.now(), name: '', website: '', email: '', researchArea: '', contactStatus: FacultyContactStatus.NotContacted, contactDate: null, interviewDate: null }] }));
+    setAppData(prev => ({ ...prev, facultyContacts: [...prev.facultyContacts, { id: Date.now(), name: '', website: '', email: '', researchArea: '', contactStatus: FacultyContactStatus.NotContacted, contactDate: null, interviewDate: null, interviewNotes: '', questions: '', answers: '' }] }));
     setIsFacultyOpen(prev => [...prev, true]);
   }, [appData.facultyContacts]);
 
   const removeFacultyContact = useCallback((indexToRemove: number) => {
     setAppData(prev => ({ ...prev, facultyContacts: prev.facultyContacts.filter((_, index) => index !== indexToRemove) }));
     setIsFacultyOpen(prev => prev.filter((_, index) => index !== indexToRemove));
+  }, []);
+
+  const handleLocationSelect = async (loc: LocationDetails) => {
+      // Fetch timezone info
+      const timezoneInfo = await getLocationTimezone(loc.latitude, loc.longitude);
+      const fullLocationDetails = { ...loc, ...timezoneInfo };
+      
+      setAppData(prev => ({
+          ...prev,
+          location: `${loc.city}, ${loc.state ? loc.state + ', ' : ''}${loc.country}`,
+          locationDetails: fullLocationDetails
+      }));
+      setShowLocationSuggestions(false);
+  };
+
+  const handleLocationChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      const value = e.target.value;
+      setAppData(prev => ({ ...prev, location: value }));
+      // Debounce effect will handle search
+      if (value.length >= 3) {
+          setShowLocationSuggestions(true);
+      } else {
+          setShowLocationSuggestions(false);
+      }
+  };
+
+  const searchUniversities = useCallback((query: string) => {
+    if (query.length < 3) {
+      setUniversitySuggestions([]);
+      setShowSuggestions(false);
+      return;
+    }
+
+    setIsSearching(true);
+    try {
+      const lowerQuery = query.toLowerCase();
+      const results = allUniversities
+        .filter(uni => uni.name.toLowerCase().includes(lowerQuery))
+        .slice(0, 10);
+      setUniversitySuggestions(results);
+      setShowSuggestions(true);
+    } catch (error) {
+      console.error('Error searching universities:', error);
+    } finally {
+      setIsSearching(false);
+    }
+  }, [allUniversities]);
+
+  const handleUniversitySelect = (uni: UniversityResult) => {
+    setAppData(prev => ({
+      ...prev,
+      universityName: uni.name,
+      portalLink: uni.web_pages[0] || prev.portalLink,
+      location: uni.country !== 'United States' ? uni.country : prev.location // Simple default
+    }));
+    setShowSuggestions(false);
+  };
+
+  const handleUniversityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setAppData(prev => ({ ...prev, universityName: value }));
+    searchUniversities(value);
+  };
+
+  const addReminder = useCallback(() => {
+    const text = prompt('Enter reminder text:');
+    if (text) {
+      setAppData(prev => ({
+        ...prev,
+        reminders: [...(prev.reminders || []), { id: Date.now().toString(), text, date: new Date().toISOString().split('T')[0], completed: false }]
+      }));
+    }
+  }, []);
+
+  const toggleReminder = useCallback((id: string) => {
+    setAppData(prev => ({
+      ...prev,
+      reminders: (prev.reminders || []).map(r => r.id === id ? { ...r, completed: !r.completed } : r)
+    }));
+  }, []);
+
+  const deleteReminder = useCallback((id: string) => {
+    setAppData(prev => ({
+      ...prev,
+      reminders: (prev.reminders || []).filter(r => r.id !== id)
+    }));
+  }, []);
+
+  const updateReminderDate = useCallback((id: string, date: string) => {
+    setAppData(prev => ({
+      ...prev,
+      reminders: (prev.reminders || []).map(r => r.id === id ? { ...r, date } : r)
+    }));
   }, []);
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -189,17 +389,33 @@ const ApplicationModal: React.FC<ApplicationModalProps> = ({ isOpen, onClose, on
         <form onSubmit={handleSubmit}>
           <div className="p-6 max-h-[70vh] overflow-y-auto space-y-8">
             <FieldSet legend="Program Details">
-              <Input
-                label="University Name"
-                name="universityName"
-                value={appData.universityName}
-                onChange={handleChange}
-                required
-                list="university-list"
-              />
-              <datalist id="university-list">
-                {POPULAR_UNIVERSITIES.map(uni => <option key={uni} value={uni} />)}
-              </datalist>
+              <div className="relative">
+                <Input
+                  label="University Name"
+                  name="universityName"
+                  value={appData.universityName}
+                  onChange={handleUniversityChange}
+                  required
+                  autoComplete="off"
+                  onFocus={() => appData.universityName.length >= 3 && setShowSuggestions(true)}
+                  onBlur={() => setTimeout(() => setShowSuggestions(false), 200)} // Delay to allow click
+                />
+                {showSuggestions && universitySuggestions.length > 0 && (
+                  <div className="absolute z-10 w-full mt-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                    {universitySuggestions.map((uni, index) => (
+                      <button
+                        key={index}
+                        type="button"
+                        onClick={() => handleUniversitySelect(uni)}
+                        className="w-full text-left px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+                      >
+                        <div className="font-medium">{uni.name}</div>
+                        <div className="text-xs text-slate-500">{uni.country}</div>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
               <Input label="Department / School" name="department" value={appData.department} onChange={handleChange} />
               <Input label="Program Name" name="programName" value={appData.programName} onChange={handleChange} required />
               <Select label="Program Type" name="programType" value={appData.programType} onChange={handleChange}>
@@ -224,7 +440,34 @@ const ApplicationModal: React.FC<ApplicationModalProps> = ({ isOpen, onClose, on
                 <option value="">Select Year</option>
                 {Array.from({ length: 8 }, (_, i) => new Date().getFullYear() - 2 + i).map(year => <option key={year} value={year}>{year}</option>)}
               </Select>
-              <Input label="Location (City, State)" name="location" value={appData.location} onChange={handleChange} className="md:col-span-2" />
+              <div className="relative md:col-span-2">
+                  <Input 
+                      label="Location (City, State)" 
+                      name="location" 
+                      value={appData.location} 
+                      onChange={handleLocationChange} 
+                      autoComplete="off"
+                      onFocus={() => appData.location.length >= 3 && setShowLocationSuggestions(true)}
+                      onBlur={() => setTimeout(() => setShowLocationSuggestions(false), 200)}
+                  />
+                  {showLocationSuggestions && locationSuggestions.length > 0 && (
+                      <div className="absolute z-10 w-full mt-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                          {locationSuggestions.map((loc, index) => (
+                              <button
+                                  key={index}
+                                  type="button"
+                                  onClick={() => handleLocationSelect(loc)}
+                                  className="w-full text-left px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+                              >
+                                  <div className="font-medium">{loc.city}</div>
+                                  <div className="text-xs text-slate-500">
+                                      {[loc.state, loc.country].filter(Boolean).join(', ')}
+                                  </div>
+                              </button>
+                          ))}
+                      </div>
+                  )}
+              </div>
             </FieldSet>
             <FieldSet legend="Rankings & Status">
               <Input label="University Ranking" name="universityRanking" value={appData.universityRanking} onChange={handleChange} />
@@ -249,22 +492,22 @@ const ApplicationModal: React.FC<ApplicationModalProps> = ({ isOpen, onClose, on
                 {Object.keys(appData.documents).map(key => {
                   const docKey = key as keyof typeof appData.documents;
                   const doc = appData.documents[docKey];
-                  
+
                   return (
                     <div key={key} className="grid grid-cols-1 sm:grid-cols-[1.5fr,1fr,auto] gap-3 items-center p-3 bg-slate-100 dark:bg-slate-700/50 rounded-lg">
                       <div className="flex items-center gap-3">
-                        <input 
-                            id={`${key}-required`} 
-                            type="checkbox" 
-                            checked={doc.required} 
-                            onChange={e => handleDocumentChange(docKey, 'required', e.target.checked)} 
-                            className="h-4 w-4 rounded border-slate-400 text-red-600 focus:ring-red-500" 
+                        <input
+                          id={`${key}-required`}
+                          type="checkbox"
+                          checked={doc.required}
+                          onChange={e => handleDocumentChange(docKey, 'required', e.target.checked)}
+                          className="h-4 w-4 rounded border-slate-400 text-red-600 focus:ring-red-500"
                         />
                         <label htmlFor={`${key}-status`} className={`font-medium ${!doc.required ? 'text-slate-400 dark:text-slate-500' : 'text-slate-800 dark:text-slate-200'}`}>
-                            {DOCUMENT_LABELS[docKey]}
+                          {DOCUMENT_LABELS[docKey]}
                         </label>
                       </div>
-                      
+
                       <select
                         id={`${key}-status`}
                         value={doc.status}
@@ -274,9 +517,9 @@ const ApplicationModal: React.FC<ApplicationModalProps> = ({ isOpen, onClose, on
                         aria-label={`${DOCUMENT_LABELS[docKey]} status`}
                       >
                         {DOCUMENT_STATUS_OPTIONS.map(status => (
-                            <option key={status} value={status} className="bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200">
-                                {status}
-                            </option>
+                          <option key={status} value={status} className="bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200">
+                            {status}
+                          </option>
                         ))}
                       </select>
 
@@ -289,6 +532,38 @@ const ApplicationModal: React.FC<ApplicationModalProps> = ({ isOpen, onClose, on
                         aria-label={`${DOCUMENT_LABELS[docKey]} submission date`}
                         title={doc.status !== DocumentStatus.Submitted ? "Select 'Submitted' status to set date" : "Submission Date"}
                       />
+
+                      <div className="flex items-center gap-1">
+                        {doc.filePath ? (
+                          <>
+                            <button
+                              type="button"
+                              onClick={() => handleOpenFile(doc.filePath!)}
+                              className="p-1.5 text-slate-500 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-full transition-colors"
+                              title={`Open ${doc.filePath}`}
+                            >
+                              <MaterialIcon name="visibility" className="text-lg" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveFile(docKey)}
+                              className="p-1.5 text-slate-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-full transition-colors"
+                              title="Remove attachment"
+                            >
+                              <MaterialIcon name="close" className="text-lg" />
+                            </button>
+                          </>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => handleAttachFile(docKey)}
+                            className="p-1.5 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-full transition-colors"
+                            title="Attach file"
+                          >
+                            <MaterialIcon name="attach_file" className="text-lg" />
+                          </button>
+                        )}
+                      </div>
                     </div>
                   );
                 })}
@@ -325,6 +600,27 @@ const ApplicationModal: React.FC<ApplicationModalProps> = ({ isOpen, onClose, on
                             <Input label="Interview Date" name="interviewDate" type="date" value={faculty.interviewDate || ''} onChange={e => handleFacultyChange(index, e)} className="md:col-span-2" />
                           )}
                         </div>
+
+                        <div className="pt-4 border-t border-slate-200 dark:border-slate-600">
+                          <h4 className="text-sm font-semibold text-slate-900 dark:text-white mb-3">Interview Preparation</h4>
+                          <div className="space-y-4">
+                            <MarkdownEditor
+                              label="Interview Notes"
+                              value={faculty.interviewNotes || ''}
+                              onChange={val => handleFacultyMarkdownChange(index, 'interviewNotes', val)}
+                            />
+                            <MarkdownEditor
+                              label="Potential Questions"
+                              value={faculty.questions || ''}
+                              onChange={val => handleFacultyMarkdownChange(index, 'questions', val)}
+                            />
+                            <MarkdownEditor
+                              label="Your Answers"
+                              value={faculty.answers || ''}
+                              onChange={val => handleFacultyMarkdownChange(index, 'answers', val)}
+                            />
+                          </div>
+                        </div>
                       </div>
                     )}
                   </div>
@@ -336,8 +632,43 @@ const ApplicationModal: React.FC<ApplicationModalProps> = ({ isOpen, onClose, on
                 )}
               </div>
             </FieldSet>
+            <FieldSet legend="Reminders">
+              <div className="md:col-span-2 space-y-3">
+                {(appData.reminders || []).map(reminder => (
+                  <div key={reminder.id} className="flex items-center gap-3 p-3 bg-slate-100 dark:bg-slate-700/50 rounded-lg">
+                    <input
+                      type="checkbox"
+                      checked={reminder.completed}
+                      onChange={() => toggleReminder(reminder.id)}
+                      className="h-5 w-5 rounded border-slate-400 text-red-600 focus:ring-red-500"
+                    />
+                    <div className="flex-grow">
+                      <div className={`text-sm font-medium ${reminder.completed ? 'text-slate-400 line-through' : 'text-slate-800 dark:text-slate-200'}`}>{reminder.text}</div>
+                    </div>
+                    <input
+                      type="date"
+                      value={reminder.date}
+                      onChange={(e) => updateReminderDate(reminder.id, e.target.value)}
+                      className="text-sm bg-transparent border-none focus:ring-0 text-slate-500 dark:text-slate-400"
+                    />
+                    <button type="button" onClick={() => deleteReminder(reminder.id)} className="text-slate-400 hover:text-red-500 transition-colors">
+                      <MaterialIcon name="delete" className="text-lg" />
+                    </button>
+                  </div>
+                ))}
+                <button type="button" onClick={addReminder} className="flex items-center gap-2 text-sm font-medium text-red-600 hover:text-red-700 transition-colors">
+                  <MaterialIcon name="add_alert" className="text-lg" />
+                  Add Reminder
+                </button>
+              </div>
+            </FieldSet>
             <FieldSet legend="General Notes">
-              <TextArea name="notes" label="Additional notes about this application..." value={appData.notes} onChange={handleChange} rows={4} className="md:col-span-2" />
+              <MarkdownEditor
+                label="Additional notes about this application..."
+                value={appData.notes}
+                onChange={val => setAppData(prev => ({ ...prev, notes: val }))}
+                className="md:col-span-2"
+              />
             </FieldSet>
           </div>
           <div className="flex items-center justify-end p-4 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-200 dark:border-slate-700 rounded-b-3xl space-x-3">
