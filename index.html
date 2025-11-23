@@ -1,78 +1,110 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-    <meta charset="UTF-8" />
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.tailwindcss.com https://aistudiocdn.com; style-src 'self' https://fonts.googleapis.com 'unsafe-inline'; font-src 'self' https://fonts.gstatic.com; connect-src 'self' http://localhost:3000 https://*.googleapis.com; img-src 'self' data:; object-src 'none';">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>AcademiaTrack - Application Dashboard</title>
-    <link rel="icon" href="AcademiaTrack.png">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
-    <style>
-      body { 
-        font-family: 'Inter', sans-serif; 
-        background-color: #f8fafc; /* slate-50 */
-        background-image: 
-          radial-gradient(ellipse at 25% 25%, rgba(239, 68, 68, 0.05), transparent 60%),
-          radial-gradient(circle at 1px 1px, #e2e8f0 1px, transparent 0); /* slate-200 dots */
-        background-size: 100% 100%, 2rem 2rem;
-        transition: background-color 0.3s;
+  <meta charset="UTF-8" />
+  <meta http-equiv="Content-Security-Policy"
+    content="default-src 'self'; script-src 'self' https://cdn.tailwindcss.com https://aistudiocdn.com; style-src 'self' https://fonts.googleapis.com 'unsafe-inline'; font-src 'self' https://fonts.gstatic.com; connect-src 'self' http://localhost:3000 https://*.googleapis.com; img-src 'self' data:; object-src 'none';">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AcademiaTrack - Application Dashboard</title>
+  <link rel="icon" href="AcademiaTrack.png">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet"
+    href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #f8fafc;
+      /* slate-50 */
+      background-image:
+        radial-gradient(ellipse at 25% 25%, rgba(239, 68, 68, 0.05), transparent 60%),
+        radial-gradient(circle at 1px 1px, #e2e8f0 1px, transparent 0);
+      /* slate-200 dots */
+      background-size: 100% 100%, 2rem 2rem;
+      transition: background-color 0.3s;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      body {
+        background-color: #0f172a;
+        /* slate-900 */
+        background-image:
+          radial-gradient(ellipse at 25% 25%, rgba(239, 68, 68, 0.1), transparent 70%),
+          radial-gradient(circle at 1px 1px, #1e293b 1px, transparent 0);
+        /* slate-800 dots */
       }
-      @media (prefers-color-scheme: dark) {
-        body {
-          background-color: #0f172a; /* slate-900 */
-          background-image: 
-            radial-gradient(ellipse at 25% 25%, rgba(239, 68, 68, 0.1), transparent 70%),
-            radial-gradient(circle at 1px 1px, #1e293b 1px, transparent 0); /* slate-800 dots */
-        }
-      }
-      .material-symbols-outlined { 
-        font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; 
-        vertical-align: bottom;
-      }
-      /* Custom focus ring for the new theme */
-      *:focus-visible {
-        outline: 2px solid #ef4444 !important; /* red-500 */
-        outline-offset: 2px !important;
-      }
-      .liquid-glass-dropdown {
-        position: relative;
-        background: rgba(255, 255, 255, 0.1);
-        backdrop-filter: blur(10px);
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        border-radius: 9999px;
-        color: white;
-        overflow: hidden;
-        transition: all 0.3s ease;
-      }
-      .liquid-glass-dropdown::before {
-        content: '';
-        position: absolute;
-        top: -50%;
-        left: -50%;
-        width: 200%;
-        height: 200%;
-        background: conic-gradient(
-          transparent,
+    }
+
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      vertical-align: bottom;
+    }
+
+    /* Custom focus ring for the new theme */
+    *:focus-visible {
+      outline: 2px solid #ef4444 !important;
+      /* red-500 */
+      outline-offset: 2px !important;
+    }
+
+    .liquid-glass-dropdown {
+      position: relative;
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 9999px;
+      color: white;
+      overflow: hidden;
+      transition: all 0.3s ease;
+    }
+
+    .liquid-glass-dropdown::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: conic-gradient(transparent,
           rgba(255, 255, 255, 0.2),
-          transparent 30%
-        );
-        animation: rotate 4s linear infinite;
+          transparent 30%);
+      animation: rotate 4s linear infinite;
+    }
+
+    .liquid-glass-dropdown:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 15px rgba(255, 255, 255, 0.3);
+    }
+
+    @keyframes rotate {
+      100% {
+        transform: rotate(360deg);
       }
-      .liquid-glass-dropdown:hover {
-        transform: scale(1.05);
-        box-shadow: 0 0 15px rgba(255, 255, 255, 0.3);
-      }
-      @keyframes rotate {
-        100% {
-          transform: rotate(360deg);
-        }
-      }
-    </style>
-<script type="importmap">
+    }
+
+    /* Custom Scrollbar */
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background-color: rgba(156, 163, 175, 0.5);
+      /* slate-400/50 */
+      border-radius: 20px;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+      background-color: rgba(156, 163, 175, 0.8);
+    }
+  </style>
+  <script type="importmap">
 {
   "imports": {
     "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
@@ -84,8 +116,10 @@
 </script>
 
 </head>
+
 <body class="transition-colors duration-300">
-    <div id="root"></div>
-    <script type="module" src="/index.tsx"></script>
+  <div id="root"></div>
+  <script type="module" src="/index.tsx"></script>
 </body>
+
 </html>

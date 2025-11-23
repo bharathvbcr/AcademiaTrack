@@ -1,5 +1,3 @@
-// Fix: Removed a self-import of `ApplicationStatus` which was causing a conflict with its own declaration.
-
 export enum ProgramType {
   Bachelors = "Bachelor's",
   Masters = "Master's",
@@ -33,6 +31,7 @@ export enum TestStatus {
   NotApplicable = 'Not Applicable',
   Waived = 'Waived',
   Required = 'Required',
+  Taken = 'Taken',
   Sent = 'Sent',
 }
 
@@ -54,8 +53,16 @@ export interface FacultyContact {
   email: string;
   researchArea: string;
   contactStatus: FacultyContactStatus;
-  contactDate: string | null;
-  interviewDate?: string | null;
+  contactDate: string | null; // ISO Date string
+  interviewDate: string | null; // ISO Date string
+}
+
+export enum DocumentStatus {
+  NotStarted = 'Not Started',
+  Drafting = 'Drafting',
+  Reviewing = 'Reviewing',
+  ReadyToSubmit = 'Ready to Submit',
+  Submitted = 'Submitted',
 }
 
 export interface Application {
@@ -69,10 +76,10 @@ export interface Application {
   isR1: boolean;
   universityRanking: string;
   departmentRanking: string;
-  
+
   status: ApplicationStatus;
   deadline: string | null;
-  preferredDeadline?: string;
+  preferredDeadline: string | null;
   admissionTerm: 'Spring' | 'Fall' | 'Summer' | null;
   admissionYear: string | null;
   applicationFee: number;
@@ -80,15 +87,15 @@ export interface Application {
   portalLink: string;
 
   documents: {
-    cv: { required: boolean; submitted: string | null };
-    statementOfPurpose: { required: boolean; submitted: string | null };
-    transcripts: { required: boolean; submitted: string | null };
-    lor1: { required: boolean; submitted: string | null };
-    lor2: { required: boolean; submitted: string | null };
-    lor3: { required: boolean; submitted: string | null };
-    writingSample: { required: boolean; submitted: string | null };
+    cv: { required: boolean; status: DocumentStatus; submitted: string | null };
+    statementOfPurpose: { required: boolean; status: DocumentStatus; submitted: string | null };
+    transcripts: { required: boolean; status: DocumentStatus; submitted: string | null };
+    lor1: { required: boolean; status: DocumentStatus; submitted: string | null };
+    lor2: { required: boolean; status: DocumentStatus; submitted: string | null };
+    lor3: { required: boolean; status: DocumentStatus; submitted: string | null };
+    writingSample: { required: boolean; status: DocumentStatus; submitted: string | null };
   };
-  
+
   gre: {
     status: TestStatus;
   };
@@ -102,4 +109,16 @@ export interface Application {
   preferredFaculty: string;
 
   notes: string;
+}
+
+export interface ElectronAPI {
+  loadData: () => Promise<Application[] | null>;
+  saveData: (data: Application[]) => Promise<boolean>;
+  showNotification: (title: string, body: string) => Promise<void>;
+}
+
+declare global {
+  interface Window {
+    electron: ElectronAPI;
+  }
 }
