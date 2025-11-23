@@ -15,6 +15,7 @@ const ApplicationModal = lazy(() => import('./components/ApplicationModal'));
 const FacultyContactModal = lazy(() => import('./components/FacultyContactModal'));
 const KanbanBoard = lazy(() => import('./components/KanbanBoard'));
 const CalendarView = lazy(() => import('./components/CalendarView'));
+const BudgetView = lazy(() => import('./components/BudgetView'));
 
 const App: React.FC = () => {
   const {
@@ -45,7 +46,7 @@ const App: React.FC = () => {
   } = useSortAndFilter(applications);
 
   const [defaultProgramType, setDefaultProgramType] = useLocalStorage<ProgramType>('default-program-type', ProgramType.PhD);
-  const [viewMode, setViewMode] = useLocalStorage<'list' | 'kanban' | 'calendar'>('view-mode', 'list');
+  const [viewMode, setViewMode] = useLocalStorage<'list' | 'kanban' | 'calendar' | 'budget'>('view-mode', 'list');
 
   const handleSave = (app: any) => {
     if (editingApplication) {
@@ -158,6 +159,10 @@ const App: React.FC = () => {
                 onDragEnd={handleDragEnd}
                 onEdit={openModal}
               />
+            </Suspense>
+          ) : viewMode === 'budget' ? (
+            <Suspense fallback={<div>Loading Budget...</div>}>
+              <BudgetView applications={filteredAndSortedApplications} />
             </Suspense>
           ) : (
             <Suspense fallback={<div>Loading Calendar...</div>}>

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Application, FacultyContact, ApplicationStatus, ApplicationFeeWaiverStatus, TestStatus, ProgramType } from '../types';
+import { Application, FacultyContact, ApplicationStatus, ApplicationFeeWaiverStatus, TestStatus, ProgramType, DocumentStatus } from '../types';
 
 export const useApplications = () => {
   const [applications, setApplications] = useState<Application[]>([]);
@@ -90,18 +90,19 @@ export const useApplications = () => {
         feeWaiverStatus: ApplicationFeeWaiverStatus.NotRequested,
         portalLink: '',
         documents: {
-          cv: { required: true, submitted: null },
-          statementOfPurpose: { required: true, submitted: null },
-          transcripts: { required: true, submitted: null },
-          lor1: { required: false, submitted: null },
-          lor2: { required: false, submitted: null },
-          lor3: { required: false, submitted: null },
-          writingSample: { required: false, submitted: null },
+          cv: { required: true, status: DocumentStatus.NotStarted, submitted: null },
+          statementOfPurpose: { required: true, status: DocumentStatus.NotStarted, submitted: null },
+          transcripts: { required: true, status: DocumentStatus.NotStarted, submitted: null },
+          lor1: { required: false, status: DocumentStatus.NotStarted, submitted: null },
+          lor2: { required: false, status: DocumentStatus.NotStarted, submitted: null },
+          lor3: { required: false, status: DocumentStatus.NotStarted, submitted: null },
+          writingSample: { required: false, status: DocumentStatus.NotStarted, submitted: null },
         },
         gre: { status: TestStatus.NotApplicable },
         englishTest: { type: 'Not Required', status: TestStatus.NotApplicable },
         preferredFaculty: '',
         notes: '',
+        reminders: [],
         customProgramType: '',
       };
       setApplications(apps => [...apps, newApplication]);

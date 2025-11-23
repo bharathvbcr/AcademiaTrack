@@ -61,11 +61,15 @@ const FacultyContactModal: React.FC<FacultyContactModalProps> = ({ isOpen, onClo
       researchArea,
       contactStatus,
       contactDate,
+      interviewDate: null,
+      interviewNotes: '',
+      questions: '',
+      answers: '',
     };
     onSave(newContact, universityName, isNewUniversity);
     handleClose();
   };
-  
+
   const handleClose = () => {
     setName('');
     setWebsite('');
@@ -90,24 +94,24 @@ const FacultyContactModal: React.FC<FacultyContactModalProps> = ({ isOpen, onClo
               <label htmlFor="facultyName" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">Faculty Name</label>
               <input id="facultyName" type="text" placeholder="e.g. Dr. Alan Turing" value={name} onChange={(e) => setName(e.target.value)} className={baseInputClasses} required />
             </div>
-            
+
             <div className="relative" ref={suggestionsRef}>
               <label htmlFor="universityName" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">University</label>
-              <input 
-                id="universityName" 
-                type="text" 
+              <input
+                id="universityName"
+                type="text"
                 placeholder="Type to search or add new..."
-                value={universityName} 
-                onChange={(e) => setUniversityName(e.target.value)} 
+                value={universityName}
+                onChange={(e) => setUniversityName(e.target.value)}
                 onFocus={() => setShowSuggestions(true)}
-                className={baseInputClasses} 
-                required 
+                className={baseInputClasses}
+                required
               />
               {showSuggestions && (
                 <div className="absolute z-10 w-full mt-1 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg shadow-lg max-h-48 overflow-y-auto">
                   {filteredUniversities.map(uni => (
-                    <div 
-                      key={uni} 
+                    <div
+                      key={uni}
                       className="px-4 py-2 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800"
                       onClick={() => {
                         setUniversityName(uni);
