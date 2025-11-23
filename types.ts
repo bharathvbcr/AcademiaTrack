@@ -87,6 +87,14 @@ export interface LocationDetails {
     dstActive?: boolean;
 }
 
+export interface UniversityResult {
+    name: string;
+    web_pages: string[];
+    country: string;
+    'state-province': string | null;
+    domains: string[];
+}
+
 export interface Application {
     id: string;
     universityName: string;

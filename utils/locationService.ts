@@ -18,6 +18,7 @@ interface NominatimResult {
         city_district?: string;
         municipality?: string;
         county?: string;
+        state_district?: string;
         state?: string;
         region?: string;
         country?: string;
@@ -42,7 +43,11 @@ export const searchLocation = async (query: string): Promise<LocationDetails[]> 
             limit: '5',
         });
 
-        const response = await fetch(`${NOMINATIM_BASE_URL}?${params.toString()}`);
+        const response = await fetch(`${NOMINATIM_BASE_URL}?${params.toString()}`, {
+            headers: {
+                'User-Agent': 'AcademiaTrack/1.0 (mailto:contact@example.com)' // Replace with real contact if available, or just app name
+            }
+        });
         if (!response.ok) {
             throw new Error('Failed to fetch location suggestions');
         }
@@ -50,20 +55,22 @@ export const searchLocation = async (query: string): Promise<LocationDetails[]> 
         const results: NominatimResult[] = await response.json();
 
         // Map to LocationDetails (without timezone initially)
-        return results.map(result => {
-            const city = result.address.city || 
-                         result.address.town || 
-                         result.address.village || 
-                         result.address.hamlet || 
-                         result.address.suburb || 
-                         result.address.neighbourhood || 
-                         result.address.municipality ||
-                         result.address.county || 
-                         '';
-                         
+        return results.map((result): LocationDetails | null => {
+            const city = result.address.city ||
+                result.address.town ||
+                result.address.village ||
+                result.address.hamlet ||
+                result.address.suburb ||
+                result.address.neighbourhood ||
+                result.address.city_district ||
+                result.address.municipality ||
+                result.address.county ||
+                result.address.state_district ||
+                '';
+
             const state = result.address.state || result.address.region || '';
             const country = result.address.country || '';
-            
+
             // Skip if we can't find a meaningful name
             if (!city && !state && !country) return null;
 

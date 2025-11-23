@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.1.1] - 2025-11-23
+
+### Fixed
+- **Location Search:** Fixed an issue where location suggestions were not appearing by adding a required `User-Agent` header to OpenStreetMap API requests.
+- **UI:** Fixed suggestion dropdown visibility logic to ensure it appears reliably while typing.
+- **Search Logic:** Prevented unnecessary API calls and search loops when a location is selected.
+
 ## [3.1.0] - 2025-11-23
 
 ### Added
