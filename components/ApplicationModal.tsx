@@ -1,16 +1,15 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Application, ApplicationStatus, ApplicationFeeWaiverStatus, FacultyContact, TestStatus, FacultyContactStatus, ProgramType, DocumentStatus, Reminder, LocationDetails } from '../types';
-import { STATUS_OPTIONS, FEE_WAIVER_STATUS_OPTIONS, TEST_STATUS_OPTIONS, FACULTY_CONTACT_STATUS_OPTIONS, DOCUMENT_LABELS, FACULTY_CONTACT_STATUS_COLORS, PROGRAM_TYPE_OPTIONS, ADMISSION_TERM_OPTIONS, POPULAR_UNIVERSITIES, DOCUMENT_STATUS_OPTIONS, DOCUMENT_STATUS_COLORS } from '../constants';
-import DateInput from './DateInput';
-import MarkdownEditor from './MarkdownEditor';
+import { Application, ApplicationStatus, ApplicationFeeWaiverStatus, FacultyContact, TestStatus, FacultyContactStatus, ProgramType, DocumentStatus, Reminder, LocationDetails, UniversityResult } from '../types';
 import { searchLocation, getLocationTimezone } from '../utils/locationService';
 import { useDebounce } from '../hooks/useDebounce';
-
-interface UniversityResult {
-  name: string;
-  web_pages: string[];
-  country: string;
-}
+import { MaterialIcon } from './ApplicationFormUI';
+import ProgramDetailsSection from './ProgramDetailsSection';
+import RankingsStatusSection from './RankingsStatusSection';
+import SubmissionDetailsSection from './SubmissionDetailsSection';
+import DocumentsSection from './DocumentsSection';
+import FacultyContactsSection from './FacultyContactsSection';
+import RemindersSection from './RemindersSection';
+import GeneralNotesSection from './GeneralNotesSection';
 
 interface ApplicationModalProps {
   isOpen: boolean;
@@ -55,10 +54,6 @@ const emptyApplication: Omit<Application, 'id'> = {
   reminders: [],
 };
 
-const MaterialIcon: React.FC<{ name: string; className?: string }> = ({ name, className }) => (
-  <span className={`material-symbols-outlined ${className}`}>{name}</span>
-);
-
 const ApplicationModal: React.FC<ApplicationModalProps> = ({ isOpen, onClose, onSave, applicationToEdit, defaultProgramType }) => {
   const [appData, setAppData] = useState<Omit<Application, 'id'>>({ ...emptyApplication });
   const [isFacultyOpen, setIsFacultyOpen] = useState<boolean[]>([]);
@@ -78,38 +73,16 @@ const ApplicationModal: React.FC<ApplicationModalProps> = ({ isOpen, onClose, on
             setShowLocationSuggestions(false);
             return;
         }
-        // Only search if the user is actively typing/searching and it's not just setting the value from selection
-        // However, distinguishing selection vs typing is hard with just debounced value.
-        // We can rely on the fact that selecting hides the dropdown.
-        // But if I select "Boston, MA", this effect runs again.
-        // We can skip if the value exactly matches a selected one? No, the user might edit it.
-        
-        // Better approach: The `handleLocationChange` updates `appData.location`.
-        // `debouncedLocation` updates later.
-        // We trigger search here.
+
+        // Don't search if we have a valid selected location that matches the text (roughly)
+        // Actually, since we clear locationDetails on type, if it exists, it MUST be a selection.
+        if (appData.locationDetails) {
+            return;
+        }
         
         try {
-            // Optimization: Don't search if it matches the currently selected location to avoid re-opening
-            if (appData.locationDetails && appData.location.startsWith(`${appData.locationDetails.city}`)) {
-                 // This is tricky. Let's just search. The dropdown only shows on focus/typing.
-                 // But we need to manage `showLocationSuggestions` carefully.
-            }
-            
-            // Only search if the input is focused? We don't have that ref handy easily.
-            // Let's just search and update suggestions. Visibility is controlled by onFocus/onBlur.
-             const results = await searchLocation(debouncedLocation);
-             setLocationSuggestions(results);
-             // Don't auto-show here, let onFocus/onChange handle it? 
-             // No, if I type, I want it to show.
-             if (document.activeElement?.id === 'location') {
-                 setShowLocationSuggestions(true);
-             }
-        } catch (error) {
-            console.error('Error searching locations:', error);
-        }
-      };
 
-      search();
+    search();
   }, [debouncedLocation]);
 
   useEffect(() => {
@@ -235,10 +208,6 @@ const ApplicationModal: React.FC<ApplicationModalProps> = ({ isOpen, onClose, on
     }));
   }, []);
 
-  const handleTestChange = useCallback((test: 'gre' | 'englishTest', field: string, value: any) => {
-    setAppData(prev => ({ ...prev, [test]: { ...prev[test], [field]: value } }));
-  }, []);
-
   const handleFacultyChange = useCallback((index: number, e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     const updatedFaculty = [...appData.facultyContacts];
@@ -272,21 +241,24 @@ const ApplicationModal: React.FC<ApplicationModalProps> = ({ isOpen, onClose, on
   }, []);
 
   const handleLocationSelect = async (loc: LocationDetails) => {
-      // Fetch timezone info
-      const timezoneInfo = await getLocationTimezone(loc.latitude, loc.longitude);
-      const fullLocationDetails = { ...loc, ...timezoneInfo };
-      
-      setAppData(prev => ({
-          ...prev,
-          location: `${loc.city}, ${loc.state ? loc.state + ', ' : ''}${loc.country}`,
-          locationDetails: fullLocationDetails
-      }));
-      setShowLocationSuggestions(false);
+    const timezoneInfo = await getLocationTimezone(loc.latitude, loc.longitude);
+    const fullLocationDetails = { ...loc, ...timezoneInfo };
+
+    setAppData(prev => ({
+      ...prev,
+      location: [loc.city, loc.state, loc.country].filter((part, index, self) => part && self.indexOf(part) === index).join(', '),
+      locationDetails: fullLocationDetails
+    }));
+    setShowLocationSuggestions(false);
   };
 
   const handleLocationChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       const value = e.target.value;
-      setAppData(prev => ({ ...prev, location: value }));
+      setAppData(prev => ({
+          ...prev,
+          location: value,
+          locationDetails: undefined // Clear details when user types manually
+      }));
       // Debounce effect will handle search
       if (value.length >= 3) {
           setShowLocationSuggestions(true);
@@ -317,14 +289,39 @@ const ApplicationModal: React.FC<ApplicationModalProps> = ({ isOpen, onClose, on
     }
   }, [allUniversities]);
 
-  const handleUniversitySelect = (uni: UniversityResult) => {
+  const handleUniversitySelect = async (uni: UniversityResult) => {
     setAppData(prev => ({
       ...prev,
       universityName: uni.name,
-      portalLink: uni.web_pages[0] || prev.portalLink,
-      location: uni.country !== 'United States' ? uni.country : prev.location // Simple default
+      location: [uni['state-province'], uni.country].filter(Boolean).join(', ')
     }));
     setShowSuggestions(false);
+
+    try {
+      const parts = [uni.name, uni['state-province'], uni.country].filter(Boolean);
+      let query = parts.join(', ');
+      let locations = await searchLocation(query);
+
+      if (!locations || locations.length === 0) {
+        // Fallback 1: Try without state if it was included
+        if (uni['state-province']) {
+          query = `${uni.name}, ${uni.country}`;
+          locations = await searchLocation(query);
+        }
+      }
+
+      if (!locations || locations.length === 0) {
+        // Fallback 2: Try just the university name
+        locations = await searchLocation(uni.name);
+      }
+
+      if (locations && locations.length > 0) {
+        const bestMatch = locations[0];
+        handleLocationSelect(bestMatch);
+      }
+    } catch (error) {
+      console.error("Failed to auto-populate location:", error);
+    }
   };
 
   const handleUniversityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -388,328 +385,66 @@ const ApplicationModal: React.FC<ApplicationModalProps> = ({ isOpen, onClose, on
         </div>
         <form onSubmit={handleSubmit}>
           <div className="p-6 max-h-[70vh] overflow-y-auto space-y-8">
-            <FieldSet legend="Program Details">
-              <div className="relative">
-                <Input
-                  label="University Name"
-                  name="universityName"
-                  value={appData.universityName}
-                  onChange={handleUniversityChange}
-                  required
-                  autoComplete="off"
-                  onFocus={() => appData.universityName.length >= 3 && setShowSuggestions(true)}
-                  onBlur={() => setTimeout(() => setShowSuggestions(false), 200)} // Delay to allow click
-                />
-                {showSuggestions && universitySuggestions.length > 0 && (
-                  <div className="absolute z-10 w-full mt-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-                    {universitySuggestions.map((uni, index) => (
-                      <button
-                        key={index}
-                        type="button"
-                        onClick={() => handleUniversitySelect(uni)}
-                        className="w-full text-left px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
-                      >
-                        <div className="font-medium">{uni.name}</div>
-                        <div className="text-xs text-slate-500">{uni.country}</div>
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-              <Input label="Department / School" name="department" value={appData.department} onChange={handleChange} />
-              <Input label="Program Name" name="programName" value={appData.programName} onChange={handleChange} required />
-              <Select label="Program Type" name="programType" value={appData.programType} onChange={handleChange}>
-                {PROGRAM_TYPE_OPTIONS.map(type => <option key={type} value={type}>{type}</option>)}
-              </Select>
-              {appData.programType === ProgramType.Other && (
-                <Input
-                  label="Custom Program Type"
-                  name="customProgramType"
-                  value={appData.customProgramType || ''}
-                  onChange={handleChange}
-                  required
-                />
-              )}
-              <DateInput label="Deadline" name="deadline" value={appData.deadline || ''} onChange={handleChange} />
-              <DateInput label="Early/Preferred Deadline" name="preferredDeadline" value={appData.preferredDeadline || ''} onChange={handleChange} />
-              <Select label="Admission Term" name="admissionTerm" value={appData.admissionTerm || ''} onChange={handleChange}>
-                <option value="">Select Term</option>
-                {ADMISSION_TERM_OPTIONS.map(term => <option key={term} value={term}>{term}</option>)}
-              </Select>
-              <Select label="Admission Year" name="admissionYear" value={appData.admissionYear || ''} onChange={handleChange}>
-                <option value="">Select Year</option>
-                {Array.from({ length: 8 }, (_, i) => new Date().getFullYear() - 2 + i).map(year => <option key={year} value={year}>{year}</option>)}
-              </Select>
-              <div className="relative md:col-span-2">
-                  <Input 
-                      label="Location (City, State)" 
-                      name="location" 
-                      value={appData.location} 
-                      onChange={handleLocationChange} 
-                      autoComplete="off"
-                      onFocus={() => appData.location.length >= 3 && setShowLocationSuggestions(true)}
-                      onBlur={() => setTimeout(() => setShowLocationSuggestions(false), 200)}
-                  />
-                  {showLocationSuggestions && locationSuggestions.length > 0 && (
-                      <div className="absolute z-10 w-full mt-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-                          {locationSuggestions.map((loc, index) => (
-                              <button
-                                  key={index}
-                                  type="button"
-                                  onClick={() => handleLocationSelect(loc)}
-                                  className="w-full text-left px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
-                              >
-                                  <div className="font-medium">{loc.city}</div>
-                                  <div className="text-xs text-slate-500">
-                                      {[loc.state, loc.country].filter(Boolean).join(', ')}
-                                  </div>
-                              </button>
-                          ))}
-                      </div>
-                  )}
-              </div>
-            </FieldSet>
-            <FieldSet legend="Rankings & Status">
-              <Input label="University Ranking" name="universityRanking" value={appData.universityRanking} onChange={handleChange} />
-              <Input label="Department Ranking" name="departmentRanking" value={appData.departmentRanking} onChange={handleChange} />
-              <div className="flex items-center mt-2 md:col-span-2">
-                <input id="isR1" name="isR1" type="checkbox" checked={appData.isR1} onChange={handleCheckboxChange} className="h-4 w-4 rounded border-slate-400 text-red-600 focus:ring-red-500" />
-                <label htmlFor="isR1" className="ml-2 block text-sm text-slate-800 dark:text-slate-200">R1 / Tier 1 University</label>
-              </div>
-            </FieldSet>
-            <FieldSet legend="Submission Details">
-              <Select label="Application Status" name="status" value={appData.status} onChange={handleChange}>
-                {STATUS_OPTIONS.map(s => <option key={s} value={s}>{s}</option>)}
-              </Select>
-              <Input label="Submission Portal Link" name="portalLink" type="url" value={appData.portalLink} onChange={handleChange} />
-              <Input label="Application Fee ($)" name="applicationFee" type="number" value={appData.applicationFee} onChange={handleNumericChange} min="0" />
-              <Select label="Fee Waiver Status" name="feeWaiverStatus" value={appData.feeWaiverStatus} onChange={handleChange}>
-                {FEE_WAIVER_STATUS_OPTIONS.map(s => <option key={s} value={s}>{s}</option>)}
-              </Select>
-            </FieldSet>
-            <FieldSet legend="Required Documents">
-              <div className="md:col-span-2 space-y-3">
-                {Object.keys(appData.documents).map(key => {
-                  const docKey = key as keyof typeof appData.documents;
-                  const doc = appData.documents[docKey];
-
-                  return (
-                    <div key={key} className="grid grid-cols-1 sm:grid-cols-[1.5fr,1fr,auto] gap-3 items-center p-3 bg-slate-100 dark:bg-slate-700/50 rounded-lg">
-                      <div className="flex items-center gap-3">
-                        <input
-                          id={`${key}-required`}
-                          type="checkbox"
-                          checked={doc.required}
-                          onChange={e => handleDocumentChange(docKey, 'required', e.target.checked)}
-                          className="h-4 w-4 rounded border-slate-400 text-red-600 focus:ring-red-500"
-                        />
-                        <label htmlFor={`${key}-status`} className={`font-medium ${!doc.required ? 'text-slate-400 dark:text-slate-500' : 'text-slate-800 dark:text-slate-200'}`}>
-                          {DOCUMENT_LABELS[docKey]}
-                        </label>
-                      </div>
-
-                      <select
-                        id={`${key}-status`}
-                        value={doc.status}
-                        onChange={e => handleDocumentChange(docKey, 'status', e.target.value)}
-                        disabled={!doc.required}
-                        className={`w-full px-2 py-1.5 text-xs font-medium rounded-md border border-slate-300 dark:border-slate-600 shadow-sm focus:outline-none focus:ring-1 focus:ring-red-500 focus:border-red-500 transition ${DOCUMENT_STATUS_COLORS[doc.status]}`}
-                        aria-label={`${DOCUMENT_LABELS[docKey]} status`}
-                      >
-                        {DOCUMENT_STATUS_OPTIONS.map(status => (
-                          <option key={status} value={status} className="bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200">
-                            {status}
-                          </option>
-                        ))}
-                      </select>
-
-                      <input
-                        type="date"
-                        value={doc.submitted || ''}
-                        onChange={e => handleDocumentChange(docKey, 'submitted', e.target.value)}
-                        disabled={!doc.required || doc.status !== DocumentStatus.Submitted}
-                        className="w-full sm:w-36 px-2 py-1 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-red-500 focus:border-red-500 transition text-sm [color-scheme:light_dark] disabled:bg-slate-200 dark:disabled:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed"
-                        aria-label={`${DOCUMENT_LABELS[docKey]} submission date`}
-                        title={doc.status !== DocumentStatus.Submitted ? "Select 'Submitted' status to set date" : "Submission Date"}
-                      />
-
-                      <div className="flex items-center gap-1">
-                        {doc.filePath ? (
-                          <>
-                            <button
-                              type="button"
-                              onClick={() => handleOpenFile(doc.filePath!)}
-                              className="p-1.5 text-slate-500 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-full transition-colors"
-                              title={`Open ${doc.filePath}`}
-                            >
-                              <MaterialIcon name="visibility" className="text-lg" />
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => handleRemoveFile(docKey)}
-                              className="p-1.5 text-slate-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-full transition-colors"
-                              title="Remove attachment"
-                            >
-                              <MaterialIcon name="close" className="text-lg" />
-                            </button>
-                          </>
-                        ) : (
-                          <button
-                            type="button"
-                            onClick={() => handleAttachFile(docKey)}
-                            className="p-1.5 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-full transition-colors"
-                            title="Attach file"
-                          >
-                            <MaterialIcon name="attach_file" className="text-lg" />
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </FieldSet>
-            <FieldSet legend="Faculty Contacts">
-              <div className="md:col-span-2 space-y-2">
-                {appData.facultyContacts.map((faculty, index) => (
-                  <div key={faculty.id} className="bg-slate-100 dark:bg-slate-700/50 rounded-lg border border-slate-200 dark:border-slate-700">
-                    <div className="flex items-center p-2">
-                      <button type="button" onClick={() => setIsFacultyOpen(p => p.map((s, i) => i === index ? !s : s))} className="flex-grow flex items-center gap-2 text-left" aria-expanded={isFacultyOpen[index]}>
-                        <MaterialIcon name="expand_more" className={`transition-transform transform ${isFacultyOpen[index] ? 'rotate-180' : ''}`} />
-                        <span className="font-medium text-sm text-slate-800 dark:text-slate-200 truncate">{faculty.name || `Faculty Contact #${index + 1}`}</span>
-                      </button>
-                      <span className={`px-2 py-0.5 text-xs font-semibold rounded-full border shrink-0 ${FACULTY_CONTACT_STATUS_COLORS[faculty.contactStatus]}`}>{faculty.contactStatus}</span>
-                      <button type="button" onClick={() => removeFacultyContact(index)} className="ml-2 p-1.5 rounded-full text-slate-500 hover:text-red-500 hover:bg-red-100 dark:hover:bg-red-900/50 transition-colors" aria-label={`Remove contact`}>
-                        <MaterialIcon name="delete" className="text-base" />
-                      </button>
-                    </div>
-                    {isFacultyOpen[index] && (
-                      <div className="p-4 border-t border-slate-200 dark:border-slate-600 space-y-4">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <Input label="Name" name="name" value={faculty.name} onChange={e => handleFacultyChange(index, e)} />
-                          <Input label="Email" name="email" type="email" value={faculty.email} onChange={e => handleFacultyChange(index, e)} />
-                          <Input label="Website URL" name="website" type="url" value={faculty.website} onChange={e => handleFacultyChange(index, e)} className="md:col-span-2" />
-                        </div>
-                        <TextArea label="Research Area" name="researchArea" value={faculty.researchArea} onChange={e => handleFacultyChange(index, e)} rows={2} />
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-slate-200 dark:border-slate-600 pt-4">
-                          <Select label="Contact Status" name="contactStatus" value={faculty.contactStatus} onChange={e => handleFacultyChange(index, e)}>
-                            {FACULTY_CONTACT_STATUS_OPTIONS.map(s => <option key={s} value={s}>{s}</option>)}
-                          </Select>
-                          <Input label="Contact Date" name="contactDate" type="date" value={faculty.contactDate || ''} onChange={e => handleFacultyChange(index, e)} disabled={faculty.contactStatus === FacultyContactStatus.NotContacted} />
-                          {faculty.contactStatus === FacultyContactStatus.MeetingScheduled && (
-                            <Input label="Interview Date" name="interviewDate" type="date" value={faculty.interviewDate || ''} onChange={e => handleFacultyChange(index, e)} className="md:col-span-2" />
-                          )}
-                        </div>
-
-                        <div className="pt-4 border-t border-slate-200 dark:border-slate-600">
-                          <h4 className="text-sm font-semibold text-slate-900 dark:text-white mb-3">Interview Preparation</h4>
-                          <div className="space-y-4">
-                            <MarkdownEditor
-                              label="Interview Notes"
-                              value={faculty.interviewNotes || ''}
-                              onChange={val => handleFacultyMarkdownChange(index, 'interviewNotes', val)}
-                            />
-                            <MarkdownEditor
-                              label="Potential Questions"
-                              value={faculty.questions || ''}
-                              onChange={val => handleFacultyMarkdownChange(index, 'questions', val)}
-                            />
-                            <MarkdownEditor
-                              label="Your Answers"
-                              value={faculty.answers || ''}
-                              onChange={val => handleFacultyMarkdownChange(index, 'answers', val)}
-                            />
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                ))}
-                {appData.facultyContacts.length < 3 && (
-                  <button type="button" onClick={addFacultyContact} className="w-full flex items-center justify-center gap-2 px-3 py-2 text-sm font-semibold text-slate-600 dark:text-slate-300 border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 hover:border-slate-400 dark:hover:border-slate-500 transition-colors">
-                    <MaterialIcon name="add" /><span>Add Faculty Contact</span>
-                  </button>
-                )}
-              </div>
-            </FieldSet>
-            <FieldSet legend="Reminders">
-              <div className="md:col-span-2 space-y-3">
-                {(appData.reminders || []).map(reminder => (
-                  <div key={reminder.id} className="flex items-center gap-3 p-3 bg-slate-100 dark:bg-slate-700/50 rounded-lg">
-                    <input
-                      type="checkbox"
-                      checked={reminder.completed}
-                      onChange={() => toggleReminder(reminder.id)}
-                      className="h-5 w-5 rounded border-slate-400 text-red-600 focus:ring-red-500"
-                    />
-                    <div className="flex-grow">
-                      <div className={`text-sm font-medium ${reminder.completed ? 'text-slate-400 line-through' : 'text-slate-800 dark:text-slate-200'}`}>{reminder.text}</div>
-                    </div>
-                    <input
-                      type="date"
-                      value={reminder.date}
-                      onChange={(e) => updateReminderDate(reminder.id, e.target.value)}
-                      className="text-sm bg-transparent border-none focus:ring-0 text-slate-500 dark:text-slate-400"
-                    />
-                    <button type="button" onClick={() => deleteReminder(reminder.id)} className="text-slate-400 hover:text-red-500 transition-colors">
-                      <MaterialIcon name="delete" className="text-lg" />
-                    </button>
-                  </div>
-                ))}
-                <button type="button" onClick={addReminder} className="flex items-center gap-2 text-sm font-medium text-red-600 hover:text-red-700 transition-colors">
-                  <MaterialIcon name="add_alert" className="text-lg" />
-                  Add Reminder
-                </button>
-              </div>
-            </FieldSet>
-            <FieldSet legend="General Notes">
-              <MarkdownEditor
-                label="Additional notes about this application..."
-                value={appData.notes}
-                onChange={val => setAppData(prev => ({ ...prev, notes: val }))}
-                className="md:col-span-2"
-              />
-            </FieldSet>
+            <ProgramDetailsSection
+              appData={appData}
+              handleChange={handleChange}
+              handleUniversityChange={handleUniversityChange}
+              handleUniversitySelect={handleUniversitySelect}
+              universitySuggestions={universitySuggestions}
+              showSuggestions={showSuggestions}
+              setShowSuggestions={setShowSuggestions}
+              handleLocationChange={handleLocationChange}
+              handleLocationSelect={handleLocationSelect}
+              locationSuggestions={locationSuggestions}
+              showLocationSuggestions={showLocationSuggestions}
+              setShowLocationSuggestions={setShowLocationSuggestions}
+            />
+            <RankingsStatusSection
+              appData={appData}
+              handleChange={handleChange}
+              handleCheckboxChange={handleCheckboxChange}
+            />
+            <SubmissionDetailsSection
+              appData={appData}
+              handleChange={handleChange}
+              handleNumericChange={handleNumericChange}
+            />
+            <DocumentsSection
+              appData={appData}
+              handleDocumentChange={handleDocumentChange}
+              handleOpenFile={handleOpenFile}
+              handleRemoveFile={handleRemoveFile}
+              handleAttachFile={handleAttachFile}
+            />
+            <FacultyContactsSection
+              appData={appData}
+              isFacultyOpen={isFacultyOpen}
+              setIsFacultyOpen={setIsFacultyOpen}
+              handleFacultyChange={handleFacultyChange}
+              removeFacultyContact={removeFacultyContact}
+              handleFacultyMarkdownChange={handleFacultyMarkdownChange}
+              addFacultyContact={addFacultyContact}
+            />
+            <RemindersSection
+              appData={appData}
+              toggleReminder={toggleReminder}
+              updateReminderDate={updateReminderDate}
+              deleteReminder={deleteReminder}
+              addReminder={addReminder}
+            />
+            <GeneralNotesSection
+              appData={appData}
+              setAppData={setAppData}
+            />
           </div>
           <div className="flex items-center justify-end p-4 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-200 dark:border-slate-700 rounded-b-3xl space-x-3">
             <button type="button" onClick={onClose} className="px-5 py-2 text-sm font-medium text-slate-700 dark:text-slate-200 bg-transparent rounded-full hover:bg-slate-200 dark:hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500">Cancel</button>
             <button type="submit" className="px-6 py-2 text-sm font-medium text-white bg-red-600 rounded-full shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">Save</button>
           </div>
-        </form>
-      </div>
-    </div>
+        </form >
+      </div >
+    </div >
   );
 };
-
-// Helper components for consistent form styling
-const FieldSet: React.FC<{ legend: string; children: React.ReactNode; }> = ({ legend, children }) => (
-  <fieldset>
-    <legend className="text-lg font-semibold text-slate-800 dark:text-slate-100 mb-4">{legend}</legend>
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">{children}</div>
-  </fieldset>
-);
-
-const baseInputClasses = "w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg shadow-sm focus:outline-none focus:ring-1 focus:ring-red-500 focus:border-red-500 transition disabled:bg-slate-100 dark:disabled:bg-slate-800";
-
-const Input: React.FC<React.InputHTMLAttributes<HTMLInputElement> & { label: string }> = ({ label, className, ...props }) => (
-  <div className={className}>
-    <label htmlFor={props.name} className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">{label}</label>
-    <input {...props} id={props.name} className={baseInputClasses} />
-  </div>
-);
-
-const Select: React.FC<React.SelectHTMLAttributes<HTMLSelectElement> & { label: string }> = ({ label, children, className, ...props }) => (
-  <div className={className}>
-    <label htmlFor={props.name} className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">{label}</label>
-    <select {...props} id={props.name} className={baseInputClasses}>{children}</select>
-  </div>
-);
-
-const TextArea: React.FC<React.TextareaHTMLAttributes<HTMLTextAreaElement> & { label: string }> = ({ label, className, ...props }) => (
-  <div className={className}>
-    <label htmlFor={props.name} className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">{label}</label>
-    <textarea {...props} id={props.name} className={baseInputClasses} />
-  </div>
-);
 
 export default ApplicationModal;
