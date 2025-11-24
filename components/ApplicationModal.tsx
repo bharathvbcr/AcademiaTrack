@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Application, ApplicationStatus, ApplicationFeeWaiverStatus, FacultyContact, TestStatus, FacultyContactStatus, ProgramType, DocumentStatus, Reminder, LocationDetails, UniversityResult } from '../types';
 import { searchLocation, getLocationTimezone } from '../utils/locationService';
 import { useDebounce } from '../hooks/useDebounce';
+import { useUniversityData } from '../hooks/useUniversityData';
 import { MaterialIcon } from './ApplicationFormUI';
 import ProgramDetailsSection from './ProgramDetailsSection';
 import RankingsStatusSection from './RankingsStatusSection';
@@ -10,6 +11,7 @@ import DocumentsSection from './DocumentsSection';
 import FacultyContactsSection from './FacultyContactsSection';
 import RemindersSection from './RemindersSection';
 import GeneralNotesSection from './GeneralNotesSection';
+
 
 interface ApplicationModalProps {
   isOpen: boolean;
@@ -57,45 +59,28 @@ const emptyApplication: Omit<Application, 'id'> = {
 const ApplicationModal: React.FC<ApplicationModalProps> = ({ isOpen, onClose, onSave, applicationToEdit, defaultProgramType }) => {
   const [appData, setAppData] = useState<Omit<Application, 'id'>>({ ...emptyApplication });
   const [isFacultyOpen, setIsFacultyOpen] = useState<boolean[]>([]);
-  const [universitySuggestions, setUniversitySuggestions] = useState<UniversityResult[]>([]);
-  const [allUniversities, setAllUniversities] = useState<UniversityResult[]>([]);
-  const [showSuggestions, setShowSuggestions] = useState(false);
-  const [isSearching, setIsSearching] = useState(false);
+
+  const {
+    universitySuggestions,
+    showSuggestions,
+    setShowSuggestions,
+    searchUniversities
+  } = useUniversityData();
 
   const [locationSuggestions, setLocationSuggestions] = useState<LocationDetails[]>([]);
   const [showLocationSuggestions, setShowLocationSuggestions] = useState(false);
   const debouncedLocation = useDebounce(appData.location, 500);
 
-  useEffect(() => {
-      const search = async () => {
-        if (debouncedLocation.length < 3) {
-            setLocationSuggestions([]);
-            setShowLocationSuggestions(false);
-            return;
-        }
-
-        // Don't search if we have a valid selected location that matches the text (roughly)
-        // Actually, since we clear locationDetails on type, if it exists, it MUST be a selection.
-        if (appData.locationDetails) {
-            return;
-        }
-        
-        try {
-
-    search();
-  }, [debouncedLocation]);
-
-  useEffect(() => {
-    fetch('/universities.json')
-      .then(res => res.json())
-      .then(data => setAllUniversities(data))
-      .catch(err => console.error('Failed to load universities:', err));
-  }, []);
-
+  // Effect to initialize form data
   useEffect(() => {
     if (isOpen) {
       if (applicationToEdit) {
-        const migratedFaculty = (applicationToEdit.facultyContacts || []).map(f => ({ ...f, contactStatus: f.contactStatus || FacultyContactStatus.NotContacted, contactDate: f.contactDate || null }));
+        const migratedFaculty = (applicationToEdit.facultyContacts || []).map(f => ({
+          ...f,
+          contactStatus: f.contactStatus || FacultyContactStatus.NotContacted,
+          contactDate: f.contactDate || null
+        }));
+
         const normalizedDocs: Application['documents'] = { ...emptyApplication.documents };
         if (applicationToEdit.documents) {
           const today = new Date().toISOString().split('T')[0];
@@ -114,12 +99,37 @@ const ApplicationModal: React.FC<ApplicationModalProps> = ({ isOpen, onClose, on
                 filePath: oldDocValue.filePath
               };
             } else {
-              normalizedDocs[docKey] = { required: true, status: oldDocValue ? DocumentStatus.Submitted : DocumentStatus.NotStarted, submitted: oldDocValue ? (typeof oldDocValue === 'string' ? oldDocValue : today) : null };
+              normalizedDocs[docKey] = {
+                required: true,
+                status: oldDocValue ? DocumentStatus.Submitted : DocumentStatus.NotStarted,
+                submitted: oldDocValue ? (typeof oldDocValue === 'string' ? oldDocValue : today) : null
+              };
             }
           }
         }
+
         const { gre, englishTest, admissionTerm, admissionYear, ...rest } = applicationToEdit;
-        setAppData({ ...emptyApplication, ...rest, programType: applicationToEdit.programType || ProgramType.PhD, customProgramType: applicationToEdit.customProgramType || '', facultyContacts: migratedFaculty, documents: normalizedDocs, gre: { status: (gre as any)?.status ?? TestStatus.NotApplicable }, englishTest: { type: (englishTest as any)?.type ?? 'Not Required', status: (englishTest as any)?.status ?? TestStatus.NotApplicable }, admissionTerm: admissionTerm || null, admissionYear: admissionYear || null, reminders: applicationToEdit.reminders || [] });
+
+        setAppData({
+          ...emptyApplication,
+          ...rest,
+          programType: applicationToEdit.programType || ProgramType.PhD,
+          customProgramType: applicationToEdit.customProgramType || '',
+          facultyContacts: migratedFaculty,
+          documents: normalizedDocs,
+          gre: {
+            status: (gre as any)?.status ?? TestStatus.NotApplicable,
+            cost: (gre as any)?.cost
+          },
+          englishTest: {
+            type: (englishTest as any)?.type ?? 'Not Required',
+            status: (englishTest as any)?.status ?? TestStatus.NotApplicable,
+            cost: (englishTest as any)?.cost
+          },
+          admissionTerm: admissionTerm || null,
+          admissionYear: admissionYear || null,
+          reminders: applicationToEdit.reminders || []
+        });
         setIsFacultyOpen(migratedFaculty.map(f => !!f.name));
       } else {
         setAppData({ ...emptyApplication, programType: defaultProgramType });
@@ -127,6 +137,33 @@ const ApplicationModal: React.FC<ApplicationModalProps> = ({ isOpen, onClose, on
       }
     }
   }, [applicationToEdit, isOpen, defaultProgramType]);
+
+  // Effect for location search
+  useEffect(() => {
+    const search = async () => {
+      if (debouncedLocation.length < 3) {
+        setLocationSuggestions([]);
+        setShowLocationSuggestions(false);
+        return;
+      }
+
+      if (appData.locationDetails) {
+        return;
+      }
+
+      try {
+        const results = await searchLocation(debouncedLocation);
+        setLocationSuggestions(results);
+
+        if (document.activeElement?.id === 'location') {
+          setShowLocationSuggestions(true);
+        }
+      } catch (error) {
+        console.error('Error searching locations:', error);
+      }
+    };
+    search();
+  }, [debouncedLocation, appData.locationDetails]);
 
   const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -253,41 +290,18 @@ const ApplicationModal: React.FC<ApplicationModalProps> = ({ isOpen, onClose, on
   };
 
   const handleLocationChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-      const value = e.target.value;
-      setAppData(prev => ({
-          ...prev,
-          location: value,
-          locationDetails: undefined // Clear details when user types manually
-      }));
-      // Debounce effect will handle search
-      if (value.length >= 3) {
-          setShowLocationSuggestions(true);
-      } else {
-          setShowLocationSuggestions(false);
-      }
+    const value = e.target.value;
+    setAppData(prev => ({
+      ...prev,
+      location: value,
+      locationDetails: undefined
+    }));
+    if (value.length >= 3) {
+      setShowLocationSuggestions(true);
+    } else {
+      setShowLocationSuggestions(false);
+    }
   };
-
-  const searchUniversities = useCallback((query: string) => {
-    if (query.length < 3) {
-      setUniversitySuggestions([]);
-      setShowSuggestions(false);
-      return;
-    }
-
-    setIsSearching(true);
-    try {
-      const lowerQuery = query.toLowerCase();
-      const results = allUniversities
-        .filter(uni => uni.name.toLowerCase().includes(lowerQuery))
-        .slice(0, 10);
-      setUniversitySuggestions(results);
-      setShowSuggestions(true);
-    } catch (error) {
-      console.error('Error searching universities:', error);
-    } finally {
-      setIsSearching(false);
-    }
-  }, [allUniversities]);
 
   const handleUniversitySelect = async (uni: UniversityResult) => {
     setAppData(prev => ({
@@ -303,7 +317,6 @@ const ApplicationModal: React.FC<ApplicationModalProps> = ({ isOpen, onClose, on
       let locations = await searchLocation(query);
 
       if (!locations || locations.length === 0) {
-        // Fallback 1: Try without state if it was included
         if (uni['state-province']) {
           query = `${uni.name}, ${uni.country}`;
           locations = await searchLocation(query);
@@ -311,7 +324,6 @@ const ApplicationModal: React.FC<ApplicationModalProps> = ({ isOpen, onClose, on
       }
 
       if (!locations || locations.length === 0) {
-        // Fallback 2: Try just the university name
         locations = await searchLocation(uni.name);
       }
 
@@ -441,9 +453,9 @@ const ApplicationModal: React.FC<ApplicationModalProps> = ({ isOpen, onClose, on
             <button type="button" onClick={onClose} className="px-5 py-2 text-sm font-medium text-slate-700 dark:text-slate-200 bg-transparent rounded-full hover:bg-slate-200 dark:hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500">Cancel</button>
             <button type="submit" className="px-6 py-2 text-sm font-medium text-white bg-red-600 rounded-full shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">Save</button>
           </div>
-        </form >
-      </div >
-    </div >
+        </form>
+      </div>
+    </div>
   );
 };
 

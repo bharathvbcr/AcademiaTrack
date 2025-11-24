@@ -11,14 +11,21 @@ export default defineConfig(({ mode }: { mode: string }) => {
         host: '0.0.0.0',
       },
       plugins: [react()],
-      define: {
-        'process.env.API_KEY': JSON.stringify(env.GEMINI_API_KEY),
-        'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY)
-      },
       resolve: {
         alias: {
           '@': fileURLToPath(new URL('.', import.meta.url)),
         }
+      },
+      build: {
+        chunkSizeWarningLimit: 2500,
+        rollupOptions: {
+          output: {
+            manualChunks: {
+              vendor: ['react', 'react-dom', 'framer-motion', 'date-fns', '@hello-pangea/dnd'],
+              charts: ['recharts'],
+            },
+          },
+        },
       }
     };
 });

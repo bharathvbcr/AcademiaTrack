@@ -1,8 +1,11 @@
 import { useState, useEffect } from 'react';
 import { Application, FacultyContact, ApplicationStatus, ApplicationFeeWaiverStatus, TestStatus, ProgramType, DocumentStatus } from '../types';
+import { useDebounce } from './useDebounce';
 
 export const useApplications = () => {
   const [applications, setApplications] = useState<Application[]>([]);
+  const [isLoaded, setIsLoaded] = useState(false);
+  const debouncedApplications = useDebounce(applications, 1000);
 
   // Load data on mount
   useEffect(() => {
@@ -11,7 +14,6 @@ export const useApplications = () => {
         const data = await window.electron.loadData();
         if (data) {
           setApplications(data);
-          checkDeadlines(data);
         }
       } else {
         // Fallback for web-only dev (optional, or just warn)
@@ -20,18 +22,34 @@ export const useApplications = () => {
           setApplications(JSON.parse(saved));
         }
       }
+      setIsLoaded(true);
     };
     loadApplications();
   }, []);
 
-  // Save data whenever applications change
+  // Save data whenever debounced applications change
   useEffect(() => {
+    if (!isLoaded) return;
+
     if (window.electron) {
-      window.electron.saveData(applications);
+      window.electron.saveData(debouncedApplications);
     } else {
-      localStorage.setItem('phd-applications', JSON.stringify(applications));
+      localStorage.setItem('phd-applications', JSON.stringify(debouncedApplications));
     }
-  }, [applications]);
+  }, [debouncedApplications, isLoaded]);
+
+  // Periodic deadline check
+  useEffect(() => {
+    if (!isLoaded) return;
+
+    checkDeadlines(applications);
+
+    const interval = setInterval(() => {
+      checkDeadlines(applications);
+    }, 60 * 60 * 1000); // Check every hour
+
+    return () => clearInterval(interval);
+  }, [isLoaded, applications]);
 
   const checkDeadlines = (apps: Application[]) => {
     const today = new Date();
@@ -53,7 +71,7 @@ export const useApplications = () => {
   };
 
   const addApplication = (app: Omit<Application, 'id'>) => {
-    const newApplication = { ...app, id: new Date().toISOString() };
+    const newApplication = { ...app, id: crypto.randomUUID() };
     setApplications(apps => [...apps, newApplication]);
   };
 
@@ -62,15 +80,13 @@ export const useApplications = () => {
   };
 
   const deleteApplication = (id: string) => {
-    if (window.confirm('Are you sure you want to delete this application?')) {
-      setApplications(apps => apps.filter(app => app.id !== id));
-    }
+    setApplications(apps => apps.filter(app => app.id !== id));
   };
 
   const addFacultyContact = (contact: FacultyContact, universityName: string, isNewUniversity: boolean, defaultProgramType: ProgramType) => {
     if (isNewUniversity) {
       const newApplication: Application = {
-        id: new Date().toISOString(),
+        id: crypto.randomUUID(),
         universityName: universityName,
         programName: 'N/A',
         programType: defaultProgramType,
@@ -115,7 +131,11 @@ export const useApplications = () => {
         };
         setApplications(apps => apps.map(app => app.id === updatedApp.id ? updatedApp : app));
       } else {
-        alert(`Could not find an application for "${universityName}". Please add an application for this university first.`);
+        if (window.electron) {
+          window.electron.showNotification('Error', `Could not find an application for "${universityName}". Please add an application for this university first.`);
+        } else {
+           console.warn(`Could not find an application for "${universityName}".`);
+        }
       }
     }
   };

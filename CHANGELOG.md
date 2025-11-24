@@ -2,6 +2,25 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.5.0] - 2025-11-24
+
+### Security
+- **Fixed:** ID generation now uses `crypto.randomUUID()` instead of `Date.now()` to ensure uniqueness and prevent collisions.
+- **Fixed:** Implemented atomic file writing for data persistence to prevent data corruption during app crashes.
+- **Fixed:** Removed API key injection (`GEMINI_API_KEY`) from client-side build bundles to prevent potential exposure.
+
+### Performance
+- **Optimization:** Implemented debouncing (1s delay) for data saving to reduce excessive disk I/O and improve UI responsiveness.
+- **Optimization:** Lazy-loaded the large `universities.json` dataset (1.8MB) so it only loads on demand when searching, significantly speeding up initial app load.
+- **Build:** Optimized build chunks by separating vendor libraries and large data files, resolving build size warnings.
+
+### Added
+- **Feature:** Added a reusable `ConfirmationModal` component for a smoother, non-blocking user experience.
+- **Feature:** Implemented periodic deadline checks (hourly) to ensure notifications are triggered even if the app remains open for long periods.
+
+### Changed
+- **UI/UX:** Replaced native blocking `window.confirm` and `window.alert` dialogs with custom modals and system notifications.
+
 ## [3.1.1] - 2025-11-23
 
 ### Fixed
