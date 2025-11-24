@@ -43,7 +43,9 @@ app.whenReady().then(() => {
 
   ipcMain.handle('save-data', async (event, data) => {
     try {
-      fs.writeFileSync(dataFilePath, JSON.stringify(data, null, 2));
+      const tempPath = `${dataFilePath}.tmp`;
+      await fs.promises.writeFile(tempPath, JSON.stringify(data, null, 2));
+      await fs.promises.rename(tempPath, dataFilePath);
       return true;
     } catch (error) {
       console.error('Failed to save data:', error);

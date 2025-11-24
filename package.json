@@ -1,7 +1,7 @@
 {
   "name": "academia-track",
   "private": true,
-  "version": "3.1.1",
+  "version": "3.5.0",
   "description": "Application Tracker",
   "author": "BHARATH CHANDRA VADDARAM <bharath.vbcr@gmail.com>",
   "type": "module",
