@@ -2,12 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
-## [3.5.0] - 2025-11-24
+## [3.5.0] - 2025-11-29
 
 ### Security
 - **Fixed:** ID generation now uses `crypto.randomUUID()` instead of `Date.now()` to ensure uniqueness and prevent collisions.
 - **Fixed:** Implemented atomic file writing for data persistence to prevent data corruption during app crashes.
 - **Fixed:** Removed API key injection (`GEMINI_API_KEY`) from client-side build bundles to prevent potential exposure.
+
+### Fixed
+- **UI:** Resolved an issue where application cards were invisible in the list view by removing conflicting `framer-motion` animations.
+- **Type Safety:** Corrected loose types in `App.tsx` and `utils.ts`, and standardized `FacultyContact` IDs.
+- **Data Integrity:** Standardized date parsing in `KanbanCard.tsx` and improved data initialization in `useApplications.ts`.
+- **Stability:** Added error handling for application save operations to prevent crashes.
 
 ### Performance
 - **Optimization:** Implemented debouncing (1s delay) for data saving to reduce excessive disk I/O and improve UI responsiveness.

@@ -1,8 +1,6 @@
 import React from 'react';
 import { Application, ApplicationStatus, TestStatus } from '../types';
 import { STATUS_COLORS, STATUS_LABELS } from '../constants';
-import { motion, AnimatePresence } from 'framer-motion';
-import { fadeIn, staggerContainer } from '../utils/motion';
 
 interface ApplicationListProps {
   applications: Application[];
@@ -19,10 +17,7 @@ const MaterialIcon: React.FC<{ name: string; className?: string }> = ({ name, cl
 const ApplicationList: React.FC<ApplicationListProps> = ({ applications, onEdit, onDelete, onUpdate, hasActiveFilter }) => {
   if (applications.length === 0) {
     return (
-      <motion.div
-        initial="hidden"
-        animate="show"
-        variants={fadeIn('up', 'tween', 0.2, 0.5)}
+      <div
         className="text-center py-16 px-6 bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl rounded-3xl shadow-lg border border-slate-200/50 dark:border-slate-700/50"
       >
         <div className="bg-slate-100 dark:bg-slate-700/50 h-20 w-20 rounded-full flex items-center justify-center mx-auto mb-6">
@@ -36,91 +31,81 @@ const ApplicationList: React.FC<ApplicationListProps> = ({ applications, onEdit,
             ? "Try adjusting your search or filters to find what you're looking for."
             : "Start tracking your academic journey by adding your first application."}
         </p>
-      </motion.div>
+      </div>
     );
   }
 
   return (
-    <motion.div
-      variants={staggerContainer(0.1, 0.1)}
-      initial="hidden"
-      animate="show"
+    <div
       className="grid gap-4 sm:gap-6 grid-cols-1 md:grid-cols-2 xl:grid-cols-3"
     >
-      <AnimatePresence mode='popLayout'>
-        {applications.map((app, index) => (
-          <motion.div
-            key={app.id}
-            variants={fadeIn('up', 'spring', index * 0.05, 0.5)}
-            layout
-            initial="hidden"
-            animate="show"
-            exit="hidden"
-            className="group relative bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl rounded-2xl p-5 border border-slate-200/50 dark:border-slate-700/50 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300"
-          >
-            <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-              <button
-                onClick={(e) => { e.stopPropagation(); onEdit(app); }}
-                className="p-2 bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-full shadow-sm hover:bg-blue-50 dark:hover:bg-blue-900/30 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
-                title="Edit"
-              >
-                <MaterialIcon name="edit" className="text-lg" />
-              </button>
-              <button
-                onClick={(e) => { e.stopPropagation(); onDelete(app.id); }}
-                className="p-2 bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-full shadow-sm hover:bg-red-50 dark:hover:bg-red-900/30 hover:text-red-600 dark:hover:text-red-400 transition-colors"
-                title="Delete"
-              >
-                <MaterialIcon name="delete" className="text-lg" />
-              </button>
-            </div>
+      {applications.map((app, index) => (
+        <div
+          key={app.id}
+          className="group relative bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl rounded-2xl p-5 border border-slate-200/50 dark:border-slate-700/50 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300"
+        >
+          <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+            <button
+              onClick={(e) => { e.stopPropagation(); onEdit(app); }}
+              className="p-2 bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-full shadow-sm hover:bg-blue-50 dark:hover:bg-blue-900/30 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+              title="Edit"
+            >
+              <MaterialIcon name="edit" className="text-lg" />
+            </button>
+            <button
+              onClick={(e) => { e.stopPropagation(); onDelete(app.id); }}
+              className="p-2 bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-full shadow-sm hover:bg-red-50 dark:hover:bg-red-900/30 hover:text-red-600 dark:hover:text-red-400 transition-colors"
+              title="Delete"
+            >
+              <MaterialIcon name="delete" className="text-lg" />
+            </button>
+          </div>
 
-            <div className="mb-4">
-              <div className="flex items-start justify-between mb-2">
-                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${STATUS_COLORS[app.status]}`}>
-                  {STATUS_LABELS[app.status]}
+          <div className="mb-4">
+            <div className="flex items-start justify-between mb-2">
+              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${STATUS_COLORS[app.status]}`}>
+                {STATUS_LABELS[app.status]}
+              </span>
+              {app.deadline && (
+                <span className="text-xs font-medium text-slate-500 dark:text-slate-400 flex items-center gap-1 bg-slate-100 dark:bg-slate-700/50 px-2 py-1 rounded-md">
+                  <MaterialIcon name="event" className="text-sm" />
+                  {new Date(app.deadline).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
                 </span>
-                {app.deadline && (
-                  <span className="text-xs font-medium text-slate-500 dark:text-slate-400 flex items-center gap-1 bg-slate-100 dark:bg-slate-700/50 px-2 py-1 rounded-md">
-                    <MaterialIcon name="event" className="text-sm" />
-                    {new Date(app.deadline).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
-                  </span>
-                )}
-              </div>
-              <h3 className="text-lg font-bold text-slate-900 dark:text-white leading-tight mb-1 line-clamp-1" title={app.universityName}>
-                {app.universityName}
-              </h3>
-              <p className="text-sm text-slate-600 dark:text-slate-300 line-clamp-1" title={app.programName}>
-                {app.programName}
-              </p>
+              )}
             </div>
+            <h3 className="text-lg font-bold text-slate-900 dark:text-white leading-tight mb-1 line-clamp-1" title={app.universityName}>
+              {app.universityName}
+            </h3>
+            <p className="text-sm text-slate-600 dark:text-slate-300 line-clamp-1" title={app.programName}>
+              {app.programName}
+            </p>
+          </div>
 
-            <div className="space-y-3 pt-4 border-t border-slate-100 dark:border-slate-700/50">
-              <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
+          <div className="space-y-3 pt-4 border-t border-slate-100 dark:border-slate-700/50">
+            <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
+              <span className="flex items-center gap-1.5">
+                <MaterialIcon name="school" className="text-sm" />
+                {app.programType}
+              </span>
+              {app.applicationFee > 0 && (
                 <span className="flex items-center gap-1.5">
-                  <MaterialIcon name="school" className="text-sm" />
-                  {app.programType}
+                  <MaterialIcon name="payments" className="text-sm" />
+                  ${app.applicationFee}
                 </span>
-                {app.applicationFee > 0 && (
-                  <span className="flex items-center gap-1.5">
-                    <MaterialIcon name="payments" className="text-sm" />
-                    ${app.applicationFee}
-                  </span>
-                )}
-              </div>
-
-              {/* Progress Bar */}
-              <div className="w-full bg-slate-100 dark:bg-slate-700 rounded-full h-1.5 overflow-hidden">
-                <div
-                  className="bg-slate-900 dark:bg-slate-100 h-1.5 rounded-full transition-all duration-500"
-                  style={{ width: `${calculateProgress(app)}%` }}
-                />
-              </div>
+              )}
             </div>
-          </motion.div>
-        ))}
-      </AnimatePresence>
-    </motion.div>
+
+            {/* Progress Bar */}
+            <div className="w-full bg-slate-100 dark:bg-slate-700 rounded-full h-1.5 overflow-hidden">
+              <div
+                className="bg-slate-900 dark:bg-slate-100 h-1.5 rounded-full transition-all duration-500"
+                style={{ width: `${calculateProgress(app)}%` }}
+              />
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
   );
 };
 

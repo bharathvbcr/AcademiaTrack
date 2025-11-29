@@ -47,7 +47,7 @@ export enum FacultyContactStatus {
 }
 
 export interface FacultyContact {
-    id: number;
+    id: string | number;
     name: string;
     website: string;
     email: string;

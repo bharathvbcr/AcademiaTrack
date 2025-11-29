@@ -39,7 +39,7 @@ const FacultyContactModal: React.FC<FacultyContactModalProps> = ({ isOpen, onClo
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (suggestionsRef.current && !suggestionsRef.current.contains(event.target as Node)) {
+      if (suggestionsRef.current && event.target instanceof Node && !suggestionsRef.current.contains(event.target)) {
         setShowSuggestions(false);
       }
     };
@@ -54,7 +54,7 @@ const FacultyContactModal: React.FC<FacultyContactModalProps> = ({ isOpen, onClo
       return;
     }
     const newContact: FacultyContact = {
-      id: Date.now(),
+      id: crypto.randomUUID(),
       name,
       website,
       email,

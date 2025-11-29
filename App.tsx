@@ -8,7 +8,7 @@ import SortControls from './components/SortControls';
 import { exportToCSV } from './utils';
 import { useLocalStorage } from './hooks/useLocalStorage';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
-import { ProgramType, ApplicationStatus } from './types';
+import { ProgramType, ApplicationStatus, Application, FacultyContact } from './types';
 import { DropResult } from '@hello-pangea/dnd';
 import ConfirmationModal from './components/ConfirmationModal';
 
@@ -56,7 +56,7 @@ const App: React.FC = () => {
     message: string;
     onConfirm: () => void;
     isDanger?: boolean;
-  }>({ isOpen: false, title: '', message: '', onConfirm: () => {} });
+  }>({ isOpen: false, title: '', message: '', onConfirm: () => { } });
 
   const closeConfirmation = () => setConfirmation(prev => ({ ...prev, isOpen: false }));
 
@@ -78,18 +78,32 @@ const App: React.FC = () => {
     'Ctrl+4': () => setViewMode('budget'),
   });
 
-  const handleSave = (app: any) => {
-    if (editingApplication) {
-      updateApplication(app);
-    } else {
-      addApplication(app);
+  const handleSave = (app: Application) => {
+    try {
+      if (editingApplication) {
+        updateApplication(app);
+      } else {
+        addApplication(app);
+      }
+      closeModal();
+    } catch (error) {
+      console.error('Failed to save application:', error);
+      if (window.electron) {
+        window.electron.showNotification('Error', 'Failed to save application. Please try again.');
+      }
     }
-    closeModal();
   };
 
-  const handleSaveFacultyContact = (contact: any, universityName: string, isNewUniversity: boolean) => {
-    addFacultyContact(contact, universityName, isNewUniversity, defaultProgramType);
-    closeFacultyModal();
+  const handleSaveFacultyContact = (contact: FacultyContact, universityName: string, isNewUniversity: boolean) => {
+    try {
+      addFacultyContact(contact, universityName, isNewUniversity, defaultProgramType);
+      closeFacultyModal();
+    } catch (error) {
+      console.error('Failed to save faculty contact:', error);
+      if (window.electron) {
+        window.electron.showNotification('Error', 'Failed to save faculty contact. Please try again.');
+      }
+    }
   };
 
   const handleExport = (format: 'csv' | 'json') => {
@@ -133,8 +147,8 @@ const App: React.FC = () => {
             onConfirm: () => importApplications(json)
           });
         } else {
-           if (window.electron) window.electron.showNotification('Error', 'Invalid JSON format. The file does not contain valid application data.');
-           else console.error('Invalid JSON format');
+          if (window.electron) window.electron.showNotification('Error', 'Invalid JSON format. The file does not contain valid application data.');
+          else console.error('Invalid JSON format');
         }
       } catch (error) {
         console.error('Error parsing JSON:', error);

@@ -1,7 +1,7 @@
 import { Application } from './types';
 
 // Helper function to escape CSV cell content
-const escapeCsvCell = (cell: any): string => {
+const escapeCsvCell = (cell: string | number | boolean | null | undefined): string => {
   const cellStr = String(cell === null || cell === undefined ? '' : cell);
   // If the string contains a comma, double quote, or newline, wrap it in double quotes.
   if (/[",\n]/.test(cellStr)) {
