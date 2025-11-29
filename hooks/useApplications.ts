@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Application, FacultyContact, ApplicationStatus, ApplicationFeeWaiverStatus, TestStatus, ProgramType, DocumentStatus } from '../types';
 import { useDebounce } from './useDebounce';
 
@@ -53,17 +53,26 @@ export const useApplications = () => {
   }, [debouncedApplications, isLoaded]);
 
   // Periodic deadline check
+  // Keep a ref to applications for the interval to access the latest state without resetting
+  const applicationsRef = React.useRef(applications);
+
+  useEffect(() => {
+    applicationsRef.current = applications;
+  }, [applications]);
+
+  // Periodic deadline check
   useEffect(() => {
     if (!isLoaded) return;
 
-    checkDeadlines(applications);
+    // Check immediately on load
+    checkDeadlines(applicationsRef.current);
 
     const interval = setInterval(() => {
-      checkDeadlines(applications);
+      checkDeadlines(applicationsRef.current);
     }, 60 * 60 * 1000); // Check every hour
 
     return () => clearInterval(interval);
-  }, [isLoaded, applications]);
+  }, [isLoaded]);
 
   const checkDeadlines = (apps: Application[]) => {
     const today = new Date();
@@ -137,7 +146,8 @@ export const useApplications = () => {
       };
       setApplications(apps => [...apps, newApplication]);
     } else {
-      const appToUpdate = applications.find(app => app.universityName === universityName);
+      // Case-insensitive search for existing application
+      const appToUpdate = applications.find(app => app.universityName.toLowerCase() === universityName.toLowerCase());
       if (appToUpdate) {
         const updatedApp = {
           ...appToUpdate,
