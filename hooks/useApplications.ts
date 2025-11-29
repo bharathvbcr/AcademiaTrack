@@ -13,13 +13,27 @@ export const useApplications = () => {
       if (window.electron) {
         const data = await window.electron.loadData();
         if (data) {
-          setApplications(data);
+          if (Array.isArray(data)) {
+            setApplications(data);
+          } else if (typeof data === 'object') {
+            // Handle case where a single application object might be returned
+            setApplications([data as unknown as Application]);
+          }
         }
       } else {
         // Fallback for web-only dev (optional, or just warn)
         const saved = localStorage.getItem('phd-applications');
         if (saved) {
-          setApplications(JSON.parse(saved));
+          try {
+            const parsed = JSON.parse(saved);
+            if (Array.isArray(parsed)) {
+              setApplications(parsed);
+            } else if (parsed && typeof parsed === 'object') {
+              setApplications([parsed]);
+            }
+          } catch (e) {
+            console.error('Failed to parse saved applications', e);
+          }
         }
       }
       setIsLoaded(true);
@@ -134,7 +148,7 @@ export const useApplications = () => {
         if (window.electron) {
           window.electron.showNotification('Error', `Could not find an application for "${universityName}". Please add an application for this university first.`);
         } else {
-           console.warn(`Could not find an application for "${universityName}".`);
+          console.warn(`Could not find an application for "${universityName}".`);
         }
       }
     }
