@@ -9,7 +9,7 @@ interface KanbanCardProps {
 }
 
 const KanbanCard: React.FC<KanbanCardProps> = ({ application, index, onEdit }) => {
-  const deadlineDate = application.deadline ? new Date(application.deadline + 'T00:00:00') : null;
+  const deadlineDate = application.deadline ? new Date(application.deadline) : null;
 
   return (
     <Draggable draggableId={application.id} index={index}>
@@ -18,9 +18,8 @@ const KanbanCard: React.FC<KanbanCardProps> = ({ application, index, onEdit }) =
           ref={provided.innerRef}
           {...provided.draggableProps}
           {...provided.dragHandleProps}
-          className={`bg-white dark:bg-slate-800 p-3 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 mb-3 transition-shadow hover:shadow-md ${
-            snapshot.isDragging ? 'shadow-lg ring-2 ring-red-500 rotate-2' : ''
-          }`}
+          className={`bg-white dark:bg-slate-800 p-3 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 mb-3 transition-shadow hover:shadow-md ${snapshot.isDragging ? 'shadow-lg ring-2 ring-red-500 rotate-2' : ''
+            }`}
           onClick={() => onEdit(application)}
           style={provided.draggableProps.style}
         >
@@ -30,16 +29,16 @@ const KanbanCard: React.FC<KanbanCardProps> = ({ application, index, onEdit }) =
           <p className="text-xs text-slate-500 dark:text-slate-400 truncate mb-2">
             {application.programName}
           </p>
-          
+
           <div className="flex justify-between items-center text-xs">
-             {deadlineDate ? (
-                <span className={`px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300`}>
-                  {deadlineDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
-                </span>
-             ) : (
-                <span></span>
-             )}
-             <span className="material-symbols-outlined text-slate-400 text-sm">drag_indicator</span>
+            {deadlineDate ? (
+              <span className={`px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300`}>
+                {deadlineDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+              </span>
+            ) : (
+              <span></span>
+            )}
+            <span className="material-symbols-outlined text-slate-400 text-sm">drag_indicator</span>
           </div>
         </div>
       )}
