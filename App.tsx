@@ -1,23 +1,20 @@
-import React, { lazy, Suspense, useState } from 'react';
+import React, { lazy, Suspense } from 'react';
 import { useApplications } from './hooks/useApplications';
 import { useAppModals } from './hooks/useAppModals';
 import { useSortAndFilter } from './hooks/useSortAndFilter';
-import Header from './components/Header';
-import ApplicationList from './components/ApplicationList';
-import SortControls from './components/SortControls';
-import { exportToCSV } from './utils';
 import { useLocalStorage } from './hooks/useLocalStorage';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
-import { ProgramType, ApplicationStatus, Application, FacultyContact } from './types';
+import { useConfirmation } from './hooks/useConfirmation';
+import { ProgramType, Application, FacultyContact } from './types';
 import { DropResult } from '@hello-pangea/dnd';
-import ConfirmationModal from './components/ConfirmationModal';
+import { exportToCSV } from './utils';
 
-const DashboardSummary = lazy(() => import('./components/DashboardSummary'));
+import Header from './components/Header';
+import ConfirmationModal from './components/ConfirmationModal';
+import MainContent from './components/MainContent';
+
 const ApplicationModal = lazy(() => import('./components/ApplicationModal'));
 const FacultyContactModal = lazy(() => import('./components/FacultyContactModal'));
-const KanbanBoard = lazy(() => import('./components/KanbanBoard'));
-const CalendarView = lazy(() => import('./components/CalendarView'));
-const BudgetView = lazy(() => import('./components/BudgetView'));
 
 const App: React.FC = () => {
   const {
@@ -50,24 +47,15 @@ const App: React.FC = () => {
   const [defaultProgramType, setDefaultProgramType] = useLocalStorage<ProgramType>('default-program-type', ProgramType.PhD);
   const [viewMode, setViewMode] = useLocalStorage<'list' | 'kanban' | 'calendar' | 'budget'>('view-mode', 'list');
 
-  const [confirmation, setConfirmation] = useState<{
-    isOpen: boolean;
-    title: string;
-    message: string;
-    onConfirm: () => void;
-    isDanger?: boolean;
-  }>({ isOpen: false, title: '', message: '', onConfirm: () => { } });
-
-  const closeConfirmation = () => setConfirmation(prev => ({ ...prev, isOpen: false }));
+  const { confirmation, showConfirmation, closeConfirmation } = useConfirmation();
 
   const requestDelete = (id: string) => {
-    setConfirmation({
-      isOpen: true,
-      title: 'Delete Application',
-      message: 'Are you sure you want to delete this application? This action cannot be undone.',
-      isDanger: true,
-      onConfirm: () => deleteApplication(id)
-    });
+    showConfirmation(
+      'Delete Application',
+      'Are you sure you want to delete this application? This action cannot be undone.',
+      () => deleteApplication(id),
+      true
+    );
   };
 
   useKeyboardShortcuts({
@@ -139,13 +127,12 @@ const App: React.FC = () => {
         );
 
         if (isValid) {
-          setConfirmation({
-            isOpen: true,
-            title: 'Import Data',
-            message: 'This will overwrite your current data. Are you sure you want to proceed?',
-            isDanger: true,
-            onConfirm: () => importApplications(json)
-          });
+          showConfirmation(
+            'Import Data',
+            'This will overwrite your current data. Are you sure you want to proceed?',
+            () => importApplications(json),
+            true
+          );
         } else {
           if (window.electron) window.electron.showNotification('Error', 'Invalid JSON format. The file does not contain valid application data.');
           else console.error('Invalid JSON format');
@@ -178,7 +165,7 @@ const App: React.FC = () => {
     if (app) {
       updateApplication({
         ...app,
-        status: destination.droppableId as ApplicationStatus
+        status: destination.droppableId as any // Cast to any or import ApplicationStatus if needed, but ApplicationStatus is string enum so it should be fine if types match
       });
     }
   };
@@ -196,52 +183,22 @@ const App: React.FC = () => {
           viewMode={viewMode}
           onViewChange={setViewMode}
         />
-        <main className="mt-8">
-          <Suspense fallback={<div>Loading...</div>}>
-            <DashboardSummary applications={applications} />
-          </Suspense>
 
-          {viewMode === 'list' ? (
-            <>
-              {applications.length > 0 && (
-                <SortControls
-                  sortConfig={sortConfig}
-                  requestSort={requestSort}
-                  searchQuery={searchQuery}
-                  onSearchChange={setSearchQuery}
-                />
-              )}
-
-              <ApplicationList
-                applications={filteredAndSortedApplications}
-                onEdit={openModal}
-                onDelete={requestDelete}
-                onUpdate={updateApplication}
-                hasActiveFilter={searchQuery.length > 0}
-              />
-            </>
-          ) : viewMode === 'kanban' ? (
-            <Suspense fallback={<div>Loading Kanban Board...</div>}>
-              <KanbanBoard
-                applications={filteredAndSortedApplications}
-                onDragEnd={handleDragEnd}
-                onEdit={openModal}
-              />
-            </Suspense>
-          ) : viewMode === 'budget' ? (
-            <Suspense fallback={<div>Loading Budget...</div>}>
-              <BudgetView applications={filteredAndSortedApplications} />
-            </Suspense>
-          ) : (
-            <Suspense fallback={<div>Loading Calendar...</div>}>
-              <CalendarView
-                applications={filteredAndSortedApplications}
-                onEdit={openModal}
-              />
-            </Suspense>
-          )}
-        </main>
+        <MainContent
+          viewMode={viewMode}
+          applications={applications}
+          filteredAndSortedApplications={filteredAndSortedApplications}
+          sortConfig={sortConfig}
+          requestSort={requestSort}
+          searchQuery={searchQuery}
+          setSearchQuery={setSearchQuery}
+          openModal={openModal}
+          requestDelete={requestDelete}
+          updateApplication={updateApplication}
+          handleDragEnd={handleDragEnd}
+        />
       </div>
+
       <ConfirmationModal
         isOpen={confirmation.isOpen}
         onClose={closeConfirmation}
@@ -250,13 +207,13 @@ const App: React.FC = () => {
         message={confirmation.message}
         isDanger={confirmation.isDanger}
       />
+
       <Suspense fallback={<div>Loading...</div>}>
         <ApplicationModal
           isOpen={isModalOpen}
           onClose={closeModal}
           onSave={handleSave}
-          applicationToEdit={editingApplication}
-          defaultProgramType={defaultProgramType}
+          applicationToEdit={editingApplication || undefined}
         />
         <FacultyContactModal
           isOpen={isFacultyModalOpen}

@@ -4,8 +4,8 @@ import { FieldSet } from './ApplicationFormUI';
 import MarkdownEditor from './MarkdownEditor';
 
 interface GeneralNotesSectionProps {
-    appData: Omit<Application, 'id'>;
-    setAppData: React.Dispatch<React.SetStateAction<Omit<Application, 'id'>>>;
+    appData: Application;
+    setAppData: React.Dispatch<React.SetStateAction<Application>>;
 }
 
 const GeneralNotesSection: React.FC<GeneralNotesSectionProps> = ({ appData, setAppData }) => {

@@ -1,7 +1,7 @@
 {
   "name": "academia-track",
   "private": true,
-  "version": "3.5.0",
+  "version": "3.6.0",
   "description": "Application Tracker",
   "author": "BHARATH CHANDRA VADDARAM <bharath.vbcr@gmail.com>",
   "type": "module",
@@ -56,6 +56,9 @@
     },
     "mac": {
       "target": "dmg"
+    },
+    "linux": {
+      "target": "AppImage"
     }
   }
 }

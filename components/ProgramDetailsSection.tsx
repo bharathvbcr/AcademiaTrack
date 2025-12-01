@@ -3,6 +3,7 @@ import { Application, ProgramType, UniversityResult, LocationDetails } from '../
 import { PROGRAM_TYPE_OPTIONS, ADMISSION_TERM_OPTIONS } from '../constants';
 import { FieldSet, Input, Select } from './ApplicationFormUI';
 import DateInput from './DateInput';
+import UniversitySearchInput from './UniversitySearchInput';
 
 interface ProgramDetailsSectionProps {
     appData: Omit<Application, 'id'>;
@@ -36,31 +37,14 @@ const ProgramDetailsSection: React.FC<ProgramDetailsSectionProps> = ({
     return (
         <FieldSet legend="Program Details">
             <div className="relative">
-                <Input
+                <UniversitySearchInput
                     label="University Name"
                     name="universityName"
                     value={appData.universityName}
                     onChange={handleUniversityChange}
+                    onSelect={handleUniversitySelect}
                     required
-                    autoComplete="off"
-                    onFocus={() => appData.universityName.length >= 3 && setShowSuggestions(true)}
-                    onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
                 />
-                {showSuggestions && universitySuggestions.length > 0 && (
-                    <div className="absolute z-10 w-full mt-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-                        {universitySuggestions.map((uni, index) => (
-                            <button
-                                key={index}
-                                type="button"
-                                onClick={() => handleUniversitySelect(uni)}
-                                className="w-full text-left px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
-                            >
-                                <div className="font-medium">{uni.name}</div>
-                                <div className="text-xs text-slate-500">{[uni['state-province'], uni.country].filter(Boolean).join(', ')}</div>
-                            </button>
-                        ))}
-                    </div>
-                )}
             </div>
             <Input label="Department / School" name="department" value={appData.department} onChange={handleChange} />
             <Input label="Program Name" name="programName" value={appData.programName} onChange={handleChange} required />

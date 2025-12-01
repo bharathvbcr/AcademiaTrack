@@ -45,7 +45,7 @@ export const searchLocation = async (query: string): Promise<LocationDetails[]> 
 
         const response = await fetch(`${NOMINATIM_BASE_URL}?${params.toString()}`, {
             headers: {
-                'User-Agent': 'AcademiaTrack/1.0 (mailto:contact@example.com)' // Replace with real contact if available, or just app name
+                'User-Agent': 'AcademiaTrack/1.0'
             }
         });
         if (!response.ok) {
@@ -56,17 +56,7 @@ export const searchLocation = async (query: string): Promise<LocationDetails[]> 
 
         // Map to LocationDetails (without timezone initially)
         return results.map((result): LocationDetails | null => {
-            const city = result.address.city ||
-                result.address.town ||
-                result.address.village ||
-                result.address.hamlet ||
-                result.address.suburb ||
-                result.address.neighbourhood ||
-                result.address.city_district ||
-                result.address.municipality ||
-                result.address.county ||
-                result.address.state_district ||
-                '';
+            const city = getCityName(result.address);
 
             const state = result.address.state || result.address.region || '';
             const country = result.address.country || '';
@@ -113,4 +103,18 @@ export const getLocationTimezone = async (latitude: number, longitude: number): 
         console.error('Error fetching timezone:', error);
         return {};
     }
+};
+
+const getCityName = (address: NominatimResult['address']): string => {
+    return address.city ||
+        address.town ||
+        address.village ||
+        address.hamlet ||
+        address.suburb ||
+        address.neighbourhood ||
+        address.city_district ||
+        address.municipality ||
+        address.county ||
+        address.state_district ||
+        '';
 };

@@ -49,6 +49,7 @@ const ApplicationList: React.FC<ApplicationListProps> = ({ applications, onEdit,
               onClick={(e) => { e.stopPropagation(); onEdit(app); }}
               className="p-2 bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-full shadow-sm hover:bg-blue-50 dark:hover:bg-blue-900/30 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
               title="Edit"
+              aria-label="Edit application"
             >
               <MaterialIcon name="edit" className="text-lg" />
             </button>
@@ -56,6 +57,7 @@ const ApplicationList: React.FC<ApplicationListProps> = ({ applications, onEdit,
               onClick={(e) => { e.stopPropagation(); onDelete(app.id); }}
               className="p-2 bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-full shadow-sm hover:bg-red-50 dark:hover:bg-red-900/30 hover:text-red-600 dark:hover:text-red-400 transition-colors"
               title="Delete"
+              aria-label="Delete application"
             >
               <MaterialIcon name="delete" className="text-lg" />
             </button>
