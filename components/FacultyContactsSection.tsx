@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Application, FacultyContactStatus } from '../types';
 import { FACULTY_CONTACT_STATUS_COLORS, FACULTY_CONTACT_STATUS_OPTIONS } from '../constants';
 import { FieldSet, Input, Select, TextArea, MaterialIcon } from './ApplicationFormUI';
@@ -12,6 +12,11 @@ interface FacultyContactsSectionProps {
     removeFacultyContact: (index: number) => void;
     handleFacultyMarkdownChange: (index: number, field: string, value: string) => void;
     addFacultyContact: () => void;
+    handleFacultyFitChange: (index: number, field: 'fitScore' | 'fitNotes', value: any) => void;
+    addPaperRead: (index: number, paper: string) => void;
+    removePaperRead: (facultyIndex: number, paperIndex: number) => void;
+    addCorrespondence: (index: number, correspondence: any) => void;
+    removeCorrespondence: (facultyIndex: number, correspondenceId: string | number) => void;
 }
 
 const FacultyContactsSection: React.FC<FacultyContactsSectionProps> = ({
@@ -22,7 +27,30 @@ const FacultyContactsSection: React.FC<FacultyContactsSectionProps> = ({
     removeFacultyContact,
     handleFacultyMarkdownChange,
     addFacultyContact,
+    handleFacultyFitChange,
+    addPaperRead,
+    removePaperRead,
+    addCorrespondence,
+    removeCorrespondence
 }) => {
+    const [newPaper, setNewPaper] = useState<{ [key: number]: string }>({});
+    const [newCorrespondence, setNewCorrespondence] = useState<{ [key: number]: any }>({});
+
+    const handleAddPaper = (index: number) => {
+        if (newPaper[index]) {
+            addPaperRead(index, newPaper[index]);
+            setNewPaper(prev => ({ ...prev, [index]: '' }));
+        }
+    };
+
+    const handleAddCorrespondence = (index: number) => {
+        const current = newCorrespondence[index] || { type: 'Email Sent', subject: '', notes: '', date: new Date().toISOString().split('T')[0] };
+        if (current.subject) {
+            addCorrespondence(index, current);
+            setNewCorrespondence(prev => ({ ...prev, [index]: { type: 'Email Sent', subject: '', notes: '', date: new Date().toISOString().split('T')[0] } }));
+        }
+    };
+
     return (
         <FieldSet legend="Faculty Contacts">
             <div className="md:col-span-2 space-y-2">
@@ -39,7 +67,8 @@ const FacultyContactsSection: React.FC<FacultyContactsSectionProps> = ({
                             </button>
                         </div>
                         {isFacultyOpen[index] && (
-                            <div className="p-4 border-t border-slate-200 dark:border-slate-600 space-y-4">
+                            <div className="p-4 border-t border-slate-200 dark:border-slate-600 space-y-6">
+                                {/* Basic Info */}
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <Input label="Name" name="name" value={faculty.name} onChange={e => handleFacultyChange(index, e)} />
                                     <Input label="Email" name="email" type="email" value={faculty.email} onChange={e => handleFacultyChange(index, e)} />
@@ -56,8 +85,134 @@ const FacultyContactsSection: React.FC<FacultyContactsSectionProps> = ({
                                     )}
                                 </div>
 
+                                {/* Research Fit */}
                                 <div className="pt-4 border-t border-slate-200 dark:border-slate-600">
-                                    <h4 className="text-sm font-semibold text-slate-900 dark:text-white mb-3">Interview Preparation</h4>
+                                    <h4 className="text-sm font-semibold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
+                                        <MaterialIcon name="science" className="text-blue-500" />
+                                        Research Fit
+                                    </h4>
+                                    <div className="space-y-4">
+                                        <div>
+                                            <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 uppercase mb-1">Fit Score (1-10)</label>
+                                            <div className="flex items-center gap-4">
+                                                <input
+                                                    type="range"
+                                                    min="1"
+                                                    max="10"
+                                                    value={faculty.fitScore || 5}
+                                                    onChange={e => handleFacultyFitChange(index, 'fitScore', parseInt(e.target.value))}
+                                                    className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer dark:bg-slate-700"
+                                                />
+                                                <span className="text-lg font-bold text-blue-600 dark:text-blue-400 w-8 text-center">{faculty.fitScore || 5}</span>
+                                            </div>
+                                        </div>
+                                        <MarkdownEditor
+                                            label="Fit Notes (Why this lab?)"
+                                            value={faculty.fitNotes || ''}
+                                            onChange={val => handleFacultyFitChange(index, 'fitNotes', val)}
+                                        />
+                                        <div>
+                                            <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 uppercase mb-2">Papers Read</label>
+                                            <div className="space-y-2">
+                                                {faculty.papersRead?.map((paper, pIndex) => (
+                                                    <div key={pIndex} className="flex items-center justify-between bg-white dark:bg-slate-800 p-2 rounded border border-slate-200 dark:border-slate-600">
+                                                        <span className="text-sm text-slate-700 dark:text-slate-300 truncate">{paper}</span>
+                                                        <button type="button" onClick={() => removePaperRead(index, pIndex)} className="text-slate-400 hover:text-red-500">
+                                                            <MaterialIcon name="close" className="text-sm" />
+                                                        </button>
+                                                    </div>
+                                                ))}
+                                                <div className="flex gap-2">
+                                                    <input
+                                                        type="text"
+                                                        value={newPaper[index] || ''}
+                                                        onChange={e => setNewPaper(prev => ({ ...prev, [index]: e.target.value }))}
+                                                        placeholder="Paper Title / Link"
+                                                        className="flex-grow px-3 py-1.5 text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded focus:ring-2 focus:ring-blue-500 outline-none"
+                                                        onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), handleAddPaper(index))}
+                                                    />
+                                                    <button type="button" onClick={() => handleAddPaper(index)} className="px-3 py-1.5 text-sm bg-blue-50 text-blue-600 rounded hover:bg-blue-100">Add</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Correspondence History */}
+                                <div className="pt-4 border-t border-slate-200 dark:border-slate-600">
+                                    <h4 className="text-sm font-semibold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
+                                        <MaterialIcon name="history" className="text-purple-500" />
+                                        Correspondence History
+                                    </h4>
+                                    <div className="space-y-4">
+                                        {faculty.correspondence?.map((corr, cIndex) => (
+                                            <div key={corr.id} className="bg-white dark:bg-slate-800 p-3 rounded border border-slate-200 dark:border-slate-600 text-sm">
+                                                <div className="flex justify-between items-start mb-1">
+                                                    <span className={`font-medium ${corr.type === 'Email Sent' ? 'text-blue-600' : corr.type === 'Email Received' ? 'text-green-600' : 'text-slate-600'}`}>
+                                                        {corr.type}
+                                                    </span>
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="text-slate-400 text-xs">{corr.date}</span>
+                                                        <button type="button" onClick={() => removeCorrespondence(index, corr.id)} className="text-slate-400 hover:text-red-500">
+                                                            <MaterialIcon name="delete" className="text-xs" />
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                                <p className="font-medium text-slate-800 dark:text-slate-200">{corr.subject}</p>
+                                                {corr.notes && <p className="text-slate-500 dark:text-slate-400 mt-1">{corr.notes}</p>}
+                                            </div>
+                                        ))}
+                                        <div className="bg-slate-50 dark:bg-slate-800/50 p-3 rounded border border-dashed border-slate-300 dark:border-slate-600 space-y-2">
+                                            <div className="grid grid-cols-2 gap-2">
+                                                <select
+                                                    value={newCorrespondence[index]?.type || 'Email Sent'}
+                                                    onChange={e => setNewCorrespondence(prev => ({ ...prev, [index]: { ...prev[index], type: e.target.value } }))}
+                                                    className="px-2 py-1.5 text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded"
+                                                >
+                                                    <option>Email Sent</option>
+                                                    <option>Email Received</option>
+                                                    <option>Meeting</option>
+                                                    <option>Other</option>
+                                                </select>
+                                                <input
+                                                    type="date"
+                                                    value={newCorrespondence[index]?.date || new Date().toISOString().split('T')[0]}
+                                                    onChange={e => setNewCorrespondence(prev => ({ ...prev, [index]: { ...prev[index], date: e.target.value } }))}
+                                                    className="px-2 py-1.5 text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded"
+                                                />
+                                            </div>
+                                            <input
+                                                type="text"
+                                                placeholder="Subject / Topic"
+                                                value={newCorrespondence[index]?.subject || ''}
+                                                onChange={e => setNewCorrespondence(prev => ({ ...prev, [index]: { ...prev[index], subject: e.target.value } }))}
+                                                className="w-full px-2 py-1.5 text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded"
+                                            />
+                                            <textarea
+                                                placeholder="Notes..."
+                                                rows={2}
+                                                value={newCorrespondence[index]?.notes || ''}
+                                                onChange={e => setNewCorrespondence(prev => ({ ...prev, [index]: { ...prev[index], notes: e.target.value } }))}
+                                                className="w-full px-2 py-1.5 text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded resize-none"
+                                            />
+                                            <button
+                                                type="button"
+                                                onClick={() => handleAddCorrespondence(index)}
+                                                disabled={!newCorrespondence[index]?.subject}
+                                                className="w-full py-1.5 text-sm bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 rounded hover:bg-slate-300 dark:hover:bg-slate-600 disabled:opacity-50"
+                                            >
+                                                Log Correspondence
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Interview Prep */}
+                                <div className="pt-4 border-t border-slate-200 dark:border-slate-600">
+                                    <h4 className="text-sm font-semibold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
+                                        <MaterialIcon name="mic" className="text-orange-500" />
+                                        Interview Preparation
+                                    </h4>
                                     <div className="space-y-4">
                                         <MarkdownEditor
                                             label="Interview Notes"

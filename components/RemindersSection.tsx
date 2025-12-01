@@ -37,7 +37,7 @@ const RemindersSection: React.FC<RemindersSectionProps> = ({
                             onChange={(e) => updateReminderDate(reminder.id, e.target.value)}
                             className="text-sm bg-transparent border-none focus:ring-0 text-slate-500 dark:text-slate-400"
                         />
-                        <button type="button" onClick={() => deleteReminder(reminder.id)} className="text-slate-400 hover:text-red-500 transition-colors">
+                        <button type="button" onClick={() => deleteReminder(reminder.id)} className="text-slate-400 hover:text-red-500 transition-colors" aria-label="Delete reminder">
                             <MaterialIcon name="delete" className="text-lg" />
                         </button>
                     </div>

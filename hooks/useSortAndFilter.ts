@@ -1,11 +1,16 @@
 import { useState, useMemo } from 'react';
 import { Application } from '../types';
 
-type SortKey = 'deadline' | 'universityName' | 'status';
+export type SortKey = 'deadline' | 'universityName' | 'status';
+
+export interface SortConfig {
+  key: SortKey;
+  direction: 'ascending' | 'descending';
+}
 
 export const useSortAndFilter = (applications: Application[]) => {
   const [searchQuery, setSearchQuery] = useState('');
-  const [sortConfig, setSortConfig] = useState<{ key: SortKey; direction: 'ascending' | 'descending' }>({
+  const [sortConfig, setSortConfig] = useState<SortConfig>({
     key: 'deadline',
     direction: 'ascending',
   });
@@ -32,8 +37,9 @@ export const useSortAndFilter = (applications: Application[]) => {
 
         let comparison = 0;
         if (sortConfig.key === 'deadline') {
-          const dateA = valA ? new Date(valA as string).getTime() : Infinity;
-          const dateB = valB ? new Date(valB as string).getTime() : Infinity;
+          // Treat null/empty deadlines as Infinity so they appear at the bottom when ascending
+          const dateA = valA ? new Date(valA as string).getTime() : (sortConfig.direction === 'ascending' ? Infinity : -Infinity);
+          const dateB = valB ? new Date(valB as string).getTime() : (sortConfig.direction === 'ascending' ? Infinity : -Infinity);
           comparison = dateA - dateB;
         } else {
           const strA = String(valA || '');
