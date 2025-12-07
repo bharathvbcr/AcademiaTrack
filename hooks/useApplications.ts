@@ -2,9 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { Application, FacultyContact, ApplicationStatus, ApplicationFeeWaiverStatus, TestStatus, ProgramType, DocumentStatus } from '../types';
 import { useDebounce } from './useDebounce';
 import { migrateData, wrapInSchema, createEmptyDataSchema } from '../utils/dataMigration';
+import { useUndoRedo } from './useUndoRedo';
 
 export const useApplications = () => {
-  const [applications, setApplications] = useState<Application[]>([]);
+  const { state: applications, setState: setApplications, undo, redo, canUndo, canRedo, reset } = useUndoRedo<Application[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
   const debouncedApplications = useDebounce(applications, 1000);
 
@@ -16,7 +17,7 @@ export const useApplications = () => {
         if (rawData) {
           // Migrate data from any version to current version
           const migratedData = migrateData(rawData);
-          setApplications(migratedData.applications);
+          reset(migratedData.applications);
         }
       } else {
         // Fallback for web-only dev
@@ -26,7 +27,7 @@ export const useApplications = () => {
             const parsed = JSON.parse(saved);
             // Migrate data from any version to current version
             const migratedData = migrateData(parsed);
-            setApplications(migratedData.applications);
+            reset(migratedData.applications);
           } catch (e) {
             console.error('Failed to parse saved applications', e);
           }
@@ -105,6 +106,30 @@ export const useApplications = () => {
     setApplications(apps => apps.filter(app => app.id !== id));
   };
 
+  const duplicateApplication = (id: string) => {
+    const appToDuplicate = applications.find(app => app.id === id);
+    if (!appToDuplicate) return;
+
+    // Deep copy to avoid reference issues
+    const newApp: Application = JSON.parse(JSON.stringify(appToDuplicate));
+
+    newApp.id = crypto.randomUUID();
+    newApp.universityName = `${newApp.universityName} (Copy)`;
+    newApp.status = ApplicationStatus.NotStarted;
+
+    // Reset document statuses
+    Object.keys(newApp.documents).forEach(key => {
+      const docKey = key as keyof typeof newApp.documents;
+      if (newApp.documents[docKey]) {
+        newApp.documents[docKey].status = DocumentStatus.NotStarted;
+        newApp.documents[docKey].submitted = null;
+      }
+    });
+
+    setApplications(apps => [...apps, newApp]);
+    if (window.electron) window.electron.showNotification('Success', 'Application duplicated successfully');
+  };
+
   const addFacultyContact = (contact: FacultyContact, universityName: string, isNewUniversity: boolean, defaultProgramType: ProgramType) => {
     if (isNewUniversity) {
       const newApplication: Application = {
@@ -167,12 +192,22 @@ export const useApplications = () => {
     setApplications(newApps);
   };
 
+  const mergeApplications = (newApps: Application[]) => {
+    setApplications(apps => [...apps, ...newApps]);
+  };
+
   return {
     applications,
     addApplication,
     updateApplication,
     deleteApplication,
+    duplicateApplication,
     addFacultyContact,
     importApplications,
+    mergeApplications,
+    undo,
+    redo,
+    canUndo,
+    canRedo,
   };
 };

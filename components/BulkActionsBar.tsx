@@ -8,6 +8,7 @@ interface BulkActionsBarProps {
     onClearSelection: () => void;
     onBulkStatusChange: (status: ApplicationStatus) => void;
     onBulkDelete: () => void;
+    onBulkCompare: () => void;
     onExitSelectionMode: () => void;
     totalCount: number;
 }
@@ -22,6 +23,7 @@ const BulkActionsBar: React.FC<BulkActionsBarProps> = ({
     onClearSelection,
     onBulkStatusChange,
     onBulkDelete,
+    onBulkCompare,
     onExitSelectionMode,
     totalCount,
 }) => {
@@ -76,8 +78,8 @@ const BulkActionsBar: React.FC<BulkActionsBarProps> = ({
                             onClick={() => setShowStatusMenu(!showStatusMenu)}
                             disabled={selectedCount === 0}
                             className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-colors ${selectedCount > 0
-                                    ? 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 shadow-sm'
-                                    : 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-600 cursor-not-allowed'
+                                ? 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 shadow-sm'
+                                : 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-600 cursor-not-allowed'
                                 }`}
                         >
                             <MaterialIcon name="sync_alt" className="text-lg" />
@@ -104,8 +106,8 @@ const BulkActionsBar: React.FC<BulkActionsBarProps> = ({
                         onClick={onBulkDelete}
                         disabled={selectedCount === 0}
                         className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-colors ${selectedCount > 0
-                                ? 'bg-red-600 text-white hover:bg-red-700 shadow-lg shadow-red-600/20'
-                                : 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-600 cursor-not-allowed'
+                            ? 'bg-red-600 text-white hover:bg-red-700 shadow-lg shadow-red-600/20'
+                            : 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-600 cursor-not-allowed'
                             }`}
                     >
                         <MaterialIcon name="delete" className="text-lg" />

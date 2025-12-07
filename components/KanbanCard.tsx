@@ -17,9 +17,10 @@ interface KanbanCardProps {
   index: number;
   onEdit: (app: Application) => void;
   onUpdate?: (app: Application) => void;
+  onDuplicate?: (id: string) => void;
 }
 
-const KanbanCard: React.FC<KanbanCardProps> = ({ application, index, onEdit, onUpdate }) => {
+const KanbanCard: React.FC<KanbanCardProps> = ({ application, index, onEdit, onUpdate, onDuplicate }) => {
   const deadlineDate = application.deadline ? new Date(application.deadline) : null;
 
   const handlePinClick = (e: React.MouseEvent) => {
@@ -50,19 +51,31 @@ const KanbanCard: React.FC<KanbanCardProps> = ({ application, index, onEdit, onU
               )}
               {application.universityName}
             </h4>
-            {onUpdate && (
-              <button
-                onClick={handlePinClick}
-                className={`p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity ${application.isPinned
-                  ? 'text-amber-500 dark:text-amber-400'
-                  : 'text-slate-400 hover:text-amber-500 dark:hover:text-amber-400'
-                  }`}
-                title={application.isPinned ? 'Unpin' : 'Pin to top'}
-                aria-label={application.isPinned ? 'Unpin' : 'Pin to top'}
-              >
-                <span className="material-symbols-outlined text-sm">push_pin</span>
-              </button>
-            )}
+            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+              {onDuplicate && (
+                <button
+                  onClick={(e) => { e.stopPropagation(); onDuplicate(application.id); }}
+                  className="p-1 rounded-full text-slate-400 hover:text-indigo-500 dark:hover:text-indigo-400"
+                  title="Duplicate"
+                  aria-label="Duplicate application"
+                >
+                  <span className="material-symbols-outlined text-sm">content_copy</span>
+                </button>
+              )}
+              {onUpdate && (
+                <button
+                  onClick={handlePinClick}
+                  className={`p-1 rounded-full transition-colors ${application.isPinned
+                    ? 'text-amber-500 dark:text-amber-400 opacity-100'
+                    : 'text-slate-400 hover:text-amber-500 dark:hover:text-amber-400'
+                    }`}
+                  title={application.isPinned ? 'Unpin' : 'Pin to top'}
+                  aria-label={application.isPinned ? 'Unpin' : 'Pin to top'}
+                >
+                  <span className="material-symbols-outlined text-sm">push_pin</span>
+                </button>
+              )}
+            </div>
           </div>
           <p className="text-xs text-slate-500 dark:text-slate-400 truncate mb-2">
             {application.programName}
