@@ -5,9 +5,12 @@ import { useSortAndFilter } from './hooks/useSortAndFilter';
 import { useLocalStorage } from './hooks/useLocalStorage';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 import { useConfirmation } from './hooks/useConfirmation';
-import { ProgramType, Application, FacultyContact } from './types';
+import { useDarkMode } from './hooks/useDarkMode';
+import { useBulkSelection } from './hooks/useBulkSelection';
+import { ProgramType, Application, FacultyContact, ApplicationStatus } from './types';
 import { DropResult } from '@hello-pangea/dnd';
 import { exportToCSV } from './utils';
+import { downloadICS } from './utils/calendarExport';
 
 import Header from './components/Header';
 import ConfirmationModal from './components/ConfirmationModal';
@@ -15,6 +18,7 @@ import MainContent from './components/MainContent';
 
 const ApplicationModal = lazy(() => import('./components/ApplicationModal'));
 const FacultyContactModal = lazy(() => import('./components/FacultyContactModal'));
+const HelpModal = lazy(() => import('./components/HelpModal'));
 
 const App: React.FC = () => {
   const {
@@ -48,15 +52,55 @@ const App: React.FC = () => {
   const [viewMode, setViewMode] = useLocalStorage<'list' | 'kanban' | 'calendar' | 'budget'>('view-mode', 'list');
 
   const { confirmation, showConfirmation, closeConfirmation } = useConfirmation();
+  const { theme, cycleTheme } = useDarkMode();
+  const [isHelpOpen, setIsHelpOpen] = React.useState(false);
 
-  const requestDelete = (id: string) => {
+  // Bulk selection
+  const {
+    selectedIds,
+    isSelectionMode,
+    selectedCount,
+    toggleSelectionMode,
+    toggleSelection,
+    selectAll,
+    clearSelection,
+    getSelectedApplications,
+  } = useBulkSelection(filteredAndSortedApplications);
+
+  const requestDelete = React.useCallback((id: string) => {
     showConfirmation(
       'Delete Application',
       'Are you sure you want to delete this application? This action cannot be undone.',
       () => deleteApplication(id),
       true
     );
-  };
+  }, [showConfirmation, deleteApplication]);
+
+  // Bulk action handlers
+  const handleBulkStatusChange = React.useCallback((status: ApplicationStatus) => {
+    const selectedApps = getSelectedApplications();
+    selectedApps.forEach(app => {
+      updateApplication({ ...app, status });
+    });
+    clearSelection();
+    toggleSelectionMode();
+  }, [getSelectedApplications, updateApplication, clearSelection, toggleSelectionMode]);
+
+  const handleBulkDelete = React.useCallback(() => {
+    showConfirmation(
+      'Delete Selected Applications',
+      `Are you sure you want to delete ${selectedCount} application(s)? This action cannot be undone.`,
+      () => {
+        const selectedApps = getSelectedApplications();
+        selectedApps.forEach(app => {
+          deleteApplication(app.id);
+        });
+        clearSelection();
+        toggleSelectionMode();
+      },
+      true
+    );
+  }, [showConfirmation, selectedCount, getSelectedApplications, deleteApplication, clearSelection, toggleSelectionMode]);
 
   useKeyboardShortcuts({
     'Ctrl+n': () => openModal(null),
@@ -64,9 +108,14 @@ const App: React.FC = () => {
     'Ctrl+2': () => setViewMode('kanban'),
     'Ctrl+3': () => setViewMode('calendar'),
     'Ctrl+4': () => setViewMode('budget'),
+    'Escape': () => {
+      if (isSelectionMode) {
+        toggleSelectionMode();
+      }
+    },
   });
 
-  const handleSave = (app: Application) => {
+  const handleSave = React.useCallback((app: Application) => {
     try {
       if (editingApplication) {
         updateApplication(app);
@@ -80,7 +129,7 @@ const App: React.FC = () => {
         window.electron.showNotification('Error', 'Failed to save application. Please try again.');
       }
     }
-  };
+  }, [editingApplication, updateApplication, addApplication, closeModal]);
 
   const handleSaveFacultyContact = (contact: FacultyContact, universityName: string, isNewUniversity: boolean) => {
     try {
@@ -94,9 +143,11 @@ const App: React.FC = () => {
     }
   };
 
-  const handleExport = (format: 'csv' | 'json') => {
+  const handleExport = (format: 'csv' | 'json' | 'ics') => {
     if (format === 'csv') {
       exportToCSV(applications);
+    } else if (format === 'ics') {
+      downloadICS(applications);
     } else {
       const dataStr = JSON.stringify(applications, null, 2);
       const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
@@ -147,7 +198,7 @@ const App: React.FC = () => {
     reader.readAsText(file);
   };
 
-  const handleDragEnd = (result: DropResult) => {
+  const handleDragEnd = React.useCallback((result: DropResult) => {
     const { destination, source, draggableId } = result;
 
     if (!destination) {
@@ -165,10 +216,10 @@ const App: React.FC = () => {
     if (app) {
       updateApplication({
         ...app,
-        status: destination.droppableId as any // Cast to any or import ApplicationStatus if needed, but ApplicationStatus is string enum so it should be fine if types match
+        status: destination.droppableId as any
       });
     }
-  };
+  }, [applications, updateApplication]);
 
   return (
     <div className="min-h-screen text-slate-800 dark:text-slate-200 font-sans p-4 sm:p-6 lg:p-8">
@@ -182,6 +233,9 @@ const App: React.FC = () => {
           onImport={handleImport}
           viewMode={viewMode}
           onViewChange={setViewMode}
+          theme={theme}
+          cycleTheme={cycleTheme}
+          onShowHelp={() => setIsHelpOpen(true)}
         />
 
         <MainContent
@@ -196,6 +250,16 @@ const App: React.FC = () => {
           requestDelete={requestDelete}
           updateApplication={updateApplication}
           handleDragEnd={handleDragEnd}
+          // Bulk selection props
+          isSelectionMode={isSelectionMode}
+          selectedIds={selectedIds}
+          selectedCount={selectedCount}
+          toggleSelectionMode={toggleSelectionMode}
+          toggleSelection={toggleSelection}
+          selectAll={selectAll}
+          clearSelection={clearSelection}
+          onBulkStatusChange={handleBulkStatusChange}
+          onBulkDelete={handleBulkDelete}
         />
       </div>
 
@@ -220,6 +284,10 @@ const App: React.FC = () => {
           onClose={closeFacultyModal}
           onSave={handleSaveFacultyContact}
           applications={applications}
+        />
+        <HelpModal
+          isOpen={isHelpOpen}
+          onClose={() => setIsHelpOpen(false)}
         />
       </Suspense>
     </div>

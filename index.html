@@ -9,6 +9,11 @@
   <title>AcademiaTrack</title>
   <link rel="icon" href="AcademiaTrack.png">
   <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class'
+    }
+  </script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -24,18 +29,17 @@
         radial-gradient(circle at 1px 1px, #e2e8f0 1px, transparent 0);
       /* slate-200 dots */
       background-size: 100% 100%, 2rem 2rem;
-      transition: background-color 0.3s;
+      transition: background-color 0.3s, background-image 0.3s;
     }
 
-    @media (prefers-color-scheme: dark) {
-      body {
-        background-color: #0f172a;
-        /* slate-900 */
-        background-image:
-          radial-gradient(ellipse at 25% 25%, rgba(239, 68, 68, 0.1), transparent 70%),
-          radial-gradient(circle at 1px 1px, #1e293b 1px, transparent 0);
-        /* slate-800 dots */
-      }
+    /* Class-based dark mode */
+    html.dark body {
+      background-color: #0f172a;
+      /* slate-900 */
+      background-image:
+        radial-gradient(ellipse at 25% 25%, rgba(239, 68, 68, 0.1), transparent 70%),
+        radial-gradient(circle at 1px 1px, #1e293b 1px, transparent 0);
+      /* slate-800 dots */
     }
 
     .material-symbols-outlined {

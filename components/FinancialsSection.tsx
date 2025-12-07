@@ -15,6 +15,8 @@ interface FinancialsSectionProps {
     handleFinancialOfferChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => void;
     handleFinancialNumericChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
     handleFinancialCheckboxChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+    handleDecisionDeadlineChange?: (date: string) => void;
+    isAccepted?: boolean;
     addScholarship: () => void;
     removeScholarship: (index: number) => void;
     handleScholarshipChange: (index: number, e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => void;
@@ -27,6 +29,8 @@ const FinancialsSection: React.FC<FinancialsSectionProps> = ({
     handleFinancialOfferChange,
     handleFinancialNumericChange,
     handleFinancialCheckboxChange,
+    handleDecisionDeadlineChange,
+    isAccepted,
     addScholarship,
     removeScholarship,
     handleScholarshipChange,
@@ -163,6 +167,27 @@ const FinancialsSection: React.FC<FinancialsSectionProps> = ({
                                 placeholder="Any additional details about the offer..."
                             />
                         </div>
+
+                        {/* Decision Deadline - shown for Accepted applications */}
+                        {isAccepted && handleDecisionDeadlineChange && (
+                            <div className="col-span-1 md:col-span-2 p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl space-y-2">
+                                <div className="flex items-center gap-2 text-amber-700 dark:text-amber-400">
+                                    <MaterialIcon name="event" className="text-lg" />
+                                    <span className="text-sm font-medium">Decision Deadline</span>
+                                </div>
+                                <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
+                                    <input
+                                        type="date"
+                                        value={appData.decisionDeadline || ''}
+                                        onChange={(e) => handleDecisionDeadlineChange(e.target.value)}
+                                        className="px-4 py-2 bg-white dark:bg-slate-800 border border-amber-300 dark:border-amber-700 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent outline-none transition-all text-slate-800 dark:text-slate-200 [color-scheme:light_dark]"
+                                    />
+                                    <span className="text-xs text-amber-600 dark:text-amber-400">
+                                        Set when you need to respond to this offer
+                                    </span>
+                                </div>
+                            </div>
+                        )}
                     </div>
                 )}
             </div>

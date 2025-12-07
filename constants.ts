@@ -212,3 +212,52 @@ export const POPULAR_UNIVERSITIES = [
   "EPFL",
   "University of Melbourne"
 ];
+
+// Tag presets for application categorization
+export interface TagPreset {
+  name: string;
+  color: string;
+  bgClass: string;
+  icon?: string;
+}
+
+export const TAG_PRESETS: TagPreset[] = [
+  { name: 'Dream School', color: '#ec4899', bgClass: 'bg-pink-100 text-pink-800 dark:bg-pink-900/30 dark:text-pink-300', icon: 'star' },
+  { name: 'Target', color: '#8b5cf6', bgClass: 'bg-violet-100 text-violet-800 dark:bg-violet-900/30 dark:text-violet-300', icon: 'gps_fixed' },
+  { name: 'Safety', color: '#22c55e', bgClass: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300', icon: 'shield' },
+  { name: 'Funded', color: '#f59e0b', bgClass: 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300', icon: 'payments' },
+  { name: 'Top Choice', color: '#ef4444', bgClass: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300', icon: 'favorite' },
+  { name: 'Research Fit', color: '#06b6d4', bgClass: 'bg-cyan-100 text-cyan-800 dark:bg-cyan-900/30 dark:text-cyan-300', icon: 'science' },
+  { name: 'Location', color: '#0ea5e9', bgClass: 'bg-sky-100 text-sky-800 dark:bg-sky-900/30 dark:text-sky-300', icon: 'location_on' },
+  { name: 'Deadline Soon', color: '#f97316', bgClass: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300', icon: 'schedule' },
+];
+
+// Get deadline countdown info
+export function getDeadlineInfo(deadline: string | null): {
+  daysLeft: number | null;
+  label: string;
+  colorClass: string;
+  urgency: 'past' | 'urgent' | 'soon' | 'normal' | 'none';
+} {
+  if (!deadline) return { daysLeft: null, label: '', colorClass: '', urgency: 'none' };
+
+  const deadlineDate = new Date(deadline);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  deadlineDate.setHours(0, 0, 0, 0);
+
+  const diffMs = deadlineDate.getTime() - today.getTime();
+  const daysLeft = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+
+  if (daysLeft < 0) {
+    return { daysLeft, label: 'Past', colorClass: 'bg-slate-200 text-slate-600 dark:bg-slate-700 dark:text-slate-400', urgency: 'past' };
+  } else if (daysLeft === 0) {
+    return { daysLeft: 0, label: 'Today!', colorClass: 'bg-red-500 text-white', urgency: 'urgent' };
+  } else if (daysLeft <= 7) {
+    return { daysLeft, label: `${daysLeft}d`, colorClass: 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300', urgency: 'urgent' };
+  } else if (daysLeft <= 30) {
+    return { daysLeft, label: `${daysLeft}d`, colorClass: 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300', urgency: 'soon' };
+  } else {
+    return { daysLeft, label: `${daysLeft}d`, colorClass: 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300', urgency: 'normal' };
+  }
+}

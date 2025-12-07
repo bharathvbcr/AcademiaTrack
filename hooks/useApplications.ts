@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Application, FacultyContact, ApplicationStatus, ApplicationFeeWaiverStatus, TestStatus, ProgramType, DocumentStatus } from '../types';
 import { useDebounce } from './useDebounce';
+import { migrateData, wrapInSchema, createEmptyDataSchema } from '../utils/dataMigration';
 
 export const useApplications = () => {
   const [applications, setApplications] = useState<Application[]>([]);
@@ -11,26 +12,21 @@ export const useApplications = () => {
   useEffect(() => {
     const loadApplications = async () => {
       if (window.electron) {
-        const data = await window.electron.loadData();
-        if (data) {
-          if (Array.isArray(data)) {
-            setApplications(data);
-          } else if (typeof data === 'object') {
-            // Handle case where a single application object might be returned
-            setApplications([data as unknown as Application]);
-          }
+        const rawData = await window.electron.loadData();
+        if (rawData) {
+          // Migrate data from any version to current version
+          const migratedData = migrateData(rawData);
+          setApplications(migratedData.applications);
         }
       } else {
-        // Fallback for web-only dev (optional, or just warn)
+        // Fallback for web-only dev
         const saved = localStorage.getItem('phd-applications');
         if (saved) {
           try {
             const parsed = JSON.parse(saved);
-            if (Array.isArray(parsed)) {
-              setApplications(parsed);
-            } else if (parsed && typeof parsed === 'object') {
-              setApplications([parsed]);
-            }
+            // Migrate data from any version to current version
+            const migratedData = migrateData(parsed);
+            setApplications(migratedData.applications);
           } catch (e) {
             console.error('Failed to parse saved applications', e);
           }
@@ -45,10 +41,13 @@ export const useApplications = () => {
   useEffect(() => {
     if (!isLoaded) return;
 
+    // Wrap applications in versioned schema before saving
+    const dataToSave = wrapInSchema(debouncedApplications);
+
     if (window.electron) {
-      window.electron.saveData(debouncedApplications);
+      window.electron.saveData(dataToSave);
     } else {
-      localStorage.setItem('phd-applications', JSON.stringify(debouncedApplications));
+      localStorage.setItem('phd-applications', JSON.stringify(dataToSave));
     }
   }, [debouncedApplications, isLoaded]);
 

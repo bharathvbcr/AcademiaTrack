@@ -3,20 +3,41 @@ import { ProgramType } from '../types';
 import { PROGRAM_TYPE_OPTIONS } from '../constants';
 import Tooltip from './Tooltip';
 
+type Theme = 'light' | 'dark' | 'system';
+
 interface HeaderProps {
   onAddNew: () => void;
   onAddFaculty: () => void;
   defaultProgramType: ProgramType;
   onSetDefaultProgramType: (type: ProgramType) => void;
-  onExport: (format: 'csv' | 'json') => void;
+  onExport: (format: 'csv' | 'json' | 'ics') => void;
   onImport: (e: React.ChangeEvent<HTMLInputElement>) => void;
   viewMode: 'list' | 'kanban' | 'calendar' | 'budget';
   onViewChange: (mode: 'list' | 'kanban' | 'calendar' | 'budget') => void;
+  theme: Theme;
+  cycleTheme: () => void;
+  onShowHelp?: () => void;
 }
 
 const MaterialIcon: React.FC<{ name: string; className?: string }> = ({ name, className }) => (
   <span className={`material-symbols-outlined ${className}`}>{name}</span>
 );
+
+const getThemeIcon = (theme: Theme): string => {
+  switch (theme) {
+    case 'light': return 'light_mode';
+    case 'dark': return 'dark_mode';
+    case 'system': return 'computer';
+  }
+};
+
+const getThemeTooltip = (theme: Theme): string => {
+  switch (theme) {
+    case 'light': return 'Light Mode (Click to change)';
+    case 'dark': return 'Dark Mode (Click to change)';
+    case 'system': return 'System Theme (Click to change)';
+  }
+};
 
 const Header: React.FC<HeaderProps> = ({
   onAddNew,
@@ -27,9 +48,13 @@ const Header: React.FC<HeaderProps> = ({
   onImport,
   viewMode,
   onViewChange,
+  theme,
+  cycleTheme,
+  onShowHelp,
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [showExportMenu, setShowExportMenu] = useState(false);
+  const [showMoreMenu, setShowMoreMenu] = useState(false);
 
   return (
     <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
@@ -99,20 +124,70 @@ const Header: React.FC<HeaderProps> = ({
 
         <div className="h-8 w-px bg-slate-200 dark:bg-slate-700 mx-2 hidden sm:block"></div>
 
+        {/* More Menu - Groups: Theme, Help, Export, Import */}
         <div className="relative">
-          <Tooltip content="Export Data">
+          <Tooltip content="More Options">
             <button
-              onClick={() => setShowExportMenu(!showExportMenu)}
-              className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors shadow-sm"
+              onClick={() => { setShowMoreMenu(!showMoreMenu); setShowExportMenu(false); }}
+              className="flex items-center justify-center w-10 h-10 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors shadow-sm"
+              aria-label="More options"
             >
-              <MaterialIcon name="download" className="text-lg" />
-              <span className="hidden sm:inline">Export</span>
+              <MaterialIcon name="more_vert" className="text-lg" />
             </button>
           </Tooltip>
-          {showExportMenu && (
-            <div className="absolute right-0 mt-2 w-32 bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700 py-1 z-20">
-              <button onClick={() => { onExport('csv'); setShowExportMenu(false); }} className="w-full text-left px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700">CSV</button>
-              <button onClick={() => { onExport('json'); setShowExportMenu(false); }} className="w-full text-left px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700">JSON</button>
+          {showMoreMenu && (
+            <div className="absolute right-0 mt-2 w-52 bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700 py-2 z-20">
+              {/* Theme */}
+              <button
+                onClick={() => { cycleTheme(); }}
+                className="w-full text-left px-4 py-2.5 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-3"
+              >
+                <MaterialIcon name={getThemeIcon(theme)} className="text-lg" />
+                <span>{theme === 'light' ? 'Light Mode' : theme === 'dark' ? 'Dark Mode' : 'System Theme'}</span>
+              </button>
+
+              {/* Help */}
+              <button
+                onClick={() => { onShowHelp?.(); setShowMoreMenu(false); }}
+                className="w-full text-left px-4 py-2.5 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-3"
+              >
+                <MaterialIcon name="help" className="text-lg" />
+                <span>Help & Documentation</span>
+              </button>
+
+              <hr className="my-2 border-slate-200 dark:border-slate-700" />
+
+              {/* Export submenu */}
+              <div className="relative group">
+                <button
+                  onClick={() => setShowExportMenu(!showExportMenu)}
+                  className="w-full text-left px-4 py-2.5 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center justify-between"
+                >
+                  <span className="flex items-center gap-3">
+                    <MaterialIcon name="download" className="text-lg" />
+                    <span>Export</span>
+                  </span>
+                  <MaterialIcon name={showExportMenu ? 'expand_less' : 'expand_more'} className="text-sm" />
+                </button>
+                {showExportMenu && (
+                  <div className="pl-10 bg-slate-50 dark:bg-slate-700/30">
+                    <button onClick={() => { onExport('csv'); setShowMoreMenu(false); setShowExportMenu(false); }} className="w-full text-left px-4 py-2 text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700">CSV</button>
+                    <button onClick={() => { onExport('json'); setShowMoreMenu(false); setShowExportMenu(false); }} className="w-full text-left px-4 py-2 text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700">JSON</button>
+                    <button onClick={() => { onExport('ics'); setShowMoreMenu(false); setShowExportMenu(false); }} className="w-full text-left px-4 py-2 text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-2">
+                      <MaterialIcon name="calendar_month" className="text-sm" />Calendar (.ics)
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {/* Import */}
+              <button
+                onClick={() => { fileInputRef.current?.click(); setShowMoreMenu(false); }}
+                className="w-full text-left px-4 py-2.5 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-3"
+              >
+                <MaterialIcon name="upload" className="text-lg" />
+                <span>Import Data</span>
+              </button>
             </div>
           )}
         </div>
@@ -124,23 +199,15 @@ const Header: React.FC<HeaderProps> = ({
           accept=".json"
           className="hidden"
         />
-        <Tooltip content="Import Data">
-          <button
-            onClick={() => fileInputRef.current?.click()}
-            className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors shadow-sm"
-          >
-            <MaterialIcon name="upload" className="text-lg" />
-            <span className="hidden sm:inline">Import</span>
-          </button>
-        </Tooltip>
 
+        {/* Primary Actions */}
         <Tooltip content="Add New Faculty Contact">
           <button
             onClick={onAddFaculty}
-            className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors shadow-sm"
+            className="flex items-center gap-2 px-3 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors shadow-sm"
           >
             <MaterialIcon name="person_add" className="text-lg" />
-            <span className="hidden sm:inline">Add Faculty</span>
+            <span className="hidden lg:inline">Faculty</span>
           </button>
         </Tooltip>
 

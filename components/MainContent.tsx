@@ -1,9 +1,10 @@
 import React, { Suspense, lazy } from 'react';
-import { Application } from '../types';
+import { Application, ApplicationStatus } from '../types';
 import { SortConfig, SortKey } from '../hooks/useSortAndFilter';
 import { DropResult } from '@hello-pangea/dnd';
 import ApplicationList from './ApplicationList';
 import SortControls from './SortControls';
+import BulkActionsBar from './BulkActionsBar';
 
 const DashboardSummary = lazy(() => import('./DashboardSummary'));
 const KanbanBoard = lazy(() => import('./KanbanBoard'));
@@ -22,6 +23,16 @@ interface MainContentProps {
     requestDelete: (id: string) => void;
     updateApplication: (app: Application) => void;
     handleDragEnd: (result: DropResult) => void;
+    // Bulk selection props
+    isSelectionMode: boolean;
+    selectedIds: Set<string>;
+    selectedCount: number;
+    toggleSelectionMode: () => void;
+    toggleSelection: (id: string) => void;
+    selectAll: () => void;
+    clearSelection: () => void;
+    onBulkStatusChange: (status: ApplicationStatus) => void;
+    onBulkDelete: () => void;
 }
 
 const MainContent: React.FC<MainContentProps> = ({
@@ -35,12 +46,34 @@ const MainContent: React.FC<MainContentProps> = ({
     openModal,
     requestDelete,
     updateApplication,
-    handleDragEnd
+    handleDragEnd,
+    isSelectionMode,
+    selectedIds,
+    selectedCount,
+    toggleSelectionMode,
+    toggleSelection,
+    selectAll,
+    clearSelection,
+    onBulkStatusChange,
+    onBulkDelete,
 }) => {
     return (
         <main className="mt-8">
+            {/* Bulk Actions Bar */}
+            {isSelectionMode && (
+                <BulkActionsBar
+                    selectedCount={selectedCount}
+                    totalCount={filteredAndSortedApplications.length}
+                    onSelectAll={selectAll}
+                    onClearSelection={clearSelection}
+                    onBulkStatusChange={onBulkStatusChange}
+                    onBulkDelete={onBulkDelete}
+                    onExitSelectionMode={toggleSelectionMode}
+                />
+            )}
+
             <Suspense fallback={<div>Loading...</div>}>
-                <DashboardSummary applications={applications} />
+                <DashboardSummary applications={applications} viewMode={viewMode} />
             </Suspense>
 
             {viewMode === 'list' ? (
@@ -60,6 +93,10 @@ const MainContent: React.FC<MainContentProps> = ({
                         onDelete={requestDelete}
                         onUpdate={updateApplication}
                         hasActiveFilter={searchQuery.length > 0}
+                        isSelectionMode={isSelectionMode}
+                        selectedIds={selectedIds}
+                        onToggleSelection={toggleSelection}
+                        onEnterSelectionMode={toggleSelectionMode}
                     />
                 </>
             ) : viewMode === 'kanban' ? (
@@ -68,6 +105,7 @@ const MainContent: React.FC<MainContentProps> = ({
                         applications={filteredAndSortedApplications}
                         onDragEnd={handleDragEnd}
                         onEdit={openModal}
+                        onUpdate={updateApplication}
                     />
                 </Suspense>
             ) : viewMode === 'budget' ? (
