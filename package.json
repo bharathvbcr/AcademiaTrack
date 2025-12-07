@@ -41,7 +41,7 @@
   "build": {
     "appId": "com.example.academia-track",
     "productName": "AcademiaTrack",
-    "icon": "AcademiaTrack.png",
+    "icon": "assets/icon.png",
     "files": [
       "dist/**/*",
       "electron/main.cjs",
