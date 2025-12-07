@@ -6,6 +6,7 @@ interface ApplicationListProps {
   onEdit: (app: Application) => void;
   onDelete: (id: string) => void;
   onUpdate: (app: Application) => void;
+  onDuplicate: (id: string) => void;
   hasActiveFilter: boolean;
   // Bulk selection props (optional for backward compatibility)
   isSelectionMode?: boolean;
@@ -23,6 +24,7 @@ const ApplicationList: React.FC<ApplicationListProps> = ({
   onEdit,
   onDelete,
   onUpdate,
+  onDuplicate,
   hasActiveFilter,
   isSelectionMode = false,
   selectedIds = new Set(),
@@ -146,6 +148,14 @@ const ApplicationList: React.FC<ApplicationListProps> = ({
                     aria-label="Edit application"
                   >
                     <MaterialIcon name="edit" className="text-lg" />
+                  </button>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); onDuplicate(app.id); }}
+                    className="p-2 bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-full shadow-sm hover:bg-indigo-50 dark:hover:bg-indigo-900/30 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+                    title="Duplicate"
+                    aria-label="Duplicate application"
+                  >
+                    <MaterialIcon name="content_copy" className="text-lg" />
                   </button>
                   <button
                     onClick={(e) => { e.stopPropagation(); onDelete(app.id); }}

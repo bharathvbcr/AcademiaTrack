@@ -1,9 +1,10 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { ProgramType } from '../types';
 import { PROGRAM_TYPE_OPTIONS } from '../constants';
 import Tooltip from './Tooltip';
 
 type Theme = 'light' | 'dark' | 'system';
+type ViewMode = 'list' | 'kanban' | 'calendar' | 'budget' | 'faculty' | 'recommenders' | 'timeline';
 
 interface HeaderProps {
   onAddNew: () => void;
@@ -12,8 +13,8 @@ interface HeaderProps {
   onSetDefaultProgramType: (type: ProgramType) => void;
   onExport: (format: 'csv' | 'json' | 'ics') => void;
   onImport: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  viewMode: 'list' | 'kanban' | 'calendar' | 'budget';
-  onViewChange: (mode: 'list' | 'kanban' | 'calendar' | 'budget') => void;
+  viewMode: ViewMode;
+  onViewChange: (mode: ViewMode) => void;
   theme: Theme;
   cycleTheme: () => void;
   onShowHelp?: () => void;
@@ -28,14 +29,6 @@ const getThemeIcon = (theme: Theme): string => {
     case 'light': return 'light_mode';
     case 'dark': return 'dark_mode';
     case 'system': return 'computer';
-  }
-};
-
-const getThemeTooltip = (theme: Theme): string => {
-  switch (theme) {
-    case 'light': return 'Light Mode (Click to change)';
-    case 'dark': return 'Dark Mode (Click to change)';
-    case 'system': return 'System Theme (Click to change)';
   }
 };
 
@@ -56,6 +49,53 @@ const Header: React.FC<HeaderProps> = ({
   const [showExportMenu, setShowExportMenu] = useState(false);
   const [showMoreMenu, setShowMoreMenu] = useState(false);
 
+  // Track mouse hover for expanding toolbar
+  const [hoveredSection, setHoveredSection] = useState<'apps' | 'schedule' | 'resources' | null>(null);
+
+  // Track last used views
+  const [lastAppView, setLastAppView] = useState<ViewMode>('list');
+  const [lastScheduleView, setLastScheduleView] = useState<ViewMode>('timeline');
+  const [lastResourceView, setLastResourceView] = useState<ViewMode>('faculty');
+
+  useEffect(() => {
+    if (['list', 'kanban', 'budget'].includes(viewMode)) {
+      setLastAppView(viewMode);
+    } else if (['timeline', 'calendar'].includes(viewMode)) {
+      setLastScheduleView(viewMode);
+    } else if (['faculty', 'recommenders'].includes(viewMode)) {
+      setLastResourceView(viewMode);
+    }
+  }, [viewMode]);
+
+  const isAppView = ['list', 'kanban', 'budget'].includes(viewMode);
+  const isScheduleView = ['timeline', 'calendar'].includes(viewMode);
+  const isResourceView = ['faculty', 'recommenders'].includes(viewMode);
+
+  const showApps = isAppView || hoveredSection === 'apps';
+  const showSchedule = isScheduleView || hoveredSection === 'schedule';
+  const showResources = isResourceView || hoveredSection === 'resources';
+
+  // Helper for Icon Buttons
+  const ViewIconButton = ({ mode, icon, label }: { mode: ViewMode, icon: string, label: string }) => {
+    const isActive = viewMode === mode;
+    return (
+      <Tooltip content={label}>
+        <button
+          onClick={() => onViewChange(mode)}
+          className={`relative p-2 rounded-lg transition-all duration-300 ${isActive
+            ? 'bg-gradient-to-br from-red-500 to-red-700 text-white shadow-lg shadow-red-500/40 ring-1 ring-white/20 scale-105'
+            : 'text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-600/50 hover:text-slate-700 dark:hover:text-slate-200'
+            }`}
+        >
+          <MaterialIcon name={icon} className="text-xl" />
+          {isActive && (
+            <div className="absolute inset-0 rounded-lg bg-white/10 opacity-50 pointer-events-none filter blur-[1px]"></div>
+          )}
+        </button>
+      </Tooltip>
+    );
+  };
+
   return (
     <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
       <div>
@@ -68,63 +108,82 @@ const Header: React.FC<HeaderProps> = ({
       </div>
 
       <div className="flex flex-wrap items-center gap-2 sm:gap-4">
-        <div className="flex items-center gap-2">
-          <label htmlFor="default-program-type" className="text-sm font-medium text-slate-600 dark:text-slate-400 whitespace-nowrap hidden lg:block">
-            Default:
-          </label>
-          <select
-            id="default-program-type"
-            value={defaultProgramType}
-            onChange={(e) => onSetDefaultProgramType(e.target.value as ProgramType)}
-            className="text-sm rounded-full border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 py-1.5 pl-3 pr-8 shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 focus:ring-offset-slate-100 dark:focus:ring-offset-slate-900"
-            aria-label="Set default program type for new applications"
-          >
-            {PROGRAM_TYPE_OPTIONS.map(type => <option key={type} value={type}>{type}</option>)}
-          </select>
-        </div>
 
-        <div className="flex bg-slate-100 dark:bg-slate-700/50 p-1 rounded-full border border-slate-200 dark:border-slate-600">
-          <Tooltip content="List View">
-            <button
-              onClick={() => onViewChange('list')}
-              className={`px-3 py-1.5 rounded-full text-sm font-medium transition-all ${viewMode === 'list' ? 'bg-white dark:bg-slate-600 text-slate-800 dark:text-slate-100 shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'}`}
-              aria-label="List View"
-            >
-              <MaterialIcon name="list" className="text-lg" />
-            </button>
-          </Tooltip>
-          <Tooltip content="Kanban Board">
-            <button
-              onClick={() => onViewChange('kanban')}
-              className={`px-3 py-1.5 rounded-full text-sm font-medium transition-all ${viewMode === 'kanban' ? 'bg-white dark:bg-slate-600 text-slate-800 dark:text-slate-100 shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'}`}
-              aria-label="Kanban View"
-            >
-              <MaterialIcon name="view_kanban" className="text-lg" />
-            </button>
-          </Tooltip>
-          <Tooltip content="Calendar View">
-            <button
-              onClick={() => onViewChange('calendar')}
-              className={`px-3 py-1.5 rounded-full text-sm font-medium transition-all ${viewMode === 'calendar' ? 'bg-white dark:bg-slate-600 text-slate-800 dark:text-slate-100 shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'}`}
-              aria-label="Calendar View"
-            >
-              <MaterialIcon name="calendar_month" className="text-lg" />
-            </button>
-          </Tooltip>
-          <Tooltip content="Budget Tracker">
-            <button
-              onClick={() => onViewChange('budget')}
-              className={`px-3 py-1.5 rounded-full text-sm font-medium transition-all ${viewMode === 'budget' ? 'bg-white dark:bg-slate-600 text-slate-800 dark:text-slate-100 shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'}`}
-              aria-label="Budget View"
-            >
-              <MaterialIcon name="attach_money" className="text-lg" />
-            </button>
-          </Tooltip>
+        {/* Expanding Toolbar */}
+        <div className="flex bg-slate-100 dark:bg-slate-700/50 p-1.5 rounded-xl border border-slate-200 dark:border-slate-600 items-center gap-1 transition-all duration-300">
+
+          {/* Applications Section */}
+          <div
+            className="flex items-center"
+            onMouseEnter={() => setHoveredSection('apps')}
+            onMouseLeave={() => setHoveredSection(null)}
+          >
+            {showApps ? (
+              <div className="flex items-center gap-1 animate-fadeIn px-1">
+                <ViewIconButton mode="list" icon="list" label="List View" />
+                <ViewIconButton mode="kanban" icon="view_kanban" label="Kanban Board" />
+                <ViewIconButton mode="budget" icon="attach_money" label="Budget" />
+              </div>
+            ) : (
+              <button
+                onClick={() => onViewChange(lastAppView)}
+                className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-600/50 transition-colors"
+              >
+                <span>Applications</span>
+              </button>
+            )}
+          </div>
+
+          <div className="h-5 w-px bg-slate-300 dark:bg-slate-600 mx-1"></div>
+
+          {/* Schedule Section */}
+          <div
+            className="flex items-center"
+            onMouseEnter={() => setHoveredSection('schedule')}
+            onMouseLeave={() => setHoveredSection(null)}
+          >
+            {showSchedule ? (
+              <div className="flex items-center gap-1 animate-fadeIn px-1">
+                <ViewIconButton mode="timeline" icon="timeline" label="Timeline" />
+                <ViewIconButton mode="calendar" icon="calendar_month" label="Calendar" />
+              </div>
+            ) : (
+              <button
+                onClick={() => onViewChange(lastScheduleView)}
+                className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-600/50 transition-colors"
+              >
+                <span>Schedule</span>
+              </button>
+            )}
+          </div>
+
+          <div className="h-5 w-px bg-slate-300 dark:bg-slate-600 mx-1"></div>
+
+          {/* Resources Section */}
+          <div
+            className="flex items-center"
+            onMouseEnter={() => setHoveredSection('resources')}
+            onMouseLeave={() => setHoveredSection(null)}
+          >
+            {showResources ? (
+              <div className="flex items-center gap-1 animate-fadeIn px-1">
+                <ViewIconButton mode="faculty" icon="school" label="Faculty" />
+                <ViewIconButton mode="recommenders" icon="assignment_ind" label="Recommenders" />
+              </div>
+            ) : (
+              <button
+                onClick={() => onViewChange(lastResourceView)}
+                className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-600/50 transition-colors"
+              >
+                <span>Resources</span>
+              </button>
+            )}
+          </div>
         </div>
 
         <div className="h-8 w-px bg-slate-200 dark:bg-slate-700 mx-2 hidden sm:block"></div>
 
-        {/* More Menu - Groups: Theme, Help, Export, Import */}
+        {/* More Menu */}
         <div className="relative">
           <Tooltip content="More Options">
             <button
@@ -136,7 +195,25 @@ const Header: React.FC<HeaderProps> = ({
             </button>
           </Tooltip>
           {showMoreMenu && (
-            <div className="absolute right-0 mt-2 w-52 bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700 py-2 z-20">
+            <div className="absolute right-0 mt-2 w-64 bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700 py-2 z-20">
+
+              {/* Default Program Selector */}
+              <div className="px-4 py-2">
+                <label htmlFor="default-program-type" className="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider block mb-1">
+                  Default Program
+                </label>
+                <select
+                  id="default-program-type"
+                  value={defaultProgramType}
+                  onChange={(e) => onSetDefaultProgramType(e.target.value as ProgramType)}
+                  className="w-full text-sm rounded-lg border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-700/50 py-1.5 pl-3 pr-8 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  {PROGRAM_TYPE_OPTIONS.map(type => <option key={type} value={type}>{type}</option>)}
+                </select>
+              </div>
+
+              <hr className="my-2 border-slate-200 dark:border-slate-700" />
+
               {/* Theme */}
               <button
                 onClick={() => { cycleTheme(); }}
@@ -196,7 +273,7 @@ const Header: React.FC<HeaderProps> = ({
           type="file"
           ref={fileInputRef}
           onChange={onImport}
-          accept=".json"
+          accept=".json,.csv"
           className="hidden"
         />
 

@@ -9,7 +9,7 @@ import { useDarkMode } from './hooks/useDarkMode';
 import { useBulkSelection } from './hooks/useBulkSelection';
 import { ProgramType, Application, FacultyContact, ApplicationStatus } from './types';
 import { DropResult } from '@hello-pangea/dnd';
-import { exportToCSV } from './utils';
+import { exportToCSV, parseCSV } from './utils';
 import { downloadICS } from './utils/calendarExport';
 
 import Header from './components/Header';
@@ -19,6 +19,7 @@ import MainContent from './components/MainContent';
 const ApplicationModal = lazy(() => import('./components/ApplicationModal'));
 const FacultyContactModal = lazy(() => import('./components/FacultyContactModal'));
 const HelpModal = lazy(() => import('./components/HelpModal'));
+const ComparisonModal = lazy(() => import('./components/ComparisonModal'));
 
 const App: React.FC = () => {
   const {
@@ -27,7 +28,13 @@ const App: React.FC = () => {
     updateApplication,
     deleteApplication,
     addFacultyContact,
+    duplicateApplication,
     importApplications,
+    mergeApplications,
+    undo,
+    redo,
+    canUndo,
+    canRedo,
   } = useApplications();
 
   const {
@@ -40,6 +47,8 @@ const App: React.FC = () => {
     closeFacultyModal,
   } = useAppModals();
 
+  const [isComparisonOpen, setIsComparisonOpen] = React.useState(false);
+
   const {
     searchQuery,
     setSearchQuery,
@@ -49,7 +58,7 @@ const App: React.FC = () => {
   } = useSortAndFilter(applications);
 
   const [defaultProgramType, setDefaultProgramType] = useLocalStorage<ProgramType>('default-program-type', ProgramType.PhD);
-  const [viewMode, setViewMode] = useLocalStorage<'list' | 'kanban' | 'calendar' | 'budget'>('view-mode', 'list');
+  const [viewMode, setViewMode] = useLocalStorage<'list' | 'kanban' | 'calendar' | 'budget' | 'faculty' | 'recommenders' | 'timeline'>('view-mode', 'list');
 
   const { confirmation, showConfirmation, closeConfirmation } = useConfirmation();
   const { theme, cycleTheme } = useDarkMode();
@@ -102,12 +111,38 @@ const App: React.FC = () => {
     );
   }, [showConfirmation, selectedCount, getSelectedApplications, deleteApplication, clearSelection, toggleSelectionMode]);
 
+  const handleBulkCompare = React.useCallback(() => {
+    if (selectedCount < 2) return;
+    setIsComparisonOpen(true);
+  }, [selectedCount]);
+
   useKeyboardShortcuts({
+    'Ctrl+z': () => {
+      if (canUndo) {
+        undo();
+        if (window.electron) window.electron.showNotification('Undo', 'Action undone');
+      }
+    },
+    'Ctrl+y': () => {
+      if (canRedo) {
+        redo();
+        if (window.electron) window.electron.showNotification('Redo', 'Action redone');
+      }
+    },
+    'Ctrl+Shift+Z': () => {
+      if (canRedo) {
+        redo();
+        if (window.electron) window.electron.showNotification('Redo', 'Action redone');
+      }
+    },
     'Ctrl+n': () => openModal(null),
     'Ctrl+1': () => setViewMode('list'),
     'Ctrl+2': () => setViewMode('kanban'),
     'Ctrl+3': () => setViewMode('calendar'),
     'Ctrl+4': () => setViewMode('budget'),
+    'Ctrl+5': () => setViewMode('faculty'),
+    'Ctrl+6': () => setViewMode('recommenders'),
+    'Ctrl+7': () => setViewMode('timeline'),
     'Escape': () => {
       if (isSelectionMode) {
         toggleSelectionMode();
@@ -167,23 +202,39 @@ const App: React.FC = () => {
     const reader = new FileReader();
     reader.onload = (event) => {
       try {
-        const json = JSON.parse(event.target?.result as string);
+        const result = event.target?.result as string;
+        let json: any;
+
+        if (file.name.toLowerCase().endsWith('.csv')) {
+          json = parseCSV(result);
+        } else {
+          json = JSON.parse(result);
+        }
+
         // Basic validation
         const isValid = Array.isArray(json) && json.every(item =>
           item &&
           typeof item === 'object' &&
           'id' in item &&
-          'universityName' in item &&
-          'status' in item
+          ('universityName' in item || 'university' in item) // Loose validation for CSV
         );
 
         if (isValid) {
-          showConfirmation(
-            'Import Data',
-            'This will overwrite your current data. Are you sure you want to proceed?',
-            () => importApplications(json),
-            true
-          );
+          if (file.name.toLowerCase().endsWith('.csv')) {
+            showConfirmation(
+              'Import CSV Data',
+              `Found ${json.length} applications. This will ADD them to your current list. Proceed?`,
+              () => mergeApplications(json),
+              false // Not dangerous
+            );
+          } else {
+            showConfirmation(
+              'Import JSON Data',
+              'This will OVERWRITE your current data. Are you sure you want to proceed?',
+              () => importApplications(json),
+              true // Dangerous
+            );
+          }
         } else {
           if (window.electron) window.electron.showNotification('Error', 'Invalid JSON format. The file does not contain valid application data.');
           else console.error('Invalid JSON format');
@@ -249,6 +300,7 @@ const App: React.FC = () => {
           openModal={openModal}
           requestDelete={requestDelete}
           updateApplication={updateApplication}
+          duplicateApplication={duplicateApplication}
           handleDragEnd={handleDragEnd}
           // Bulk selection props
           isSelectionMode={isSelectionMode}
@@ -260,6 +312,7 @@ const App: React.FC = () => {
           clearSelection={clearSelection}
           onBulkStatusChange={handleBulkStatusChange}
           onBulkDelete={handleBulkDelete}
+          onBulkCompare={handleBulkCompare}
         />
       </div>
 
@@ -288,6 +341,11 @@ const App: React.FC = () => {
         <HelpModal
           isOpen={isHelpOpen}
           onClose={() => setIsHelpOpen(false)}
+        />
+        <ComparisonModal
+          isOpen={isComparisonOpen}
+          onClose={() => setIsComparisonOpen(false)}
+          applications={getSelectedApplications()}
         />
       </Suspense>
     </div>

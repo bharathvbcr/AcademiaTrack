@@ -7,7 +7,7 @@ import { format, parseISO, isValid } from 'date-fns';
 
 interface DashboardSummaryProps {
   applications: Application[];
-  viewMode?: 'list' | 'kanban' | 'calendar' | 'budget';
+  viewMode?: 'list' | 'kanban' | 'calendar' | 'budget' | 'faculty' | 'recommenders' | 'timeline';
 }
 
 const DashboardSummary: React.FC<DashboardSummaryProps> = ({ applications, viewMode = 'list' }) => {

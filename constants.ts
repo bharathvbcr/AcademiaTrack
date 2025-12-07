@@ -1,4 +1,4 @@
-import { ApplicationStatus, ApplicationFeeWaiverStatus, TestStatus, FacultyContactStatus, ProgramType, DocumentStatus } from './types';
+import { ApplicationStatus, ApplicationFeeWaiverStatus, TestStatus, FacultyContactStatus, ProgramType, DocumentStatus, RecommenderStatus } from './types';
 import { Application } from './types';
 
 export const PROGRAM_TYPE_OPTIONS: ProgramType[] = [
@@ -261,3 +261,17 @@ export function getDeadlineInfo(deadline: string | null): {
     return { daysLeft, label: `${daysLeft}d`, colorClass: 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300', urgency: 'normal' };
   }
 }
+
+export const RECOMMENDER_STATUS_OPTIONS: RecommenderStatus[] = [
+  RecommenderStatus.NotStarted,
+  RecommenderStatus.Requested,
+  RecommenderStatus.Reminded,
+  RecommenderStatus.Submitted,
+];
+
+export const RECOMMENDER_STATUS_COLORS: { [key in RecommenderStatus]: string } = {
+  [RecommenderStatus.NotStarted]: 'bg-slate-200 text-slate-700 border-slate-300 dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600',
+  [RecommenderStatus.Requested]: 'bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-500/20 dark:text-blue-200 dark:border-blue-500/30',
+  [RecommenderStatus.Reminded]: 'bg-yellow-100 text-yellow-800 border-yellow-200 dark:bg-yellow-500/20 dark:text-yellow-200 dark:border-yellow-500/30',
+  [RecommenderStatus.Submitted]: 'bg-green-100 text-green-800 border-green-200 dark:bg-green-500/20 dark:text-green-200 dark:border-green-500/30',
+};

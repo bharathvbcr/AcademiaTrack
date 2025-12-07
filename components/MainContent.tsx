@@ -10,9 +10,12 @@ const DashboardSummary = lazy(() => import('./DashboardSummary'));
 const KanbanBoard = lazy(() => import('./KanbanBoard'));
 const CalendarView = lazy(() => import('./CalendarView'));
 const BudgetView = lazy(() => import('./BudgetView'));
+const FacultyView = lazy(() => import('./FacultyView'));
+const RecommendersView = lazy(() => import('./RecommendersView'));
+const TimelineView = lazy(() => import('./TimelineView'));
 
 interface MainContentProps {
-    viewMode: 'list' | 'kanban' | 'calendar' | 'budget';
+    viewMode: 'list' | 'kanban' | 'calendar' | 'budget' | 'faculty' | 'recommenders' | 'timeline';
     applications: Application[];
     filteredAndSortedApplications: Application[];
     sortConfig: SortConfig;
@@ -22,6 +25,7 @@ interface MainContentProps {
     openModal: (app: Application | null) => void;
     requestDelete: (id: string) => void;
     updateApplication: (app: Application) => void;
+    duplicateApplication: (id: string) => void;
     handleDragEnd: (result: DropResult) => void;
     // Bulk selection props
     isSelectionMode: boolean;
@@ -33,6 +37,7 @@ interface MainContentProps {
     clearSelection: () => void;
     onBulkStatusChange: (status: ApplicationStatus) => void;
     onBulkDelete: () => void;
+    onBulkCompare: () => void;
 }
 
 const MainContent: React.FC<MainContentProps> = ({
@@ -46,6 +51,7 @@ const MainContent: React.FC<MainContentProps> = ({
     openModal,
     requestDelete,
     updateApplication,
+    duplicateApplication,
     handleDragEnd,
     isSelectionMode,
     selectedIds,
@@ -56,6 +62,7 @@ const MainContent: React.FC<MainContentProps> = ({
     clearSelection,
     onBulkStatusChange,
     onBulkDelete,
+    onBulkCompare,
 }) => {
     return (
         <main className="mt-8">
@@ -68,6 +75,7 @@ const MainContent: React.FC<MainContentProps> = ({
                     onClearSelection={clearSelection}
                     onBulkStatusChange={onBulkStatusChange}
                     onBulkDelete={onBulkDelete}
+                    onBulkCompare={onBulkCompare}
                     onExitSelectionMode={toggleSelectionMode}
                 />
             )}
@@ -92,6 +100,7 @@ const MainContent: React.FC<MainContentProps> = ({
                         onEdit={openModal}
                         onDelete={requestDelete}
                         onUpdate={updateApplication}
+                        onDuplicate={duplicateApplication}
                         hasActiveFilter={searchQuery.length > 0}
                         isSelectionMode={isSelectionMode}
                         selectedIds={selectedIds}
@@ -106,11 +115,37 @@ const MainContent: React.FC<MainContentProps> = ({
                         onDragEnd={handleDragEnd}
                         onEdit={openModal}
                         onUpdate={updateApplication}
+                        onDuplicate={duplicateApplication}
                     />
                 </Suspense>
             ) : viewMode === 'budget' ? (
                 <Suspense fallback={<div>Loading Budget...</div>}>
                     <BudgetView applications={filteredAndSortedApplications} />
+                </Suspense>
+            ) : viewMode === 'faculty' ? (
+                <Suspense fallback={<div>Loading Faculty...</div>}>
+                    <FacultyView
+                        applications={applications}
+                        updateApplication={updateApplication}
+                        openModal={openModal}
+                    />
+                </Suspense>
+            ) : viewMode === 'recommenders' ? (
+                <Suspense fallback={<div>Loading Recommenders...</div>}>
+                    <RecommendersView
+                        applications={applications}
+                        updateApplication={updateApplication}
+                        openModal={openModal}
+                    />
+                </Suspense>
+            ) : viewMode === 'timeline' ? (
+                <Suspense fallback={<div>Loading Timeline...</div>}>
+                    <div className="h-full overflow-hidden">
+                        <TimelineView
+                            applications={filteredAndSortedApplications}
+                            onEdit={openModal}
+                        />
+                    </div>
                 </Suspense>
             ) : (
                 <Suspense fallback={<div>Loading Calendar...</div>}>
