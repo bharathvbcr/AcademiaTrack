@@ -118,8 +118,32 @@ export interface Scholarship {
     notes: string;
 }
 
+export interface StatusChange {
+    status: ApplicationStatus;
+    timestamp: string; // ISO date
+    note?: string;
+}
+
+export interface GlobalRecommender {
+    id: string;
+    name: string;
+    title: string;
+    institution: string;
+    email: string;
+    phone?: string;
+    relationship: string;
+    notes: string;
+    // Track which applications use this recommender
+    applicationIds: string[];
+}
+
 export interface Application {
     id: string;
+    isPinned?: boolean;
+    admissionChance?: number; // 0-100 percentage
+    statusHistory?: StatusChange[];
+    decisionDeadline?: string; // Date to respond to offer by
+    tags?: string[]; // Custom labels like "Dream School", "Safety"
     universityName: string;
     programName: string;
     programType: ProgramType;
@@ -175,12 +199,36 @@ export interface Application {
     };
 }
 
+export interface BackupInfo {
+    filename: string;
+    path: string;
+    timestamp: string;
+    size: number;
+}
+
+export interface BackupResult {
+    success: boolean;
+    error?: string;
+    path?: string;
+    timestamp?: string;
+    data?: unknown;
+}
+
 export interface ElectronAPI {
     selectFile: () => Promise<string | null>;
     openFile: (path: string) => Promise<void>;
-    loadData: () => Promise<Application[] | null>;
-    saveData: (data: Application[]) => Promise<void>;
+    loadData: () => Promise<unknown>;
+    saveData: (data: unknown) => Promise<void>;
     showNotification: (title: string, body: string) => void;
+    // Document storage
+    copyDocument: (sourcePath: string, appId: string, docType: string) => Promise<BackupResult>;
+    deleteDocument: (path: string) => Promise<BackupResult>;
+    // Backup methods
+    createBackup: () => Promise<BackupResult>;
+    listBackups: () => Promise<BackupInfo[]>;
+    restoreBackup: (path: string) => Promise<BackupResult>;
+    deleteBackup: (path: string) => Promise<BackupResult>;
+    autoBackup: () => Promise<BackupResult>;
 }
 
 declare global {
@@ -188,3 +236,4 @@ declare global {
         electron: ElectronAPI;
     }
 }
+

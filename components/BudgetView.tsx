@@ -17,7 +17,8 @@ const BudgetView: React.FC<BudgetViewProps> = ({ applications }) => {
         totalStipendPotential,
         costByUniversity,
         financialOffers,
-        scholarships
+        scholarships,
+        costPerChance
     } = useMemo(() => {
         let totalAppFees = 0;
         let totalTestCosts = 0;
@@ -25,6 +26,7 @@ const BudgetView: React.FC<BudgetViewProps> = ({ applications }) => {
         const costByUniversity: { name: string; value: number }[] = [];
         const financialOffers: { university: string; stipend: number; waiver: number; net: number }[] = [];
         const scholarships: { name: string; amount: number; status: string; university: string }[] = [];
+        const costPerChance: { name: string; fee: number; chance: number; costPerPercent: number }[] = [];
 
         applications.forEach(app => {
             const appFee = app.applicationFee || 0;
@@ -37,6 +39,16 @@ const BudgetView: React.FC<BudgetViewProps> = ({ applications }) => {
 
             if (appTotal > 0) {
                 costByUniversity.push({ name: app.universityName, value: appTotal });
+            }
+
+            // Cost per admission chance analysis
+            if (app.admissionChance && app.admissionChance > 0) {
+                costPerChance.push({
+                    name: app.universityName.length > 15 ? app.universityName.substring(0, 15) + '...' : app.universityName,
+                    fee: appFee,
+                    chance: app.admissionChance,
+                    costPerPercent: appFee / app.admissionChance
+                });
             }
 
             // Financial Offers
@@ -75,7 +87,8 @@ const BudgetView: React.FC<BudgetViewProps> = ({ applications }) => {
             totalStipendPotential,
             costByUniversity: costByUniversity.sort((a, b) => b.value - a.value),
             financialOffers: financialOffers.sort((a, b) => b.stipend - a.stipend),
-            scholarships
+            scholarships,
+            costPerChance: costPerChance.sort((a, b) => a.costPerPercent - b.costPerPercent)
         };
     }, [applications]);
 
@@ -204,6 +217,58 @@ const BudgetView: React.FC<BudgetViewProps> = ({ applications }) => {
                     </div>
                 )}
             </div>
+
+            {/* Cost per Admission Chance Analysis */}
+            {costPerChance.length > 0 && (
+                <div className="bg-white dark:bg-slate-800 p-6 rounded-3xl shadow-lg border border-slate-200 dark:border-slate-700">
+                    <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-2">Cost per Admission Chance</h3>
+                    <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">
+                        Lower cost per 1% admission chance = better ROI. Add admission chance estimates to your applications to see this analysis.
+                    </p>
+                    <div className="h-80">
+                        <ResponsiveContainer width="100%" height="100%">
+                            <BarChart data={costPerChance} layout="vertical" margin={{ left: 20, right: 20 }}>
+                                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                                <XAxis
+                                    type="number"
+                                    tickFormatter={(value) => `$${value.toFixed(2)}`}
+                                    label={{ value: 'Cost per 1% Chance', position: 'bottom', offset: 0 }}
+                                />
+                                <YAxis type="category" dataKey="name" width={100} tick={{ fontSize: 11 }} />
+                                <Tooltip
+                                    formatter={(value: number, _name: string, props: any) => [
+                                        `$${value.toFixed(2)} per 1%`,
+                                        `Fee: $${props.payload.fee} | Chance: ${props.payload.chance}%`
+                                    ]}
+                                    contentStyle={{
+                                        backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                                        borderRadius: '8px',
+                                        border: 'none',
+                                        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                                    }}
+                                    itemStyle={{ color: '#1e293b' }}
+                                />
+                                <Bar dataKey="costPerPercent" fill="#8b5cf6" radius={[0, 4, 4, 0]} />
+                            </BarChart>
+                        </ResponsiveContainer>
+                    </div>
+                    <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
+                        {costPerChance.slice(0, 3).map((app, index) => (
+                            <div key={index} className={`p-3 rounded-lg ${index === 0 ? 'bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800' : 'bg-slate-50 dark:bg-slate-700/30'}`}>
+                                <div className="flex items-center gap-2 mb-1">
+                                    {index === 0 && <span className="text-green-600 dark:text-green-400 text-xs font-medium">Best ROI</span>}
+                                </div>
+                                <p className="font-medium text-slate-800 dark:text-white truncate" title={app.name}>{app.name}</p>
+                                <div className="flex justify-between text-sm mt-1">
+                                    <span className="text-slate-500 dark:text-slate-400">Fee: ${app.fee}</span>
+                                    <span className="text-slate-500 dark:text-slate-400">Chance: {app.chance}%</span>
+                                </div>
+                                <p className="text-lg font-bold text-purple-600 dark:text-purple-400">${app.costPerPercent.toFixed(2)}/1%</p>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

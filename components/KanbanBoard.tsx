@@ -8,9 +8,10 @@ interface KanbanBoardProps {
     applications: Application[];
     onDragEnd: (result: DropResult) => void;
     onEdit: (app: Application) => void;
+    onUpdate?: (app: Application) => void;
 }
 
-const KanbanBoard: React.FC<KanbanBoardProps> = ({ applications, onDragEnd, onEdit }) => {
+const KanbanBoard: React.FC<KanbanBoardProps> = ({ applications, onDragEnd, onEdit, onUpdate }) => {
     // Group applications by status
     const applicationsByStatus = React.useMemo(() => {
         const grouped: Record<string, Application[]> = {};
@@ -39,6 +40,7 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({ applications, onDragEnd, onEd
                             status={status as ApplicationStatus}
                             applications={applicationsByStatus[status] || []}
                             onEdit={onEdit}
+                            onUpdate={onUpdate}
                         />
                     ))}
                 </div>

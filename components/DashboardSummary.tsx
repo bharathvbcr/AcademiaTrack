@@ -7,13 +7,16 @@ import { format, parseISO, isValid } from 'date-fns';
 
 interface DashboardSummaryProps {
   applications: Application[];
+  viewMode?: 'list' | 'kanban' | 'calendar' | 'budget';
 }
 
-const DashboardSummary: React.FC<DashboardSummaryProps> = ({ applications }) => {
+const DashboardSummary: React.FC<DashboardSummaryProps> = ({ applications, viewMode = 'list' }) => {
   const [isDarkMode, setIsDarkMode] = useState(
     () => typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches
   );
-  const [showAnalytics, setShowAnalytics] = useState(true);
+  // Auto-hide analytics on non-list views, but allow manual toggle
+  const [userPreference, setUserPreference] = useState<boolean | null>(null);
+  const showAnalytics = userPreference !== null ? userPreference : viewMode === 'list';
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -50,7 +53,18 @@ const DashboardSummary: React.FC<DashboardSummaryProps> = ({ applications }) => 
       return diffDays >= 0 && diffDays <= 14; // Next 2 weeks
     }).length;
 
-    return { total, accepted, rejected, pending, upcomingDeadlines };
+    // Calculate acceptance rate (accepted / (accepted + rejected))
+    const decisioned = accepted + rejected;
+    const acceptanceRate = decisioned > 0 ? Math.round((accepted / decisioned) * 100) : null;
+
+    // Calculate total cost spent
+    const totalCost = applications.reduce((sum, app) => {
+      const fee = app.applicationFee || 0;
+      const waived = app.feeWaiverStatus === 'Granted';
+      return sum + (waived ? 0 : fee);
+    }, 0);
+
+    return { total, accepted, rejected, pending, upcomingDeadlines, acceptanceRate, totalCost };
   }, [applications]);
 
   const timelineData = useMemo(() => {
@@ -127,16 +141,28 @@ const DashboardSummary: React.FC<DashboardSummaryProps> = ({ applications }) => 
   return (
     <div className="space-y-6 mb-8">
       {/* Summary Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
         <SummaryCard title="Total Applications" value={summaryStats.total} icon="folder_open" color="bg-blue-500" />
         <SummaryCard title="Pending / In Progress" value={summaryStats.pending} icon="hourglass_empty" color="bg-amber-500" />
         <SummaryCard title="Accepted" value={summaryStats.accepted} icon="check_circle" color="bg-green-500" />
         <SummaryCard title="Deadlines (14 Days)" value={summaryStats.upcomingDeadlines} icon="event_busy" color="bg-red-500" />
+        <SummaryCard
+          title="Acceptance Rate"
+          value={summaryStats.acceptanceRate !== null ? `${summaryStats.acceptanceRate}%` : '-'}
+          icon="percent"
+          color="bg-purple-500"
+        />
+        <SummaryCard
+          title="Total Cost Spent"
+          value={`$${summaryStats.totalCost.toLocaleString()}`}
+          icon="payments"
+          color="bg-emerald-500"
+        />
       </div>
 
       <div className="flex justify-end">
         <button
-          onClick={() => setShowAnalytics(!showAnalytics)}
+          onClick={() => setUserPreference(!showAnalytics)}
           className="flex items-center gap-2 text-sm font-medium text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors"
         >
           <span className="material-symbols-outlined text-lg">
@@ -178,7 +204,15 @@ const DashboardSummary: React.FC<DashboardSummaryProps> = ({ applications }) => 
                           ))}
                         </Pie>
                         <Tooltip contentStyle={tooltipStyle} itemStyle={{ color: isDarkMode ? '#e2e8f0' : '#1e293b' }} />
-                        <Legend iconSize={10} wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }} />
+                        <Legend
+                          iconSize={10}
+                          wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }}
+                          formatter={(value, entry: any) => (
+                            <span className="text-slate-600 dark:text-slate-300">
+                              {value} <span className="font-semibold ml-1">({entry.payload.value})</span>
+                            </span>
+                          )}
+                        />
                       </PieChart>
                     </ResponsiveContainer>
                   </div>
@@ -208,7 +242,15 @@ const DashboardSummary: React.FC<DashboardSummaryProps> = ({ applications }) => 
                           ))}
                         </Pie>
                         <Tooltip contentStyle={tooltipStyle} itemStyle={{ color: isDarkMode ? '#e2e8f0' : '#1e293b' }} />
-                        <Legend iconSize={10} wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }} />
+                        <Legend
+                          iconSize={10}
+                          wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }}
+                          formatter={(value, entry: any) => (
+                            <span className="text-slate-600 dark:text-slate-300">
+                              {value} <span className="font-semibold ml-1">({entry.payload.count})</span>
+                            </span>
+                          )}
+                        />
                       </PieChart>
                     </ResponsiveContainer>
                   </div>
@@ -264,7 +306,7 @@ const DashboardSummary: React.FC<DashboardSummaryProps> = ({ applications }) => 
   );
 };
 
-const SummaryCard: React.FC<{ title: string; value: number; icon: string; color: string }> = ({ title, value, icon, color }) => (
+const SummaryCard: React.FC<{ title: string; value: number | string; icon: string; color: string }> = ({ title, value, icon, color }) => (
   <div className="bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl p-4 rounded-2xl shadow-sm border border-slate-200/50 dark:border-slate-700/50 flex items-center gap-4">
     <div className={`h-12 w-12 rounded-xl ${color} bg-opacity-10 flex items-center justify-center shrink-0`}>
       <span className={`material-symbols-outlined ${color.replace('bg-', 'text-')}`}>{icon}</span>

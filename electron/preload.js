@@ -6,4 +6,13 @@ contextBridge.exposeInMainWorld('electron', {
   showNotification: (title, body) => ipcRenderer.invoke('show-notification', { title, body }),
   selectFile: () => ipcRenderer.invoke('select-file'),
   openFile: (path) => ipcRenderer.invoke('open-file', path),
+  // Document storage
+  copyDocument: (sourcePath, appId, docType) => ipcRenderer.invoke('copy-document', { sourcePath, appId, docType }),
+  deleteDocument: (path) => ipcRenderer.invoke('delete-document', path),
+  // Backup methods
+  createBackup: () => ipcRenderer.invoke('create-backup'),
+  listBackups: () => ipcRenderer.invoke('list-backups'),
+  restoreBackup: (path) => ipcRenderer.invoke('restore-backup', path),
+  deleteBackup: (path) => ipcRenderer.invoke('delete-backup', path),
+  autoBackup: () => ipcRenderer.invoke('auto-backup'),
 });

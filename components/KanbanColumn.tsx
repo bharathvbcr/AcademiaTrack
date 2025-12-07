@@ -8,9 +8,10 @@ interface KanbanColumnProps {
     status: ApplicationStatus;
     applications: Application[];
     onEdit: (app: Application) => void;
+    onUpdate?: (app: Application) => void;
 }
 
-const KanbanColumn: React.FC<KanbanColumnProps> = ({ status, applications, onEdit }) => {
+const KanbanColumn: React.FC<KanbanColumnProps> = ({ status, applications, onEdit, onUpdate }) => {
     return (
         <div className="flex flex-col w-72 shrink-0 max-h-full">
             <div className={`flex items-center justify-between mb-3 px-2 py-1 rounded-lg ${STATUS_COLORS[status]} bg-opacity-20`}>
@@ -34,6 +35,7 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({ status, applications, onEdi
                                 application={app}
                                 index={index}
                                 onEdit={onEdit}
+                                onUpdate={onUpdate}
                             />
                         ))}
                         {provided.placeholder}
