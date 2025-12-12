@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { backdropVariants, modalVariants } from '../hooks/useAnimations';
 import {
   Application, FacultyContactStatus, ProgramType,
   LocationDetails, UniversityResult
@@ -182,108 +184,124 @@ const ApplicationModal: React.FC<ApplicationModalProps> = ({ isOpen, onClose, ap
     onClose();
   };
 
-  if (!isOpen) return null;
-
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" aria-labelledby="modal-title" role="dialog" aria-modal="true">
-      <div onClick={onClose} className="fixed inset-0 bg-black/60 backdrop-blur-md transition-opacity" aria-hidden="true"></div>
+    <AnimatePresence>
+      {isOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+          <motion.div
+            onClick={onClose}
+            className="fixed inset-0 bg-black/60 backdrop-blur-md"
+            aria-hidden="true"
+            variants={backdropVariants}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+          />
 
-      <div className="relative bg-white dark:bg-slate-800 rounded-3xl shadow-xl w-full max-w-3xl transform transition-all">
-        <div className="flex items-center justify-between p-5 border-b border-slate-200 dark:border-slate-700">
-          <h3 className="text-xl font-semibold text-slate-900 dark:text-white" id="modal-title">{applicationToEdit ? 'Edit Application' : 'Add New Application'}</h3>
-          <button type="button" onClick={onClose} className="p-1.5 rounded-full text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-700 hover:text-slate-700 dark:hover:text-slate-200 transition-colors">
-            <MaterialIcon name="close" className="text-xl" />
-          </button>
+          <motion.div
+            className="relative bg-white dark:bg-slate-800 rounded-3xl shadow-xl w-full max-w-3xl"
+            variants={modalVariants}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+          >
+            <div className="flex items-center justify-between p-5 border-b border-slate-200 dark:border-slate-700">
+              <h3 className="text-xl font-semibold text-slate-900 dark:text-white" id="modal-title">{applicationToEdit ? 'Edit Application' : 'Add New Application'}</h3>
+              <button type="button" onClick={onClose} className="p-1.5 rounded-full text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-700 hover:text-slate-700 dark:hover:text-slate-200 transition-colors">
+                <MaterialIcon name="close" className="text-xl" />
+              </button>
+            </div>
+            <form onSubmit={handleSubmit}>
+              <div className="p-6 max-h-[70vh] overflow-y-auto space-y-8">
+                <ProgramDetailsSection
+                  appData={appData}
+                  handleChange={handleChange}
+                  handleUniversityChange={handleUniversityChange}
+                  handleUniversitySelect={handleUniversitySelect}
+                  universitySuggestions={universitySuggestions}
+                  showSuggestions={showSuggestions}
+                  setShowSuggestions={setShowSuggestions}
+                  handleLocationChange={handleLocationChange}
+                  handleLocationSelect={handleLocationSelect}
+                  locationSuggestions={locationSuggestions}
+                  showLocationSuggestions={showLocationSuggestions}
+                  setShowLocationSuggestions={setShowLocationSuggestions}
+                />
+                <RankingsStatusSection
+                  appData={appData}
+                  handleChange={handleChange}
+                  handleCheckboxChange={handleCheckboxChange}
+                />
+                <DocumentsSection
+                  appData={appData}
+                  handleDocumentChange={handleDocumentChange}
+                  handleOpenFile={async () => { }} // Placeholder as file handling is complex
+                  handleRemoveFile={() => { }} // Placeholder
+                  handleAttachFile={() => { }} // Placeholder
+                />
+                <EssaysSection
+                  appData={appData}
+                  addEssay={addEssay}
+                  removeEssay={removeEssay}
+                  updateEssayStatus={updateEssayStatus}
+                  addEssayDraft={addEssayDraft}
+                  removeEssayDraft={removeEssayDraft}
+                  updateEssayDraft={updateEssayDraft}
+                />
+                <FacultyContactsSection
+                  appData={appData}
+                  handleFacultyChange={handleFacultyChange}
+                  handleFacultyMarkdownChange={handleFacultyMarkdownChange}
+                  addFacultyContact={addFacultyContact}
+                  removeFacultyContact={removeFacultyContact}
+                  isFacultyOpen={isFacultyOpen}
+                  setIsFacultyOpen={setIsFacultyOpen}
+                  handleFacultyFitChange={handleFacultyFitChange}
+                  addPaperRead={addPaperRead}
+                  removePaperRead={removePaperRead}
+                  addCorrespondence={addCorrespondence}
+                  removeCorrespondence={removeCorrespondence}
+                />
+                <RecommenderSection
+                  appData={appData}
+                  handleRecommenderChange={handleRecommenderChange}
+                  addRecommender={addRecommender}
+                  removeRecommender={removeRecommender}
+                  isRecommenderOpen={isRecommenderOpen}
+                  setIsRecommenderOpen={setIsRecommenderOpen}
+                />
+                <FinancialsSection
+                  appData={appData}
+                  handleFinancialOfferChange={handleFinancialOfferChange}
+                  handleFinancialNumericChange={handleFinancialNumericChange}
+                  handleFinancialCheckboxChange={handleFinancialCheckboxChange}
+                  addScholarship={addScholarship}
+                  removeScholarship={removeScholarship}
+                  handleScholarshipChange={handleScholarshipChange}
+                  isScholarshipOpen={isScholarshipOpen}
+                  setIsScholarshipOpen={setIsScholarshipOpen}
+                />
+                <RemindersSection
+                  appData={appData}
+                  toggleReminder={toggleReminder}
+                  updateReminderDate={updateReminderDate}
+                  deleteReminder={deleteReminder}
+                  addReminder={addReminder}
+                />
+                <GeneralNotesSection
+                  appData={appData}
+                  setAppData={setAppData}
+                />
+              </div>
+              <div className="flex items-center justify-end p-4 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-200 dark:border-slate-700 rounded-b-3xl space-x-3">
+                <button type="button" onClick={onClose} className="px-5 py-2 text-sm font-medium text-slate-700 dark:text-slate-200 bg-transparent rounded-full hover:bg-slate-200 dark:hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500">Cancel</button>
+                <button type="submit" className="px-6 py-2 text-sm font-medium text-white bg-red-600 rounded-full shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">Save</button>
+              </div>
+            </form>
+          </motion.div>
         </div>
-        <form onSubmit={handleSubmit}>
-          <div className="p-6 max-h-[70vh] overflow-y-auto space-y-8">
-            <ProgramDetailsSection
-              appData={appData}
-              handleChange={handleChange}
-              handleUniversityChange={handleUniversityChange}
-              handleUniversitySelect={handleUniversitySelect}
-              universitySuggestions={universitySuggestions}
-              showSuggestions={showSuggestions}
-              setShowSuggestions={setShowSuggestions}
-              handleLocationChange={handleLocationChange}
-              handleLocationSelect={handleLocationSelect}
-              locationSuggestions={locationSuggestions}
-              showLocationSuggestions={showLocationSuggestions}
-              setShowLocationSuggestions={setShowLocationSuggestions}
-            />
-            <RankingsStatusSection
-              appData={appData}
-              handleChange={handleChange}
-              handleCheckboxChange={handleCheckboxChange}
-            />
-            <DocumentsSection
-              appData={appData}
-              handleDocumentChange={handleDocumentChange}
-              handleOpenFile={async () => { }} // Placeholder as file handling is complex
-              handleRemoveFile={() => { }} // Placeholder
-              handleAttachFile={() => { }} // Placeholder
-            />
-            <EssaysSection
-              appData={appData}
-              addEssay={addEssay}
-              removeEssay={removeEssay}
-              updateEssayStatus={updateEssayStatus}
-              addEssayDraft={addEssayDraft}
-              removeEssayDraft={removeEssayDraft}
-              updateEssayDraft={updateEssayDraft}
-            />
-            <FacultyContactsSection
-              appData={appData}
-              handleFacultyChange={handleFacultyChange}
-              handleFacultyMarkdownChange={handleFacultyMarkdownChange}
-              addFacultyContact={addFacultyContact}
-              removeFacultyContact={removeFacultyContact}
-              isFacultyOpen={isFacultyOpen}
-              setIsFacultyOpen={setIsFacultyOpen}
-              handleFacultyFitChange={handleFacultyFitChange}
-              addPaperRead={addPaperRead}
-              removePaperRead={removePaperRead}
-              addCorrespondence={addCorrespondence}
-              removeCorrespondence={removeCorrespondence}
-            />
-            <RecommenderSection
-              appData={appData}
-              handleRecommenderChange={handleRecommenderChange}
-              addRecommender={addRecommender}
-              removeRecommender={removeRecommender}
-              isRecommenderOpen={isRecommenderOpen}
-              setIsRecommenderOpen={setIsRecommenderOpen}
-            />
-            <FinancialsSection
-              appData={appData}
-              handleFinancialOfferChange={handleFinancialOfferChange}
-              handleFinancialNumericChange={handleFinancialNumericChange}
-              handleFinancialCheckboxChange={handleFinancialCheckboxChange}
-              addScholarship={addScholarship}
-              removeScholarship={removeScholarship}
-              handleScholarshipChange={handleScholarshipChange}
-              isScholarshipOpen={isScholarshipOpen}
-              setIsScholarshipOpen={setIsScholarshipOpen}
-            />
-            <RemindersSection
-              appData={appData}
-              toggleReminder={toggleReminder}
-              updateReminderDate={updateReminderDate}
-              deleteReminder={deleteReminder}
-              addReminder={addReminder}
-            />
-            <GeneralNotesSection
-              appData={appData}
-              setAppData={setAppData}
-            />
-          </div>
-          <div className="flex items-center justify-end p-4 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-200 dark:border-slate-700 rounded-b-3xl space-x-3">
-            <button type="button" onClick={onClose} className="px-5 py-2 text-sm font-medium text-slate-700 dark:text-slate-200 bg-transparent rounded-full hover:bg-slate-200 dark:hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500">Cancel</button>
-            <button type="submit" className="px-6 py-2 text-sm font-medium text-white bg-red-600 rounded-full shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">Save</button>
-          </div>
-        </form>
-      </div>
-    </div>
+      )}
+    </AnimatePresence>
   );
 };
 

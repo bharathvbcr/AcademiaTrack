@@ -15,4 +15,13 @@ contextBridge.exposeInMainWorld('electron', {
   restoreBackup: (path) => ipcRenderer.invoke('restore-backup', path),
   deleteBackup: (path) => ipcRenderer.invoke('delete-backup', path),
   autoBackup: () => ipcRenderer.invoke('auto-backup'),
+  // Version & Updates
+  getVersionInfo: () => ipcRenderer.invoke('get-version-info'),
+  checkForUpdates: () => ipcRenderer.invoke('check-for-updates'),
+  downloadUpdate: () => ipcRenderer.invoke('download-update'),
+  installUpdate: () => ipcRenderer.invoke('install-update'),
+  onUpdateStatus: (callback) => {
+    ipcRenderer.on('update-status', (event, data) => callback(data));
+    return () => ipcRenderer.removeAllListeners('update-status');
+  },
 });
