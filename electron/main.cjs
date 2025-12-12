@@ -2,11 +2,25 @@ const { app, BrowserWindow, ipcMain, Notification, dialog, shell } = require('el
 const path = require('path');
 const fs = require('fs');
 
+// Auto-updater (only in production)
+let autoUpdater = null;
+if (process.env.NODE_ENV !== 'development') {
+  try {
+    autoUpdater = require('electron-updater').autoUpdater;
+    autoUpdater.autoDownload = false;
+    autoUpdater.autoInstallOnAppQuit = true;
+  } catch (e) {
+    console.log('Auto-updater not available');
+  }
+}
+
 const userDataPath = app.getPath('userData');
 const dataFilePath = path.join(userDataPath, 'data.json');
 
+let mainWindow = null;
+
 function createWindow() {
-  const win = new BrowserWindow({
+  mainWindow = new BrowserWindow({
     width: 1200,
     height: 800,
     icon: path.join(__dirname, '../AcademiaTrack.png'),
@@ -18,15 +32,104 @@ function createWindow() {
   });
 
   if (process.env.NODE_ENV === 'development') {
-    win.loadURL('http://localhost:5173');
-    win.webContents.openDevTools();
+    mainWindow.loadURL('http://localhost:5173');
+    mainWindow.webContents.openDevTools();
   } else {
-    win.loadFile(path.join(__dirname, '..', 'dist', 'index.html'));
+    mainWindow.loadFile(path.join(__dirname, '..', 'dist', 'index.html'));
   }
 }
 
 app.whenReady().then(() => {
   createWindow();
+
+  // --- Auto-updater handlers ---
+  if (autoUpdater) {
+    autoUpdater.on('checking-for-update', () => {
+      mainWindow?.webContents.send('update-status', { status: 'checking' });
+    });
+
+    autoUpdater.on('update-available', (info) => {
+      mainWindow?.webContents.send('update-status', {
+        status: 'available',
+        version: info.version,
+        releaseNotes: info.releaseNotes
+      });
+    });
+
+    autoUpdater.on('update-not-available', () => {
+      mainWindow?.webContents.send('update-status', { status: 'not-available' });
+    });
+
+    autoUpdater.on('download-progress', (progress) => {
+      mainWindow?.webContents.send('update-status', {
+        status: 'downloading',
+        percent: progress.percent
+      });
+    });
+
+    autoUpdater.on('update-downloaded', (info) => {
+      mainWindow?.webContents.send('update-status', {
+        status: 'downloaded',
+        version: info.version
+      });
+    });
+
+    autoUpdater.on('error', (err) => {
+      mainWindow?.webContents.send('update-status', {
+        status: 'error',
+        message: err.message
+      });
+    });
+
+    // Check for updates after app starts
+    setTimeout(() => {
+      autoUpdater.checkForUpdates().catch(() => { });
+    }, 3000);
+  }
+
+  // IPC: Get app version info
+  ipcMain.handle('get-version-info', async () => {
+    return {
+      version: app.getVersion(),
+      name: app.getName(),
+      electron: process.versions.electron,
+      node: process.versions.node,
+      chrome: process.versions.chrome,
+      platform: process.platform,
+      arch: process.arch,
+    };
+  });
+
+  // IPC: Check for updates
+  ipcMain.handle('check-for-updates', async () => {
+    if (!autoUpdater) {
+      return { available: false, reason: 'Auto-updater not available in development' };
+    }
+    try {
+      const result = await autoUpdater.checkForUpdates();
+      return { available: !!result?.updateInfo, version: result?.updateInfo?.version };
+    } catch (error) {
+      return { available: false, error: error.message };
+    }
+  });
+
+  // IPC: Download update
+  ipcMain.handle('download-update', async () => {
+    if (!autoUpdater) return { success: false };
+    try {
+      await autoUpdater.downloadUpdate();
+      return { success: true };
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
+  });
+
+  // IPC: Install update and restart
+  ipcMain.handle('install-update', async () => {
+    if (!autoUpdater) return { success: false };
+    autoUpdater.quitAndInstall(false, true);
+    return { success: true };
+  });
 
   ipcMain.handle('load-data', async () => {
     try {

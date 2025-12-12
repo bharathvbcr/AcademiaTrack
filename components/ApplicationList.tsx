@@ -1,6 +1,9 @@
-import React from 'react';
+import React, { useCallback, useMemo } from 'react';
+import { motion } from 'framer-motion';
 import { Application, ApplicationStatus, TestStatus } from '../types';
 import { STATUS_COLORS, STATUS_LABELS, getDeadlineInfo, TAG_PRESETS } from '../constants';
+import { cardContainerVariants, cardVariants } from '../hooks/useAnimations';
+
 interface ApplicationListProps {
   applications: Application[];
   onEdit: (app: Application) => void;
@@ -19,6 +22,31 @@ const MaterialIcon: React.FC<{ name: string; className?: string }> = ({ name, cl
   <span className={`material-symbols-outlined ${className}`}>{name}</span>
 );
 
+const calculateProgress = (app: Application): number => {
+  let progress = 0;
+  if (app.status === ApplicationStatus.Submitted || app.status === ApplicationStatus.Accepted || app.status === ApplicationStatus.Rejected || app.status === ApplicationStatus.Waitlisted) return 100;
+
+  // Basic info filled (always true if created)
+  progress += 10;
+
+  // Documents
+  const docs = Object.values(app.documents);
+  const requiredDocs = docs.filter(d => d.required);
+  const submittedDocs = requiredDocs.filter(d => d.submitted);
+  if (requiredDocs.length > 0) {
+    progress += (submittedDocs.length / requiredDocs.length) * 50;
+  }
+
+  // Faculty contact (bonus if done)
+  if (app.facultyContacts.length > 0) progress += 10;
+
+  // Tests
+  if (app.englishTest?.status === TestStatus.Taken) progress += 10;
+  if (app.gre?.status === TestStatus.Taken) progress += 10;
+
+  return Math.min(100, Math.round(progress));
+};
+
 const ApplicationList: React.FC<ApplicationListProps> = ({
   applications,
   onEdit,
@@ -31,9 +59,39 @@ const ApplicationList: React.FC<ApplicationListProps> = ({
   onToggleSelection,
   onEnterSelectionMode,
 }) => {
+  // Memoized click handlers
+  const handleCardClick = useCallback((app: Application) => {
+    if (isSelectionMode && onToggleSelection) {
+      onToggleSelection(app.id);
+    } else {
+      onEdit(app);
+    }
+  }, [isSelectionMode, onToggleSelection, onEdit]);
+
+  const handleLongPress = useCallback((app: Application) => {
+    if (!isSelectionMode && onEnterSelectionMode) {
+      onEnterSelectionMode();
+      if (onToggleSelection) {
+        onToggleSelection(app.id);
+      }
+    }
+  }, [isSelectionMode, onEnterSelectionMode, onToggleSelection]);
+
+  // Memoize progress calculations for all applications
+  const progressMap = useMemo(() => {
+    const map = new Map<string, number>();
+    applications.forEach(app => {
+      map.set(app.id, calculateProgress(app));
+    });
+    return map;
+  }, [applications]);
+
   if (applications.length === 0) {
     return (
-      <div
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.3 }}
         className="text-center py-16 px-6 bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl rounded-3xl shadow-lg border border-slate-200/50 dark:border-slate-700/50"
       >
         <div className="bg-slate-100 dark:bg-slate-700/50 h-20 w-20 rounded-full flex items-center justify-center mx-auto mb-6">
@@ -47,53 +105,47 @@ const ApplicationList: React.FC<ApplicationListProps> = ({
             ? "Try adjusting your search or filters to find what you're looking for."
             : "Start tracking your academic journey by adding your first application."}
         </p>
-      </div>
+      </motion.div>
     );
   }
-
-  const handleCardClick = (app: Application) => {
-    if (isSelectionMode && onToggleSelection) {
-      onToggleSelection(app.id);
-    } else {
-      onEdit(app);
-    }
-  };
-
-  const handleLongPress = (app: Application) => {
-    if (!isSelectionMode && onEnterSelectionMode) {
-      onEnterSelectionMode();
-      if (onToggleSelection) {
-        onToggleSelection(app.id);
-      }
-    }
-  };
 
   return (
     <div className="space-y-4">
       {/* Selection mode hint */}
       {!isSelectionMode && applications.length > 1 && (
-        <div className="text-xs text-slate-500 dark:text-slate-400 text-center mb-2">
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="text-xs text-slate-500 dark:text-slate-400 text-center mb-2"
+        >
           <span className="hidden sm:inline">
             Tip: Long-press or right-click a card to enter selection mode
           </span>
-        </div>
+        </motion.div>
       )}
 
-      <div
+      <motion.div
         className="grid gap-4 sm:gap-6 grid-cols-1 md:grid-cols-2 xl:grid-cols-3"
+        variants={cardContainerVariants}
+        initial="hidden"
+        animate="visible"
       >
-        {applications.map((app, index) => {
+        {applications.map((app) => {
           const isSelected = selectedIds.has(app.id);
+          const progress = progressMap.get(app.id) ?? 0;
 
           return (
-            <div
+            <motion.div
               key={app.id}
+              variants={cardVariants}
+              whileHover="hover"
+              whileTap="tap"
               onClick={() => handleCardClick(app)}
               onContextMenu={(e) => {
                 e.preventDefault();
                 handleLongPress(app);
               }}
-              className={`group relative bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl rounded-2xl p-5 border-2 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer ${isSelected
+              className={`group relative bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl rounded-2xl p-5 border-2 shadow-sm cursor-pointer ${isSelected
                 ? 'border-red-500 dark:border-red-400 ring-2 ring-red-500/20'
                 : app.isPinned
                   ? 'border-amber-400 dark:border-amber-500'
@@ -222,43 +274,20 @@ const ApplicationList: React.FC<ApplicationListProps> = ({
 
                 {/* Progress Bar */}
                 <div className="w-full bg-slate-100 dark:bg-slate-700 rounded-full h-1.5 overflow-hidden">
-                  <div
-                    className="bg-slate-900 dark:bg-slate-100 h-1.5 rounded-full transition-all duration-500"
-                    style={{ width: `${calculateProgress(app)}%` }}
+                  <motion.div
+                    className="bg-slate-900 dark:bg-slate-100 h-1.5 rounded-full"
+                    initial={{ width: 0 }}
+                    animate={{ width: `${progress}%` }}
+                    transition={{ duration: 0.5, ease: 'easeOut' }}
                   />
                 </div>
               </div>
-            </div>
+            </motion.div>
           );
         })}
-      </div>
+      </motion.div>
     </div>
   );
 };
 
-const calculateProgress = (app: Application): number => {
-  let progress = 0;
-  if (app.status === ApplicationStatus.Submitted || app.status === ApplicationStatus.Accepted || app.status === ApplicationStatus.Rejected || app.status === ApplicationStatus.Waitlisted) return 100;
-
-  // Basic info filled (always true if created)
-  progress += 10;
-
-  // Documents
-  const docs = Object.values(app.documents);
-  const requiredDocs = docs.filter(d => d.required);
-  const submittedDocs = requiredDocs.filter(d => d.submitted);
-  if (requiredDocs.length > 0) {
-    progress += (submittedDocs.length / requiredDocs.length) * 50;
-  }
-
-  // Faculty contact (bonus if done)
-  if (app.facultyContacts.length > 0) progress += 10;
-
-  // Tests
-  if (app.englishTest?.status === TestStatus.Taken) progress += 10;
-  if (app.gre?.status === TestStatus.Taken) progress += 10;
-
-  return Math.min(100, Math.round(progress));
-};
-
-export default ApplicationList;
+export default React.memo(ApplicationList);

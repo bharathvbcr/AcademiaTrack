@@ -53,10 +53,6 @@ const DashboardSummary: React.FC<DashboardSummaryProps> = ({ applications, viewM
       return diffDays >= 0 && diffDays <= 14; // Next 2 weeks
     }).length;
 
-    // Calculate acceptance rate (accepted / (accepted + rejected))
-    const decisioned = accepted + rejected;
-    const acceptanceRate = decisioned > 0 ? Math.round((accepted / decisioned) * 100) : null;
-
     // Calculate total cost spent
     const totalCost = applications.reduce((sum, app) => {
       const fee = app.applicationFee || 0;
@@ -64,7 +60,7 @@ const DashboardSummary: React.FC<DashboardSummaryProps> = ({ applications, viewM
       return sum + (waived ? 0 : fee);
     }, 0);
 
-    return { total, accepted, rejected, pending, upcomingDeadlines, acceptanceRate, totalCost };
+    return { total, accepted, rejected, pending, upcomingDeadlines, totalCost };
   }, [applications]);
 
   const timelineData = useMemo(() => {
@@ -146,12 +142,7 @@ const DashboardSummary: React.FC<DashboardSummaryProps> = ({ applications, viewM
         <SummaryCard title="Pending / In Progress" value={summaryStats.pending} icon="hourglass_empty" color="bg-amber-500" />
         <SummaryCard title="Accepted" value={summaryStats.accepted} icon="check_circle" color="bg-green-500" />
         <SummaryCard title="Deadlines (14 Days)" value={summaryStats.upcomingDeadlines} icon="event_busy" color="bg-red-500" />
-        <SummaryCard
-          title="Acceptance Rate"
-          value={summaryStats.acceptanceRate !== null ? `${summaryStats.acceptanceRate}%` : '-'}
-          icon="percent"
-          color="bg-purple-500"
-        />
+        <SummaryCard title="Rejected" value={summaryStats.rejected} icon="cancel" color="bg-rose-500" />
         <SummaryCard
           title="Total Cost Spent"
           value={`$${summaryStats.totalCost.toLocaleString()}`}

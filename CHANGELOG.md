@@ -2,6 +2,28 @@
 
 All notable changes to this project will be documented in this file.
 
+## [4.2.1] - 2025-12-12
+
+### Added
+- **Auto-Updates:** Integrated `electron-updater` for automatic update checking and installation from GitHub releases.
+- **Version Info:** New `get-version-info` IPC handler exposing app version, platform, architecture, and runtime versions.
+- **Windows Portable:** Added portable .exe target that runs without installation.
+- **ARM64 Builds:** Added Apple Silicon (arm64) support for macOS, and arm64 targets for Windows and Linux.
+- **Transition Animations:** Added smooth page transitions, card entrance animations, and modal animations using framer-motion.
+- **Loading Spinner:** New `LoadingSpinner` component with animated spinner and size variants.
+
+### Changed
+- **Dashboard:** Replaced "Acceptance Rate" metric with "Rejected" count for more actionable information.
+- **Build Compression:** Set to `maximum` for smaller installer sizes.
+- **README:** Expanded with cross-platform installation instructions (Windows, macOS, Linux), development setup, and code signing documentation.
+
+### Performance
+- **ApplicationList:** Added `React.memo`, `useMemo` for progress calculations, and `useCallback` for click handlers.
+- **Artifact Naming:** Improved build artifact naming with version, OS, and architecture.
+
+### Security
+- **Code Signing:** Added macOS notarization support and entitlements configuration (optional, disabled by default).
+
 ## [3.5.0] - 2025-11-29
 
 ### Security
