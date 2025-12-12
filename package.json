@@ -50,7 +50,7 @@
     "appId": "com.bharathvbcr.academia-track",
     "productName": "AcademiaTrack",
     "icon": "assets/icon.png",
-    "artifactName": "${productName}-${version}-${os}-${arch}.${ext}",
+    "artifactName": "${productName}-${version}-${os}.${ext}",
     "compression": "maximum",
     "files": [
       "dist/**/*",
@@ -68,19 +68,8 @@
     },
     "win": {
       "target": [
-        {
-          "target": "nsis",
-          "arch": [
-            "x64",
-            "arm64"
-          ]
-        },
-        {
-          "target": "portable",
-          "arch": [
-            "x64"
-          ]
-        }
+        "nsis",
+        "portable"
       ],
       "signingHashAlgorithms": [
         "sha256"
@@ -98,20 +87,8 @@
     },
     "mac": {
       "target": [
-        {
-          "target": "dmg",
-          "arch": [
-            "x64",
-            "arm64"
-          ]
-        },
-        {
-          "target": "zip",
-          "arch": [
-            "x64",
-            "arm64"
-          ]
-        }
+        "dmg",
+        "zip"
       ],
       "category": "public.app-category.education",
       "hardenedRuntime": true,
@@ -126,20 +103,8 @@
     },
     "linux": {
       "target": [
-        {
-          "target": "AppImage",
-          "arch": [
-            "x64",
-            "arm64"
-          ]
-        },
-        {
-          "target": "deb",
-          "arch": [
-            "x64",
-            "arm64"
-          ]
-        }
+        "AppImage",
+        "deb"
       ],
       "category": "Education",
       "desktop": {
