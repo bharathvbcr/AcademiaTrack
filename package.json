@@ -81,11 +81,7 @@
             "x64"
           ]
         }
-      ],
-      "signingHashAlgorithms": [
-        "sha256"
-      ],
-      "sign": null
+      ]
     },
     "nsis": {
       "oneClick": false,
@@ -139,10 +135,12 @@
       ],
       "category": "Education",
       "desktop": {
-        "Name": "AcademiaTrack",
-        "Comment": "Academic Application Tracker",
-        "Categories": "Education;Office;",
-        "Keywords": "university;application;tracker;academic;"
+        "entry": {
+          "Name": "AcademiaTrack",
+          "Comment": "Academic Application Tracker",
+          "Categories": "Education;Office;",
+          "Keywords": "university;application;tracker;academic;"
+        }
       }
     },
     "afterSign": "scripts/notarize.js"
