@@ -48,6 +48,9 @@ const ApplicationModal: React.FC<ApplicationModalProps> = ({ isOpen, onClose, ap
     handleNumericChange,
     handleCheckboxChange,
     handleDocumentChange,
+    handleAttachFile,
+    handleOpenFile,
+    handleRemoveFile,
     handleFacultyChange,
     handleFacultyMarkdownChange,
     addFacultyContact,
@@ -235,9 +238,9 @@ const ApplicationModal: React.FC<ApplicationModalProps> = ({ isOpen, onClose, ap
                 <DocumentsSection
                   appData={appData}
                   handleDocumentChange={handleDocumentChange}
-                  handleOpenFile={async () => { }} // Placeholder as file handling is complex
-                  handleRemoveFile={() => { }} // Placeholder
-                  handleAttachFile={() => { }} // Placeholder
+                  handleOpenFile={handleOpenFile}
+                  handleRemoveFile={handleRemoveFile}
+                  handleAttachFile={handleAttachFile}
                 />
                 <EssaysSection
                   appData={appData}
