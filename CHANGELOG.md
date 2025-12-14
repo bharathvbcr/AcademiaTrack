@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## [4.2.2] - 2025-12-14
+
+### Fixed
+- **Document Attachments:** Implemented file attachment handlers for documents section (was placeholder functions that did nothing when clicked).
+- **Build:** Renamed `notarize.js` to `notarize.cjs` for ES module compatibility in electron-builder.
+
+### Added
+- **Essay Draft Attachments:** Added file attachment support for essay drafts with attach/open/remove functionality.
+
 ## [4.2.1] - 2025-12-12
 
 ### Added
