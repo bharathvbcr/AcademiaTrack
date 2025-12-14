@@ -66,6 +66,9 @@ const ApplicationModal: React.FC<ApplicationModalProps> = ({ isOpen, onClose, ap
     addEssayDraft,
     removeEssayDraft,
     updateEssayDraft,
+    handleAttachEssayDraftFile,
+    handleOpenEssayDraftFile,
+    handleRemoveEssayDraftFile,
     handleRecommenderChange,
     addRecommender,
     removeRecommender,
@@ -250,6 +253,9 @@ const ApplicationModal: React.FC<ApplicationModalProps> = ({ isOpen, onClose, ap
                   addEssayDraft={addEssayDraft}
                   removeEssayDraft={removeEssayDraft}
                   updateEssayDraft={updateEssayDraft}
+                  handleAttachEssayDraftFile={handleAttachEssayDraftFile}
+                  handleOpenEssayDraftFile={handleOpenEssayDraftFile}
+                  handleRemoveEssayDraftFile={handleRemoveEssayDraftFile}
                 />
                 <FacultyContactsSection
                   appData={appData}

@@ -10,6 +10,9 @@ interface EssaysSectionProps {
     addEssayDraft: (essayId: string | number, draft: Omit<EssayDraft, 'id'>) => void;
     removeEssayDraft: (essayId: string | number, draftId: string | number) => void;
     updateEssayDraft: (essayId: string | number, draftId: string | number, field: keyof EssayDraft, value: any) => void;
+    handleAttachEssayDraftFile: (essayId: string | number, draftId: string | number) => void;
+    handleOpenEssayDraftFile: (filePath: string) => void;
+    handleRemoveEssayDraftFile: (essayId: string | number, draftId: string | number, filePath: string) => void;
 }
 
 const EssaysSection: React.FC<EssaysSectionProps> = ({
@@ -19,7 +22,10 @@ const EssaysSection: React.FC<EssaysSectionProps> = ({
     updateEssayStatus,
     addEssayDraft,
     removeEssayDraft,
-    updateEssayDraft
+    updateEssayDraft,
+    handleAttachEssayDraftFile,
+    handleOpenEssayDraftFile,
+    handleRemoveEssayDraftFile
 }) => {
     const [openEssays, setOpenEssays] = useState<{ [key: string]: boolean }>({});
     const [newDrafts, setNewDrafts] = useState<{ [key: string]: Partial<EssayDraft> }>({});
@@ -68,8 +74,8 @@ const EssaysSection: React.FC<EssaysSectionProps> = ({
                                     onChange={(e) => updateEssayStatus(essay.id, e.target.value as any)}
                                     onClick={(e) => e.stopPropagation()}
                                     className={`text-xs font-medium px-2 py-1 rounded-full border ${essay.status === 'Finalized' ? 'bg-green-100 text-green-700 border-green-200' :
-                                            essay.status === 'Drafting' ? 'bg-blue-100 text-blue-700 border-blue-200' :
-                                                'bg-slate-100 text-slate-700 border-slate-200'
+                                        essay.status === 'Drafting' ? 'bg-blue-100 text-blue-700 border-blue-200' :
+                                            'bg-slate-100 text-slate-700 border-slate-200'
                                         }`}
                                 >
                                     <option value="Not Started">Not Started</option>
@@ -98,6 +104,7 @@ const EssaysSection: React.FC<EssaysSectionProps> = ({
                                                     <th className="px-4 py-2">Date</th>
                                                     <th className="px-4 py-2">Words</th>
                                                     <th className="px-4 py-2">Notes</th>
+                                                    <th className="px-4 py-2">File</th>
                                                     <th className="px-4 py-2">Actions</th>
                                                 </tr>
                                             </thead>
@@ -108,6 +115,39 @@ const EssaysSection: React.FC<EssaysSectionProps> = ({
                                                         <td className="px-4 py-2">{draft.date}</td>
                                                         <td className="px-4 py-2">{draft.wordCount}</td>
                                                         <td className="px-4 py-2 truncate max-w-xs">{draft.notes}</td>
+                                                        <td className="px-4 py-2">
+                                                            <div className="flex items-center gap-1">
+                                                                {draft.filePath ? (
+                                                                    <>
+                                                                        <button
+                                                                            type="button"
+                                                                            onClick={() => handleOpenEssayDraftFile(draft.filePath!)}
+                                                                            className="p-1 text-blue-500 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded transition-colors"
+                                                                            title="Open file"
+                                                                        >
+                                                                            <MaterialIcon name="visibility" className="text-base" />
+                                                                        </button>
+                                                                        <button
+                                                                            type="button"
+                                                                            onClick={() => handleRemoveEssayDraftFile(essay.id, draft.id, draft.filePath!)}
+                                                                            className="p-1 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 rounded transition-colors"
+                                                                            title="Remove file"
+                                                                        >
+                                                                            <MaterialIcon name="close" className="text-base" />
+                                                                        </button>
+                                                                    </>
+                                                                ) : (
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => handleAttachEssayDraftFile(essay.id, draft.id)}
+                                                                        className="p-1 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 rounded transition-colors"
+                                                                        title="Attach file"
+                                                                    >
+                                                                        <MaterialIcon name="attach_file" className="text-base" />
+                                                                    </button>
+                                                                )}
+                                                            </div>
+                                                        </td>
                                                         <td className="px-4 py-2">
                                                             <button
                                                                 type="button"
