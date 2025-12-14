@@ -176,6 +176,73 @@ export const useApplicationForm = (isOpen: boolean, applicationToEdit?: Applicat
         });
     }, []);
 
+    // Document file attachment handlers
+    const handleAttachFile = useCallback(async (docKey: keyof Application['documents']) => {
+        if (!window.electron) {
+            console.warn('File attachment only available in Electron');
+            return;
+        }
+
+        try {
+            const filePath = await window.electron.selectFile();
+            if (filePath) {
+                // For new applications, we store the source path temporarily
+                // For existing applications, we copy to app storage
+                const appId = appData.id || `temp-${Date.now()}`;
+                const result = await window.electron.copyDocument(filePath, appId, docKey);
+
+                if (result.success && result.path) {
+                    setAppData(prev => {
+                        const newDocuments = { ...prev.documents };
+                        newDocuments[docKey] = {
+                            ...newDocuments[docKey],
+                            filePath: result.path
+                        };
+                        return { ...prev, documents: newDocuments };
+                    });
+                } else {
+                    console.error('Failed to copy document:', result.error);
+                }
+            }
+        } catch (error) {
+            console.error('Error attaching file:', error);
+        }
+    }, [appData.id]);
+
+    const handleOpenFile = useCallback(async (filePath: string) => {
+        if (!window.electron) {
+            console.warn('File opening only available in Electron');
+            return;
+        }
+
+        try {
+            await window.electron.openFile(filePath);
+        } catch (error) {
+            console.error('Error opening file:', error);
+        }
+    }, []);
+
+    const handleRemoveFile = useCallback(async (docKey: keyof Application['documents']) => {
+        const filePath = appData.documents[docKey].filePath;
+
+        if (filePath && window.electron) {
+            try {
+                await window.electron.deleteDocument(filePath);
+            } catch (error) {
+                console.error('Error deleting file:', error);
+            }
+        }
+
+        setAppData(prev => {
+            const newDocuments = { ...prev.documents };
+            newDocuments[docKey] = {
+                ...newDocuments[docKey],
+                filePath: undefined
+            };
+            return { ...prev, documents: newDocuments };
+        });
+    }, [appData.documents]);
+
     const handleFacultyChange = useCallback((index: number, e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
         setAppData(prev => {
@@ -513,6 +580,9 @@ export const useApplicationForm = (isOpen: boolean, applicationToEdit?: Applicat
         handleNumericChange,
         handleCheckboxChange,
         handleDocumentChange,
+        handleAttachFile,
+        handleOpenFile,
+        handleRemoveFile,
         handleFacultyChange,
         handleFacultyMarkdownChange,
         addFacultyContact,
