@@ -423,6 +423,78 @@ export const useApplicationForm = (isOpen: boolean, applicationToEdit?: Applicat
         }));
     }, []);
 
+    // Essay Draft file attachment handlers
+    const handleAttachEssayDraftFile = useCallback(async (essayId: string | number, draftId: string | number) => {
+        if (!window.electron) {
+            console.warn('File attachment only available in Electron');
+            return;
+        }
+
+        try {
+            const filePath = await window.electron.selectFile();
+            if (filePath) {
+                const appId = appData.id || `temp-${Date.now()}`;
+                const result = await window.electron.copyDocument(filePath, appId, `essay-${essayId}-draft-${draftId}`);
+
+                if (result.success && result.path) {
+                    setAppData(prev => ({
+                        ...prev,
+                        essays: (prev.essays || []).map(e => {
+                            if (e.id === essayId) {
+                                return {
+                                    ...e,
+                                    drafts: e.drafts.map(d => d.id === draftId ? { ...d, filePath: result.path } : d)
+                                };
+                            }
+                            return e;
+                        })
+                    }));
+                } else {
+                    console.error('Failed to copy essay draft file:', result.error);
+                }
+            }
+        } catch (error) {
+            console.error('Error attaching essay draft file:', error);
+        }
+    }, [appData.id]);
+
+    const handleOpenEssayDraftFile = useCallback(async (filePath: string) => {
+        if (!window.electron) {
+            console.warn('File opening only available in Electron');
+            return;
+        }
+
+        try {
+            await window.electron.openFile(filePath);
+        } catch (error) {
+            console.error('Error opening essay draft file:', error);
+        }
+    }, []);
+
+    const handleRemoveEssayDraftFile = useCallback(async (essayId: string | number, draftId: string | number, filePath: string) => {
+        if (filePath && window.electron) {
+            try {
+                await window.electron.deleteDocument(filePath);
+            } catch (error) {
+                console.error('Error deleting essay draft file:', error);
+            }
+        }
+
+        setAppData(prev => ({
+            ...prev,
+            essays: (prev.essays || []).map(e => {
+                if (e.id === essayId) {
+                    return {
+                        ...e,
+                        drafts: e.drafts.map(d => d.id === draftId ? { ...d, filePath: undefined } : d)
+                    };
+                }
+                return e;
+            })
+        }));
+    }, []);
+
+
     const handleRecommenderChange = useCallback((index: number, e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
         setAppData(prev => {
@@ -598,6 +670,9 @@ export const useApplicationForm = (isOpen: boolean, applicationToEdit?: Applicat
         addEssayDraft,
         removeEssayDraft,
         updateEssayDraft,
+        handleAttachEssayDraftFile,
+        handleOpenEssayDraftFile,
+        handleRemoveEssayDraftFile,
         handleRecommenderChange,
         addRecommender,
         removeRecommender,
