@@ -136,10 +136,6 @@ For production releases, you can enable code signing to avoid security warnings.
 
 For Windows, you'll need an EV Code Signing Certificate from a trusted CA.
 
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
 ## 🤝 Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
