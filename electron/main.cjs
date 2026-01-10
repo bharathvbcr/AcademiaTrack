@@ -23,6 +23,10 @@ function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1200,
     height: 800,
+    minWidth: 800,
+    minHeight: 600,
+    frame: false,
+    transparent: false,
     icon: path.join(__dirname, '../AcademiaTrack.png'),
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
@@ -31,8 +35,17 @@ function createWindow() {
     }
   });
 
+  // Send maximize state changes to renderer
+  mainWindow.on('maximize', () => {
+    mainWindow?.webContents.send('maximize-change', true);
+  });
+
+  mainWindow.on('unmaximize', () => {
+    mainWindow?.webContents.send('maximize-change', false);
+  });
+
   if (process.env.NODE_ENV === 'development') {
-    mainWindow.loadURL('http://localhost:5173');
+    mainWindow.loadURL('http://localhost:3000');
     mainWindow.webContents.openDevTools();
   } else {
     mainWindow.loadFile(path.join(__dirname, '..', 'dist', 'index.html'));
@@ -98,6 +111,27 @@ app.whenReady().then(() => {
       platform: process.platform,
       arch: process.arch,
     };
+  });
+
+  // IPC: Window controls for frameless window
+  ipcMain.handle('window-minimize', () => {
+    mainWindow?.minimize();
+  });
+
+  ipcMain.handle('window-maximize', () => {
+    if (mainWindow?.isMaximized()) {
+      mainWindow.unmaximize();
+    } else {
+      mainWindow?.maximize();
+    }
+  });
+
+  ipcMain.handle('window-close', () => {
+    mainWindow?.close();
+  });
+
+  ipcMain.handle('window-is-maximized', () => {
+    return mainWindow?.isMaximized() ?? false;
   });
 
   // IPC: Check for updates
