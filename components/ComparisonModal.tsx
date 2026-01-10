@@ -1,5 +1,6 @@
 import React from 'react';
 import { Application, ApplicationStatus } from '../types';
+import { useLockBodyScroll } from '../hooks/useLockBodyScroll';
 import { formatCurrency } from '../utils/formatters';
 
 interface ComparisonModalProps {
@@ -9,6 +10,7 @@ interface ComparisonModalProps {
 }
 
 const ComparisonModal: React.FC<ComparisonModalProps> = ({ isOpen, onClose, applications }) => {
+    useLockBodyScroll(isOpen);
     if (!isOpen) return null;
 
     return (
