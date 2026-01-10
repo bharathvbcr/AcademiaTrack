@@ -1,5 +1,8 @@
 name: Release
 
+permissions:
+  contents: read
+
 on:
   push:
     tags:
@@ -27,12 +30,14 @@ jobs:
 
   build:
     name: Build Electron App
+    permissions:
+      contents: read
     needs: test
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         os: [windows-latest, macos-latest, ubuntu-latest]
-    
+
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4

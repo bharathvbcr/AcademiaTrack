@@ -12,7 +12,9 @@
   "type": "module",
   "main": "electron/main.cjs",
   "scripts": {
-    "test": "echo \"No tests specified\" && exit 0",
+    "test": "vitest",
+    "test:ui": "vitest --ui",
+    "test:run": "vitest run",
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
@@ -29,11 +31,14 @@
     "react-dom": "^19.2.0",
     "react-markdown": "^10.1.0",
     "recharts": "^3.3.0",
-    "remark-gfm": "^4.0.1",
-    "xlsx": "^0.18.5"
+    "remark-gfm": "^4.0.1"
   },
   "devDependencies": {
     "@electron/notarize": "^2.5.0",
+    "@playwright/test": "^1.57.0",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.1",
+    "@testing-library/user-event": "^14.6.1",
     "@types/canvas-confetti": "^1.6.4",
     "@types/node": "^22.14.0",
     "@types/react": "^19.2.2",
@@ -43,9 +48,11 @@
     "cross-env": "^10.1.0",
     "electron": "^39.1.1",
     "electron-builder": "^26.0.12",
+    "jsdom": "^27.4.0",
     "png2icons": "^2.0.1",
     "typescript": "~5.8.2",
     "vite": "^6.2.0",
+    "vitest": "^4.0.16",
     "wait-on": "^9.0.1"
   },
   "build": {
