@@ -24,4 +24,15 @@ contextBridge.exposeInMainWorld('electron', {
     ipcRenderer.on('update-status', (event, data) => callback(data));
     return () => ipcRenderer.removeAllListeners('update-status');
   },
+  // Window controls for frameless window
+  windowControls: {
+    minimize: () => ipcRenderer.invoke('window-minimize'),
+    maximize: () => ipcRenderer.invoke('window-maximize'),
+    close: () => ipcRenderer.invoke('window-close'),
+    isMaximized: () => ipcRenderer.invoke('window-is-maximized'),
+    onMaximizeChange: (callback) => {
+      ipcRenderer.on('maximize-change', (event, isMaximized) => callback(isMaximized));
+      return () => ipcRenderer.removeAllListeners('maximize-change');
+    },
+  },
 });
