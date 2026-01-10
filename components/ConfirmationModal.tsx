@@ -1,4 +1,5 @@
 import React from 'react';
+import { useLockBodyScroll } from '../hooks/useLockBodyScroll';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface ConfirmationModalProps {
@@ -22,6 +23,7 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
   cancelLabel = 'Cancel',
   isDanger = false,
 }) => {
+  useLockBodyScroll(isOpen);
   if (!isOpen) return null;
 
   return (
@@ -36,7 +38,7 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
             className="fixed inset-0 bg-black/60 backdrop-blur-sm"
             aria-hidden="true"
           />
-          
+
           <motion.div
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -49,7 +51,7 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
                   {isDanger ? 'warning' : 'info'}
                 </span>
               </div>
-              
+
               <h3 className="text-lg font-semibold text-center text-slate-900 dark:text-white mb-2">
                 {title}
               </h3>
@@ -69,11 +71,10 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
               <button
                 type="button"
                 onClick={() => { onConfirm(); onClose(); }}
-                className={`px-4 py-2 text-sm font-medium text-white rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 transition-colors ${
-                  isDanger 
-                    ? 'bg-red-600 hover:bg-red-700 focus:ring-red-500' 
+                className={`px-4 py-2 text-sm font-medium text-white rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 transition-colors ${isDanger
+                    ? 'bg-red-600 hover:bg-red-700 focus:ring-red-500'
                     : 'bg-blue-600 hover:bg-blue-700 focus:ring-blue-500'
-                }`}
+                  }`}
               >
                 {confirmLabel}
               </button>

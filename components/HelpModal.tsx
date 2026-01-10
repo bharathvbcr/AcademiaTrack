@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useLockBodyScroll } from '../hooks/useLockBodyScroll';
 
 interface HelpModalProps {
     isOpen: boolean;
@@ -9,6 +10,7 @@ interface HelpModalProps {
 type TabId = 'getting-started' | 'features' | 'shortcuts' | 'faq';
 
 const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
+    useLockBodyScroll(isOpen);
     const [activeTab, setActiveTab] = useState<TabId>('getting-started');
 
     const tabs: { id: TabId; label: string; icon: string }[] = [
@@ -56,8 +58,8 @@ const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
                             key={tab.id}
                             onClick={() => setActiveTab(tab.id)}
                             className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${activeTab === tab.id
-                                    ? 'border-red-500 text-red-600 dark:text-red-400'
-                                    : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
+                                ? 'border-red-500 text-red-600 dark:text-red-400'
+                                : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
                                 }`}
                         >
                             <span className="material-symbols-outlined text-lg">{tab.icon}</span>
@@ -104,7 +106,10 @@ const Section: React.FC<{ title: string; icon: string; children: React.ReactNode
 const GettingStartedTab = () => (
     <TabContent>
         <div className="text-slate-600 dark:text-slate-300">
-            <p className="text-lg mb-4">Welcome to <strong className="text-slate-900 dark:text-white">AcademiaTrack</strong>! This application helps you manage your graduate school applications in one place.</p>
+            <div className="flex items-center gap-3 mb-4">
+                <img src="./AcademiaTrack.png" alt="AcademiaTrack" className="w-12 h-12 object-contain" />
+                <p className="text-lg">Welcome to <strong className="text-slate-900 dark:text-white">AcademiaTrack</strong>! This application helps you manage your graduate school applications in one place.</p>
+            </div>
         </div>
 
         <Section title="Quick Start" icon="play_arrow">
