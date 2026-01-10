@@ -177,7 +177,7 @@ app.whenReady().then(() => {
   ipcMain.handle('load-data', async () => {
     try {
       if (fs.existsSync(dataFilePath)) {
-        const data = fs.readFileSync(dataFilePath, 'utf-8');
+        const data = await fs.promises.readFile(dataFilePath, 'utf-8');
         return JSON.parse(data);
       }
       return null;
@@ -213,7 +213,13 @@ app.whenReady().then(() => {
   });
 
   ipcMain.handle('open-file', async (event, filePath) => {
-    await shell.openPath(filePath);
+    // Security: Only allow opening files within the userData directory
+    const normalizedPath = path.normalize(filePath);
+    if (!normalizedPath.startsWith(path.normalize(userDataPath))) {
+      console.error('Security Warning: Attempted to open file outside userData:', filePath);
+      return;
+    }
+    await shell.openPath(normalizedPath);
   });
 
   // Documents directory for file storage
@@ -227,14 +233,30 @@ app.whenReady().then(() => {
   // Copy document to app storage
   ipcMain.handle('copy-document', async (event, { sourcePath, appId, docType }) => {
     try {
+      // Validate source exists
+      if (!fs.existsSync(sourcePath)) {
+        throw new Error('Source file not found');
+      }
+
       const appDocDir = path.join(documentsDir, appId);
       if (!fs.existsSync(appDocDir)) {
         fs.mkdirSync(appDocDir, { recursive: true });
       }
 
       const ext = path.extname(sourcePath);
+      // Validate extension
+      const allowedExts = ['.pdf', '.doc', '.docx', '.txt', '.jpg', '.jpeg', '.png'];
+      if (!allowedExts.includes(ext.toLowerCase())) {
+         throw new Error('Invalid file type');
+      }
+
       const destFileName = `${docType}${ext}`;
       const destPath = path.join(appDocDir, destFileName);
+
+      // Security check for destPath
+      if (!path.normalize(destPath).startsWith(path.normalize(documentsDir))) {
+        throw new Error('Invalid destination path');
+      }
 
       await fs.promises.copyFile(sourcePath, destPath);
       return { success: true, path: destPath };
@@ -247,8 +269,13 @@ app.whenReady().then(() => {
   // Delete document from app storage
   ipcMain.handle('delete-document', async (event, filePath) => {
     try {
-      if (fs.existsSync(filePath)) {
-        await fs.promises.unlink(filePath);
+      const normalizedPath = path.normalize(filePath);
+      if (!normalizedPath.startsWith(path.normalize(documentsDir))) {
+        throw new Error('Access denied: Cannot delete files outside documents directory');
+      }
+
+      if (fs.existsSync(normalizedPath)) {
+        await fs.promises.unlink(normalizedPath);
       }
       return { success: true };
     } catch (error) {
@@ -310,7 +337,12 @@ app.whenReady().then(() => {
   // Restore from backup
   ipcMain.handle('restore-backup', async (event, backupPath) => {
     try {
-      if (!fs.existsSync(backupPath)) {
+      const normalizedPath = path.normalize(backupPath);
+      if (!normalizedPath.startsWith(path.normalize(backupDir))) {
+        return { success: false, error: 'Invalid backup path' };
+      }
+
+      if (!fs.existsSync(normalizedPath)) {
         return { success: false, error: 'Backup file not found' };
       }
       // Create safety backup before restore
@@ -318,9 +350,9 @@ app.whenReady().then(() => {
         const safetyPath = path.join(backupDir, `pre-restore-${Date.now()}.json`);
         await fs.promises.copyFile(dataFilePath, safetyPath);
       }
-      await fs.promises.copyFile(backupPath, dataFilePath);
+      await fs.promises.copyFile(normalizedPath, dataFilePath);
       // Reload data
-      const data = fs.readFileSync(dataFilePath, 'utf-8');
+      const data = await fs.promises.readFile(dataFilePath, 'utf-8');
       return { success: true, data: JSON.parse(data) };
     } catch (error) {
       console.error('Failed to restore backup:', error);
@@ -331,8 +363,13 @@ app.whenReady().then(() => {
   // Delete backup
   ipcMain.handle('delete-backup', async (event, backupPath) => {
     try {
-      if (fs.existsSync(backupPath)) {
-        await fs.promises.unlink(backupPath);
+      const normalizedPath = path.normalize(backupPath);
+      if (!normalizedPath.startsWith(path.normalize(backupDir))) {
+        return { success: false, error: 'Invalid backup path' };
+      }
+
+      if (fs.existsSync(normalizedPath)) {
+        await fs.promises.unlink(normalizedPath);
       }
       return { success: true };
     } catch (error) {
