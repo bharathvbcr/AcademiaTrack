@@ -12,6 +12,15 @@ import {
     ScholarshipStatus
 } from './enums';
 
+export interface CustomFieldDefinition {
+    id: string; // uuid
+    name: string;
+    type: 'text' | 'number' | 'boolean' | 'date' | 'select';
+    options?: string[]; // For 'select' type
+    placeholder?: string;
+    required?: boolean;
+}
+
 export interface Correspondence {
     id: string | number;
     date: string; // ISO Date
@@ -179,6 +188,9 @@ export interface Application {
     reminders?: Reminder[];
     notes: string;
 
+    // Custom Fields (Key: Field ID, Value: Field Value)
+    customFields?: Record<string, string | number | boolean>;
+
     // Financials
     financialOffer?: FinancialOffer;
     scholarships?: Scholarship[];
@@ -199,6 +211,20 @@ export interface Application {
     };
 }
 
+export interface ValidationIssue {
+    id: string;
+    field: string;
+    message: string;
+    severity: 'error' | 'warning';
+}
+
+export interface ValidationResult {
+    applicationId: string;
+    completeness: number;
+    errors: ValidationIssue[];
+    warnings: ValidationIssue[];
+}
+
 export interface BackupInfo {
     filename: string;
     path: string;
@@ -212,6 +238,14 @@ export interface BackupResult {
     path?: string;
     timestamp?: string;
     data?: unknown;
+}
+
+export interface WindowControls {
+    minimize: () => Promise<void>;
+    maximize: () => Promise<void>;
+    close: () => Promise<void>;
+    isMaximized: () => Promise<boolean>;
+    onMaximizeChange: (callback: (isMaximized: boolean) => void) => () => void;
 }
 
 export interface ElectronAPI {
@@ -229,6 +263,8 @@ export interface ElectronAPI {
     restoreBackup: (path: string) => Promise<BackupResult>;
     deleteBackup: (path: string) => Promise<BackupResult>;
     autoBackup: () => Promise<BackupResult>;
+    // Window controls for frameless window
+    windowControls: WindowControls;
 }
 
 declare global {

@@ -8,6 +8,7 @@ import {
 import { useUniversityData } from '../hooks/useUniversityData';
 import { useDebounce } from '../hooks/useDebounce';
 import { useApplicationForm } from '../hooks/useApplicationForm';
+import { useLockBodyScroll } from '../hooks/useLockBodyScroll';
 import { MaterialIcon } from './ApplicationFormUI';
 import ProgramDetailsSection from './ProgramDetailsSection';
 import RankingsStatusSection from './RankingsStatusSection';
@@ -19,6 +20,7 @@ import FinancialsSection from './FinancialsSection';
 import EssaysSection from './EssaysSection';
 import DocumentsSection from './DocumentsSection';
 import { getLocationTimezone, searchLocation } from '../utils/locationService';
+import CustomFieldsSection from './CustomFieldsSection';
 
 interface ApplicationModalProps {
   isOpen: boolean;
@@ -34,6 +36,8 @@ const ApplicationModal: React.FC<ApplicationModalProps> = ({ isOpen, onClose, ap
     setShowSuggestions,
     searchUniversities
   } = useUniversityData();
+
+  useLockBodyScroll(isOpen);
 
   const {
     appData,
@@ -81,7 +85,8 @@ const ApplicationModal: React.FC<ApplicationModalProps> = ({ isOpen, onClose, ap
     handleFinancialCheckboxChange,
     addScholarship,
     removeScholarship,
-    handleScholarshipChange
+    handleScholarshipChange,
+    handleCustomFieldChange
   } = useApplicationForm(isOpen, applicationToEdit);
 
   const [locationSuggestions, setLocationSuggestions] = useState<LocationDetails[]>([]);
@@ -232,6 +237,10 @@ const ApplicationModal: React.FC<ApplicationModalProps> = ({ isOpen, onClose, ap
                   locationSuggestions={locationSuggestions}
                   showLocationSuggestions={showLocationSuggestions}
                   setShowLocationSuggestions={setShowLocationSuggestions}
+                />
+                <CustomFieldsSection
+                  appData={appData}
+                  handleCustomFieldChange={handleCustomFieldChange}
                 />
                 <RankingsStatusSection
                   appData={appData}

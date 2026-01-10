@@ -1,8 +1,9 @@
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Application, ApplicationStatus, TestStatus } from '../types';
 import { STATUS_COLORS, STATUS_LABELS, getDeadlineInfo, TAG_PRESETS } from '../constants';
 import { cardContainerVariants, cardVariants } from '../hooks/useAnimations';
+import VirtualizedList from './VirtualizedList';
 
 interface ApplicationListProps {
   applications: Application[];
@@ -86,6 +87,8 @@ const ApplicationList: React.FC<ApplicationListProps> = ({
     return map;
   }, [applications]);
 
+  const [useVirtualScrolling, setUseVirtualScrolling] = useState(applications.length > 50);
+
   if (applications.length === 0) {
     return (
       <motion.div
@@ -106,6 +109,132 @@ const ApplicationList: React.FC<ApplicationListProps> = ({
             : "Start tracking your academic journey by adding your first application."}
         </p>
       </motion.div>
+    );
+  }
+
+  // Use virtual scrolling for large lists
+  if (useVirtualScrolling && applications.length > 50) {
+    return (
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <div className="text-sm text-slate-500 dark:text-slate-400">
+            Virtual scrolling enabled ({applications.length} items)
+          </div>
+          <button
+            onClick={() => setUseVirtualScrolling(false)}
+            className="text-sm text-blue-600 dark:text-blue-400 hover:underline"
+          >
+            Disable
+          </button>
+        </div>
+        <VirtualizedList
+          items={applications}
+          itemHeight={250} // Approximate height of a card
+          layout="grid"
+          gridGap={24} // gap-6
+          minItemWidth={350} // similar to standard card width
+          renderItem={(app, index, style) => {
+            const isSelected = selectedIds.has(app.id);
+            const progress = progressMap.get(app.id) ?? 0;
+
+            return (
+              <div
+                key={app.id}
+                style={style}
+                onClick={() => handleCardClick(app)}
+                onContextMenu={(e) => {
+                  e.preventDefault();
+                  handleLongPress(app);
+                }}
+                className={`group bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl rounded-2xl p-5 border-2 shadow-sm cursor-pointer transition-shadow hover:shadow-md ${isSelected
+                  ? 'border-red-500 dark:border-red-400 ring-2 ring-red-500/20'
+                  : app.isPinned
+                    ? 'border-amber-400 dark:border-amber-500'
+                    : 'border-slate-200/50 dark:border-slate-700/50'
+                  }`}
+              >
+                {/* Selection Checkbox */}
+                {isSelectionMode && (
+                  <div
+                    className="absolute top-4 left-4 z-10"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (onToggleSelection) onToggleSelection(app.id);
+                    }}
+                  >
+                    <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${isSelected
+                      ? 'bg-red-500 border-red-500 text-white'
+                      : 'border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800'
+                      }`}>
+                      {isSelected && <MaterialIcon name="check" className="text-sm" />}
+                    </div>
+                  </div>
+                )}
+
+                {/* Pin indicator for pinned cards */}
+                {app.isPinned && !isSelectionMode && (
+                  <div className="absolute top-4 left-4">
+                    <span className="text-amber-500 dark:text-amber-400">
+                      <MaterialIcon name="push_pin" className="text-lg" />
+                    </span>
+                  </div>
+                )}
+
+                <div className={`mb-4 ${isSelectionMode ? 'pl-8' : ''} ${app.isPinned && !isSelectionMode ? 'pl-8' : ''}`}>
+                  <div className="flex items-start justify-between mb-2 gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${STATUS_COLORS[app.status]}`}>
+                        {STATUS_LABELS[app.status]}
+                      </span>
+                      {/* Tags display (simplified for virtual list performance) */}
+                      {app.tags && app.tags.length > 0 && (
+                        <span className="text-xs text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700 rounded-full px-2 py-0.5">
+                          {app.tags.length} tag{app.tags.length !== 1 ? 's' : ''}
+                        </span>
+                      )}
+                    </div>
+                    {app.deadline && (() => {
+                      const info = getDeadlineInfo(app.deadline);
+                      return (
+                        <span className={`text-xs font-medium flex items-center gap-1 px-2 py-1 rounded-md ${info.colorClass}`}>
+                          <MaterialIcon name="schedule" className="text-sm" />
+                          {info.label}
+                        </span>
+                      );
+                    })()}
+                  </div>
+                  <h3 className="text-lg font-bold text-slate-900 dark:text-white leading-tight mb-1 line-clamp-1" title={app.universityName}>
+                    {app.universityName}
+                  </h3>
+                  <p className="text-sm text-slate-600 dark:text-slate-300 line-clamp-1" title={app.programName}>
+                    {app.programName}
+                  </p>
+                </div>
+
+                <div className="space-y-3 pt-4 border-t border-slate-100 dark:border-slate-700/50">
+                  <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
+                    <span className="flex items-center gap-1.5">
+                      <MaterialIcon name="school" className="text-sm" />
+                      {app.programType}
+                    </span>
+                    <span className="flex items-center gap-1.5">
+                      {Math.round(progress)}% Complete
+                    </span>
+                  </div>
+
+                  {/* Progress Bar */}
+                  <div className="w-full bg-slate-100 dark:bg-slate-700 rounded-full h-1.5 overflow-hidden">
+                    <div
+                      className="bg-slate-900 dark:bg-slate-100 h-1.5 rounded-full"
+                      style={{ width: `${progress}%` }}
+                    />
+                  </div>
+                </div>
+              </div>
+            );
+          }}
+        />
+      </div>
     );
   }
 
