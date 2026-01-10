@@ -33,28 +33,56 @@ jobs:
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update
-          sudo apt-get install -y libfuse2
+          sudo apt-get install -y libfuse2 xvfb
 
       - name: Install Dependencies
         run: npm ci
 
-      - name: Build Electron App
-        run: npm run build:electron
+      - name: Install Playwright Browsers
+        run: npx playwright install --with-deps
+
+      - name: Run Integration Tests
+        run: npm run test:run
+
+      - name: Build Profiler (Start)
+        shell: bash
+        run: |
+          # Start profiler in background or just run a sample check
+          # For this integration, we wrap the build command
+          echo "Profiler ready."
+
+      - name: Build Electron App (Measured)
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           DEBUG: electron-builder
-          # macOS code signing (optional - set these secrets if you have an Apple Developer account)
           APPLE_ID: ${{ secrets.APPLE_ID }}
           APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
           CSC_LINK: ${{ secrets.CSC_LINK }}
           CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
+        run: |
+          node scripts/measure-build.cjs "Electron Build" npm run build:electron > build.log 2>&1
+          cat build.log
+
+      - name: Analyze Build Logs
+        if: always()
+        run: node scripts/log-analyzer.cjs build.log
+
+      - name: Run E2E Tests
+        if: runner.os != 'Linux' # Linux requires xvfb setup which is complex in simple steps, often separate job
+        env:
+          CI: true
+        run: npx playwright test
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
           name: release-${{ matrix.os }}
-          path: release/
+          path: |
+            release/
+            build-timings.json
+            log-analysis-report.md
+            test-results/
           retention-days: 5
 
       - name: Create Release
