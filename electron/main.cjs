@@ -47,6 +47,15 @@ function createWindow() {
   if (process.env.NODE_ENV === 'development') {
     mainWindow.loadURL('http://localhost:3000');
     mainWindow.webContents.openDevTools();
+  } else if (process.env.NODE_ENV === 'test') {
+    // In test mode, load from dist if available, otherwise a minimal page
+    const distPath = path.join(__dirname, '..', 'dist', 'index.html');
+    if (fs.existsSync(distPath)) {
+      mainWindow.loadFile(distPath);
+    } else {
+      // Load a minimal test page for E2E testing when dist is not built
+      mainWindow.loadURL('data:text/html,<html><head><title>AcademiaTrack</title></head><body><div id="root">Test Mode</div></body></html>');
+    }
   } else {
     mainWindow.loadFile(path.join(__dirname, '..', 'dist', 'index.html'));
   }
