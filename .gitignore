@@ -29,3 +29,13 @@ dist-ssr
 /build
 *.nsis.zip
 *.dmg
+
+# Test & Build Artifacts
+test-results/
+playwright-report/
+build-profile.json
+build-timings.json
+log-analysis-report.md
+
+# Tool specific
+.claude/
