@@ -2,30 +2,6 @@
 
 All notable changes to this project will be documented in this file.
 
-## [4.5.0] - 2026-01-10
-
-### Security
-- **Hardened IPC Handlers:** Restricted file system access in Electron main process. `open-file`, `copy-document`, `delete-document`, and backup/restore operations now strictly validate paths to ensure they are within allowed directories (UserData), preventing path traversal attacks.
-- **CSP Cleanup:** Removed unnecessary and insecure CDN import maps from `index.html`.
-
-### Code Quality
-- **Refactoring:** Major directory restructuring. Moved all source code (`components`, `hooks`, `utils`, `types`, `assets`, `App.tsx`, `index.tsx`) into a `src/` directory to adhere to modern Vite/React project standards.
-- **Async I/O:** Converted synchronous file I/O operations in main process to asynchronous to prevent blocking the UI thread.
-
-### Documentation
-- **Security Policy:** Updated supported versions and reporting instructions.
-
-## [4.4.3] - 2026-01-10
-
-### Fixed
-- **Release Workflow:** Disabled signing identity auto-discovery and skipped publish step during build to fix CI release workflow.
-
-## [4.4.2] - 2026-01-10
-
-### Fixed
-- **Tests:** Fixed `ReferenceError: __dirname is not defined` in E2E tests by migrating to ESM path resolution.
-- **Build:** Updated `.gitignore` to exclude build artifacts and test reports.
-
 ## [4.2.2] - 2025-12-14
 
 ### Fixed
