@@ -2,8 +2,9 @@ import React, { useRef, useState, useEffect } from 'react';
 import { ProgramType } from '../types';
 import { PROGRAM_TYPE_OPTIONS } from '../constants';
 import Tooltip from './Tooltip';
+import { useClickOutside } from '../hooks/useClickOutside';
 
-type Theme = 'light' | 'dark' | 'system';
+
 type ViewMode = 'list' | 'kanban' | 'calendar' | 'budget' | 'faculty' | 'recommenders' | 'timeline';
 
 interface HeaderProps {
@@ -11,26 +12,16 @@ interface HeaderProps {
   onAddFaculty: () => void;
   defaultProgramType: ProgramType;
   onSetDefaultProgramType: (type: ProgramType) => void;
-  onExport: (format: 'csv' | 'json' | 'ics') => void;
+  onExport: (format: 'csv' | 'json' | 'ics' | 'md' | 'pdf') => void;
   onImport: (e: React.ChangeEvent<HTMLInputElement>) => void;
   viewMode: ViewMode;
   onViewChange: (mode: ViewMode) => void;
-  theme: Theme;
-  cycleTheme: () => void;
   onShowHelp?: () => void;
 }
 
 const MaterialIcon: React.FC<{ name: string; className?: string }> = ({ name, className }) => (
   <span className={`material-symbols-outlined ${className}`}>{name}</span>
 );
-
-const getThemeIcon = (theme: Theme): string => {
-  switch (theme) {
-    case 'light': return 'light_mode';
-    case 'dark': return 'dark_mode';
-    case 'system': return 'computer';
-  }
-};
 
 const Header: React.FC<HeaderProps> = ({
   onAddNew,
@@ -41,13 +32,17 @@ const Header: React.FC<HeaderProps> = ({
   onImport,
   viewMode,
   onViewChange,
-  theme,
-  cycleTheme,
   onShowHelp,
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const moreMenuRef = useRef<HTMLDivElement>(null);
   const [showExportMenu, setShowExportMenu] = useState(false);
   const [showMoreMenu, setShowMoreMenu] = useState(false);
+
+  useClickOutside(moreMenuRef, () => {
+    setShowMoreMenu(false);
+    setShowExportMenu(false);
+  });
 
   // Track mouse hover for expanding toolbar
   const [hoveredSection, setHoveredSection] = useState<'apps' | 'schedule' | 'resources' | null>(null);
@@ -98,13 +93,20 @@ const Header: React.FC<HeaderProps> = ({
 
   return (
     <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-      <div>
-        <h1 className="text-3xl font-bold text-slate-900 dark:text-white tracking-tight">
-          AcademiaTrack
-        </h1>
-        <p className="text-slate-500 dark:text-slate-400 mt-1">
-          Manage your academic applications efficiently
-        </p>
+      <div className="flex items-center gap-3">
+        <img
+          src="./AcademiaTrack.png"
+          alt="AcademiaTrack"
+          className="w-10 h-10 object-contain"
+        />
+        <div>
+          <h1 className="text-3xl font-bold text-slate-900 dark:text-white tracking-tight">
+            AcademiaTrack
+          </h1>
+          <p className="text-slate-500 dark:text-slate-400 mt-1">
+            Manage your academic applications efficiently
+          </p>
+        </div>
       </div>
 
       <div className="flex flex-wrap items-center gap-2 sm:gap-4">
@@ -184,7 +186,7 @@ const Header: React.FC<HeaderProps> = ({
         <div className="h-8 w-px bg-slate-200 dark:bg-slate-700 mx-2 hidden sm:block"></div>
 
         {/* More Menu */}
-        <div className="relative">
+        <div className="relative" ref={moreMenuRef}>
           <Tooltip content="More Options">
             <button
               onClick={() => { setShowMoreMenu(!showMoreMenu); setShowExportMenu(false); }}
@@ -214,15 +216,6 @@ const Header: React.FC<HeaderProps> = ({
 
               <hr className="my-2 border-slate-200 dark:border-slate-700" />
 
-              {/* Theme */}
-              <button
-                onClick={() => { cycleTheme(); }}
-                className="w-full text-left px-4 py-2.5 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-3"
-              >
-                <MaterialIcon name={getThemeIcon(theme)} className="text-lg" />
-                <span>{theme === 'light' ? 'Light Mode' : theme === 'dark' ? 'Dark Mode' : 'System Theme'}</span>
-              </button>
-
               {/* Help */}
               <button
                 onClick={() => { onShowHelp?.(); setShowMoreMenu(false); }}
@@ -250,9 +243,11 @@ const Header: React.FC<HeaderProps> = ({
                   <div className="pl-10 bg-slate-50 dark:bg-slate-700/30">
                     <button onClick={() => { onExport('csv'); setShowMoreMenu(false); setShowExportMenu(false); }} className="w-full text-left px-4 py-2 text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700">CSV</button>
                     <button onClick={() => { onExport('json'); setShowMoreMenu(false); setShowExportMenu(false); }} className="w-full text-left px-4 py-2 text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700">JSON</button>
+                    <button onClick={() => { onExport('md'); setShowMoreMenu(false); setShowExportMenu(false); }} className="w-full text-left px-4 py-2 text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700">Markdown (.md)</button>
                     <button onClick={() => { onExport('ics'); setShowMoreMenu(false); setShowExportMenu(false); }} className="w-full text-left px-4 py-2 text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-2">
                       <MaterialIcon name="calendar_month" className="text-sm" />Calendar (.ics)
                     </button>
+                    <button onClick={() => { onExport('pdf'); setShowMoreMenu(false); setShowExportMenu(false); }} className="w-full text-left px-4 py-2 text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700">PDF</button>
                   </div>
                 )}
               </div>
@@ -269,12 +264,17 @@ const Header: React.FC<HeaderProps> = ({
           )}
         </div>
 
+        <label htmlFor="file-import" className="sr-only">
+          Import data file
+        </label>
         <input
+          id="file-import"
           type="file"
           ref={fileInputRef}
           onChange={onImport}
           accept=".json,.csv"
           className="hidden"
+          title="Import data file"
         />
 
         {/* Primary Actions */}

@@ -53,7 +53,8 @@ export const emptyApplication: Application = {
         assistantshipHours: 0,
         notes: ''
     },
-    scholarships: []
+    scholarships: [],
+    customFields: {}
 };
 
 export const useApplicationForm = (isOpen: boolean, applicationToEdit?: Application) => {
@@ -116,7 +117,8 @@ export const useApplicationForm = (isOpen: boolean, applicationToEdit?: Applicat
                     recommenders: applicationToEdit.recommenders || [],
                     reminders: applicationToEdit.reminders || [],
                     admissionTerm: admissionTerm || null,
-                    admissionYear: admissionYear || null
+                    admissionYear: admissionYear || null,
+                    customFields: applicationToEdit.customFields || {}
                 });
 
                 setIsFacultyOpen(new Array(migratedFaculty.length).fill(false));
@@ -639,6 +641,16 @@ export const useApplicationForm = (isOpen: boolean, applicationToEdit?: Applicat
         });
     }, []);
 
+    const handleCustomFieldChange = useCallback((fieldId: string, value: string | number | boolean) => {
+        setAppData(prev => ({
+            ...prev,
+            customFields: {
+                ...(prev.customFields || {}),
+                [fieldId]: value
+            }
+        }));
+    }, []);
+
     return {
         appData,
         setAppData,
@@ -685,6 +697,7 @@ export const useApplicationForm = (isOpen: boolean, applicationToEdit?: Applicat
         handleFinancialCheckboxChange,
         addScholarship,
         removeScholarship,
-        handleScholarshipChange
+        handleScholarshipChange,
+        handleCustomFieldChange
     };
 };
