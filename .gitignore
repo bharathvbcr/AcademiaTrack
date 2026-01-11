@@ -39,3 +39,10 @@ log-analysis-report.md
 
 # Tool specific
 .claude/
+
+# Agent & Audit Files
+POWER_USER_AUDIT_REPORT.md
+.agent/
+.gemini/
+.genkit/
+.claude/
