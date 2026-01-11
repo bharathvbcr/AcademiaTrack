@@ -12,28 +12,40 @@ export const useApplications = () => {
   // Load data on mount
   useEffect(() => {
     const loadApplications = async () => {
-      if (window.electron) {
-        const rawData = await window.electron.loadData();
-        if (rawData) {
-          // Migrate data from any version to current version
-          const migratedData = migrateData(rawData);
-          reset(migratedData.applications);
-        }
-      } else {
-        // Fallback for web-only dev
-        const saved = localStorage.getItem('phd-applications');
-        if (saved) {
-          try {
-            const parsed = JSON.parse(saved);
-            // Migrate data from any version to current version
-            const migratedData = migrateData(parsed);
-            reset(migratedData.applications);
-          } catch (e) {
-            console.error('Failed to parse saved applications', e);
+      let retries = 3;
+      while (retries > 0) {
+        try {
+          if (window.electron) {
+            const rawData = await window.electron.loadData();
+            if (rawData) {
+              // Migrate data from any version to current version
+              const migratedData = migrateData(rawData);
+              reset(migratedData.applications);
+            }
+          } else {
+            // Fallback for web-only dev
+            const saved = localStorage.getItem('phd-applications');
+            if (saved) {
+              const parsed = JSON.parse(saved);
+              // Migrate data from any version to current version
+              const migratedData = migrateData(parsed);
+              reset(migratedData.applications);
+            }
           }
+          setIsLoaded(true);
+          return; // Success, exit retry loop
+        } catch (e) {
+          console.error(`Failed to load applications (${4 - retries}/3):`, e);
+          retries--;
+          if (retries === 0) {
+            console.error('Failed to load applications after retries, starting with empty state');
+            setIsLoaded(true);
+            return;
+          }
+          // Wait before retry (exponential backoff)
+          await new Promise(resolve => setTimeout(resolve, 1000 * (4 - retries)));
         }
       }
-      setIsLoaded(true);
     };
     loadApplications();
   }, []);
@@ -42,14 +54,37 @@ export const useApplications = () => {
   useEffect(() => {
     if (!isLoaded) return;
 
-    // Wrap applications in versioned schema before saving
-    const dataToSave = wrapInSchema(debouncedApplications);
+    const saveData = async () => {
+      try {
+        // Wrap applications in versioned schema before saving
+        const dataToSave = wrapInSchema(debouncedApplications);
 
-    if (window.electron) {
-      window.electron.saveData(dataToSave);
-    } else {
-      localStorage.setItem('phd-applications', JSON.stringify(dataToSave));
-    }
+        if (window.electron) {
+          await window.electron.saveData(dataToSave);
+        } else {
+          localStorage.setItem('phd-applications', JSON.stringify(dataToSave));
+        }
+      } catch (error) {
+        console.error('Failed to save applications:', error);
+        // Retry once after a short delay
+        setTimeout(() => {
+          try {
+            const dataToSave = wrapInSchema(debouncedApplications);
+            if (window.electron) {
+              window.electron.saveData(dataToSave).catch(e => {
+                console.error('Retry save also failed:', e);
+              });
+            } else {
+              localStorage.setItem('phd-applications', JSON.stringify(dataToSave));
+            }
+          } catch (retryError) {
+            console.error('Retry save failed:', retryError);
+          }
+        }, 1000);
+      }
+    };
+
+    saveData();
   }, [debouncedApplications, isLoaded]);
 
   // Periodic deadline check
@@ -94,16 +129,45 @@ export const useApplications = () => {
   };
 
   const addApplication = (app: Omit<Application, 'id'>) => {
-    const newApplication = { ...app, id: crypto.randomUUID() };
-    setApplications(apps => [...apps, newApplication]);
+    try {
+      const newApplication = { ...app, id: crypto.randomUUID() };
+      setApplications(apps => [...apps, newApplication]);
+    } catch (error) {
+      console.error('Failed to add application:', error);
+      throw new Error('Failed to add application. Please try again.');
+    }
   };
 
   const updateApplication = (updatedApp: Application) => {
-    setApplications(apps => apps.map(app => app.id === updatedApp.id ? updatedApp : app));
+    try {
+      setApplications(apps => {
+        const index = apps.findIndex(app => app.id === updatedApp.id);
+        if (index === -1) {
+          console.warn(`Application with id ${updatedApp.id} not found for update`);
+          return apps;
+        }
+        return apps.map(app => app.id === updatedApp.id ? updatedApp : app);
+      });
+    } catch (error) {
+      console.error('Failed to update application:', error);
+      throw new Error('Failed to update application. Please try again.');
+    }
   };
 
   const deleteApplication = (id: string) => {
-    setApplications(apps => apps.filter(app => app.id !== id));
+    try {
+      setApplications(apps => {
+        const exists = apps.some(app => app.id === id);
+        if (!exists) {
+          console.warn(`Application with id ${id} not found for deletion`);
+          return apps;
+        }
+        return apps.filter(app => app.id !== id);
+      });
+    } catch (error) {
+      console.error('Failed to delete application:', error);
+      throw new Error('Failed to delete application. Please try again.');
+    }
   };
 
   const duplicateApplication = (id: string) => {
@@ -189,11 +253,54 @@ export const useApplications = () => {
   };
 
   const importApplications = (newApps: Application[]) => {
-    setApplications(newApps);
+    try {
+      // Validate imported data
+      if (!Array.isArray(newApps)) {
+        throw new Error('Imported data must be an array of applications');
+      }
+      // Basic validation - ensure each app has required fields
+      const validApps = newApps.filter(app => {
+        if (!app || typeof app !== 'object') return false;
+        if (!app.id || !app.universityName || !app.programName) {
+          console.warn('Skipping invalid application:', app);
+          return false;
+        }
+        return true;
+      });
+      if (validApps.length === 0 && newApps.length > 0) {
+        throw new Error('No valid applications found in imported data');
+      }
+      reset(validApps);
+    } catch (error) {
+      console.error('Failed to import applications:', error);
+      throw error instanceof Error ? error : new Error('Failed to import applications. Please check the data format.');
+    }
   };
 
   const mergeApplications = (newApps: Application[]) => {
-    setApplications(apps => [...apps, ...newApps]);
+    try {
+      if (!Array.isArray(newApps)) {
+        throw new Error('Merged data must be an array of applications');
+      }
+      // Validate and filter valid applications
+      const validApps = newApps.filter(app => {
+        if (!app || typeof app !== 'object') return false;
+        // For merge, we can be more lenient - just need university name
+        if (!app.universityName) {
+          console.warn('Skipping application without university name:', app);
+          return false;
+        }
+        // Generate ID if missing
+        if (!app.id) {
+          app.id = crypto.randomUUID();
+        }
+        return true;
+      });
+      setApplications(apps => [...apps, ...validApps]);
+    } catch (error) {
+      console.error('Failed to merge applications:', error);
+      throw error instanceof Error ? error : new Error('Failed to merge applications. Please check the data format.');
+    }
   };
 
   return {

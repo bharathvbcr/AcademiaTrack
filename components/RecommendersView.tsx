@@ -164,12 +164,13 @@ const RecommendersView: React.FC<RecommendersViewProps> = ({ applications, updat
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         placeholder="Search recommenders by name, university, email..."
-                        className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-[#E8B4B8]/30 liquid-glass focus:outline-none focus:ring-2 focus:ring-[#E8B4B8] text-[#F5D7DA] placeholder:text-[#E8B4B8]/50"
                     />
                     {searchQuery && (
                         <button
                             onClick={() => setSearchQuery('')}
                             className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                            aria-label="Clear search"
                         >
                             <MaterialIcon name="close" className="text-lg" />
                         </button>
@@ -188,9 +189,9 @@ const RecommendersView: React.FC<RecommendersViewProps> = ({ applications, updat
 
             {/* Recommenders Table */}
             {filteredRecommenders.length === 0 ? (
-                <div className="text-center py-12 bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700">
-                    <MaterialIcon name="group" className="text-6xl text-slate-300 dark:text-slate-600" />
-                    <p className="mt-4 text-slate-500 dark:text-slate-400">
+                <div className="text-center py-12 liquid-glass-card rounded-2xl">
+                    <MaterialIcon name="group" className="text-6xl text-[#E8B4B8]/50" />
+                    <p className="mt-4 text-[#E8B4B8]/70">
                         {allRecommenders.length === 0
                             ? 'No recommenders added yet. Add recommenders to your applications to see them here.'
                             : 'No recommenders match your search criteria.'}
@@ -279,10 +280,13 @@ const RecommendersView: React.FC<RecommendersViewProps> = ({ applications, updat
                                             </div>
                                         </td>
                                         <td className="px-4 py-3">
+                                            <label htmlFor={`status-${recommender.applicationId}-${recommender.id}`} className="sr-only">Recommender status for {recommender.name}</label>
                                             <select
+                                                id={`status-${recommender.applicationId}-${recommender.id}`}
                                                 value={recommender.status}
                                                 onChange={(e) => handleStatusChange(recommender, e.target.value as RecommenderStatus)}
                                                 className={`text-xs font-medium px-2.5 py-1 rounded-full border cursor-pointer ${RECOMMENDER_STATUS_COLORS[recommender.status]}`}
+                                                aria-label={`Status for ${recommender.name}`}
                                             >
                                                 {RECOMMENDER_STATUS_OPTIONS.map(status => (
                                                     <option key={status} value={status}>{status}</option>

@@ -8,6 +8,7 @@ import ApplicationList from './ApplicationList';
 import SortControls from './SortControls';
 import BulkActionsBar from './BulkActionsBar';
 import LoadingSpinner from './LoadingSpinner';
+import { SkeletonCard } from './SkeletonLoader';
 
 const DashboardSummary = lazy(() => import('./DashboardSummary'));
 const KanbanBoard = lazy(() => import('./KanbanBoard'));
@@ -44,8 +45,15 @@ interface MainContentProps {
 }
 
 const LoadingFallback: React.FC<{ text?: string }> = ({ text }) => (
-    <div className="flex items-center justify-center py-16">
-        <LoadingSpinner size="lg" text={text} />
+    <div className="space-y-4">
+        {text && (
+            <div className="flex items-center justify-center py-4">
+                <LoadingSpinner size="md" text={text} />
+            </div>
+        )}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <SkeletonCard count={6} />
+        </div>
     </div>
 );
 

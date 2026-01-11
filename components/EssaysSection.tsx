@@ -73,6 +73,7 @@ const EssaysSection: React.FC<EssaysSectionProps> = ({
                                     value={essay.status}
                                     onChange={(e) => updateEssayStatus(essay.id, e.target.value as any)}
                                     onClick={(e) => e.stopPropagation()}
+                                    aria-label={`Status for ${essay.name}`}
                                     className={`text-xs font-medium px-2 py-1 rounded-full border ${essay.status === 'Finalized' ? 'bg-green-100 text-green-700 border-green-200' :
                                         essay.status === 'Drafting' ? 'bg-blue-100 text-blue-700 border-blue-200' :
                                             'bg-slate-100 text-slate-700 border-slate-200'
@@ -85,6 +86,7 @@ const EssaysSection: React.FC<EssaysSectionProps> = ({
                                 <button
                                     type="button"
                                     onClick={(e) => { e.stopPropagation(); removeEssay(essay.id); }}
+                                    aria-label={`Remove ${essay.name}`}
                                     className="text-slate-400 hover:text-red-500 transition-colors"
                                 >
                                     <MaterialIcon name="delete" />
@@ -152,6 +154,7 @@ const EssaysSection: React.FC<EssaysSectionProps> = ({
                                                             <button
                                                                 type="button"
                                                                 onClick={() => removeEssayDraft(essay.id, draft.id)}
+                                                                aria-label={`Remove draft version ${draft.version}`}
                                                                 className="text-red-500 hover:text-red-700"
                                                             >
                                                                 <MaterialIcon name="delete" className="text-base" />
@@ -175,27 +178,28 @@ const EssaysSection: React.FC<EssaysSectionProps> = ({
                                             placeholder="Ver #"
                                             value={newDrafts[essay.id]?.version || (essay.drafts.length + 1)}
                                             onChange={(e) => handleNewDraftChange(essay.id, 'version', parseInt(e.target.value))}
-                                            className="px-2 py-1.5 text-sm rounded border border-slate-300 dark:border-slate-600 dark:bg-slate-800"
+                                            className="px-2 py-1.5 text-sm rounded border border-[#E8B4B8]/30 liquid-glass text-[#F5D7DA] placeholder:text-[#E8B4B8]/50"
                                         />
                                         <input
                                             type="date"
                                             value={newDrafts[essay.id]?.date || new Date().toISOString().split('T')[0]}
                                             onChange={(e) => handleNewDraftChange(essay.id, 'date', e.target.value)}
-                                            className="px-2 py-1.5 text-sm rounded border border-slate-300 dark:border-slate-600 dark:bg-slate-800"
+                                            aria-label="Draft date"
+                                            className="px-2 py-1.5 text-sm rounded border border-[#E8B4B8]/30 liquid-glass text-[#F5D7DA] placeholder:text-[#E8B4B8]/50"
                                         />
                                         <input
                                             type="number"
                                             placeholder="Word Count"
                                             value={newDrafts[essay.id]?.wordCount || ''}
                                             onChange={(e) => handleNewDraftChange(essay.id, 'wordCount', parseInt(e.target.value))}
-                                            className="px-2 py-1.5 text-sm rounded border border-slate-300 dark:border-slate-600 dark:bg-slate-800"
+                                            className="px-2 py-1.5 text-sm rounded border border-[#E8B4B8]/30 liquid-glass text-[#F5D7DA] placeholder:text-[#E8B4B8]/50"
                                         />
                                         <input
                                             type="text"
                                             placeholder="Notes"
                                             value={newDrafts[essay.id]?.notes || ''}
                                             onChange={(e) => handleNewDraftChange(essay.id, 'notes', e.target.value)}
-                                            className="px-2 py-1.5 text-sm rounded border border-slate-300 dark:border-slate-600 dark:bg-slate-800"
+                                            className="px-2 py-1.5 text-sm rounded border border-[#E8B4B8]/30 liquid-glass text-[#F5D7DA] placeholder:text-[#E8B4B8]/50"
                                         />
                                     </div>
                                     <button

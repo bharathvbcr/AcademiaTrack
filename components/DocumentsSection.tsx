@@ -26,7 +26,7 @@ const DocumentsSection: React.FC<DocumentsSectionProps> = ({
                     const doc = appData.documents[docKey];
 
                     return (
-                        <div key={key} className="grid grid-cols-1 sm:grid-cols-[1.5fr,1fr,auto] gap-3 items-center p-3 bg-slate-100 dark:bg-slate-700/50 rounded-lg">
+                        <div key={key} className="grid grid-cols-1 sm:grid-cols-[1.5fr,1fr,auto] gap-3 items-center p-3 liquid-glass-depth rounded-lg">
                             <div className="flex items-center gap-3">
                                 <input
                                     id={`${key}-required`}
@@ -60,7 +60,7 @@ const DocumentsSection: React.FC<DocumentsSectionProps> = ({
                                 value={doc.submitted || ''}
                                 onChange={e => handleDocumentChange(docKey, 'submitted', e.target.value)}
                                 disabled={!doc.required || doc.status !== DocumentStatus.Submitted}
-                                className="w-full sm:w-36 px-2 py-1 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-red-500 focus:border-red-500 transition text-sm [color-scheme:light_dark] disabled:bg-slate-200 dark:disabled:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="w-full sm:w-36 px-2 py-1 liquid-glass-input border border-[#27272a] bg-[#18181b] rounded-md focus:outline-none focus:ring-2 focus:ring-[#dc2626] focus:border-transparent transition text-sm text-[#f4f4f5] [color-scheme:dark] disabled:opacity-50 disabled:cursor-not-allowed"
                                 aria-label={`${DOCUMENT_LABELS[docKey]} submission date`}
                                 title={doc.status !== DocumentStatus.Submitted ? "Select 'Submitted' status to set date" : "Submission Date"}
                             />

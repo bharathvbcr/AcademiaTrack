@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta http-equiv="Content-Security-Policy"
-    content="default-src 'self'; script-src 'self' https://cdn.tailwindcss.com https://aistudiocdn.com; style-src 'self' https://fonts.googleapis.com 'unsafe-inline'; font-src 'self' https://fonts.gstatic.com; connect-src 'self' http://localhost:3000 https://*.googleapis.com https://nominatim.openstreetmap.org https://timeapi.io; img-src 'self' data:; object-src 'none';">
+    content="default-src 'self'; script-src 'self' https://cdn.tailwindcss.com https://aistudiocdn.com 'unsafe-inline'; style-src 'self' https://fonts.googleapis.com 'unsafe-inline'; font-src 'self' https://fonts.gstatic.com; connect-src 'self' http://localhost:3000 https://*.googleapis.com https://nominatim.openstreetmap.org https://timeapi.io; img-src 'self' data:; object-src 'none';">
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>AcademiaTrack</title>
   <link rel="icon" href="AcademiaTrack.png">
@@ -20,26 +20,75 @@
   <link rel="stylesheet"
     href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
   <style>
-    body {
-      font-family: 'Inter', sans-serif;
-      background-color: #f8fafc;
-      /* slate-50 */
-      background-image:
-        radial-gradient(ellipse at 25% 25%, rgba(239, 68, 68, 0.05), transparent 60%),
-        radial-gradient(circle at 1px 1px, #e2e8f0 1px, transparent 0);
-      /* slate-200 dots */
-      background-size: 100% 100%, 2rem 2rem;
-      transition: background-color 0.3s, background-image 0.3s;
+    :root {
+      /* Minimal Dark Palette */
+      --bg-base: #09090b;
+      /* Zinc 950 */
+      --bg-card: #18181b;
+      /* Zinc 900 */
+      --bg-card-hover: #27272a;
+      /* Zinc 800 */
+      --border-color: #27272a;
+      /* Zinc 800 */
+
+      --text-primary: #f4f4f5;
+      /* Zinc 100 */
+      --text-secondary: #a1a1aa;
+      /* Zinc 400 */
+      --text-muted: #71717a;
+      /* Zinc 500 */
+
+      --accent-primary: #dc2626;
+      /* Red 600 */
+      --accent-hover: #b91c1c;
+      /* Red 700 */
+      --accent-subtle: rgba(220, 38, 38, 0.1);
+
+      /* Re-mapping old variables to new palette for compatibility */
+      --crimson-diffused: var(--accent-primary);
+      --crimson-diffused-40: var(--accent-subtle);
+      --crimson-diffused-50: var(--accent-subtle);
+      --crimson-diffused-60: var(--accent-subtle);
+      --scarlet-red: var(--accent-primary);
+      --scarlet-red-30: var(--accent-subtle);
+      --scarlet-red-50: var(--accent-subtle);
+      --rose-gold: var(--text-secondary);
+      --rose-gold-dark: var(--text-muted);
+      --rose-gold-30: rgba(161, 161, 170, 0.3);
+      --rose-gold-50: rgba(161, 161, 170, 0.5);
+      --pale-pink: var(--text-primary);
+      --pale-pink-dark: var(--text-secondary);
+      --pale-pink-20: rgba(244, 244, 245, 0.2);
+      --pale-pink-30: rgba(244, 244, 245, 0.3);
+
+      --bg-base-light: var(--bg-card);
+      --bg-surface-glass: var(--bg-card);
+      --glass-border: var(--border-color);
+
+      /* Dark Red Background Variables - Muted to dark */
+      --dark-red: #18181b;
+      --dark-red-15: rgba(24, 24, 27, 0.5);
+      --dark-red-12: rgba(24, 24, 27, 0.5);
+      --darker-red: #09090b;
+      --darker-red-12: rgba(9, 9, 11, 0.5);
+      --darker-red-10: rgba(9, 9, 11, 0.5);
+      --very-dark-red-5: rgba(9, 9, 11, 0.5);
+
+      /* Glass Effect Variables - Removed glass, now solid */
+      --glass-blur: none;
+      --glass-shadow: none;
+      --glass-shadow-hover: none;
     }
 
-    /* Class-based dark mode */
-    html.dark body {
-      background-color: #0f172a;
-      /* slate-900 */
-      background-image:
-        radial-gradient(ellipse at 25% 25%, rgba(239, 68, 68, 0.1), transparent 70%),
-        radial-gradient(circle at 1px 1px, #1e293b 1px, transparent 0);
-      /* slate-800 dots */
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: var(--bg-base);
+      color: var(--text-primary);
+    }
+
+    /* Remove the pseudo-element gradients */
+    body::before {
+      display: none;
     }
 
     .material-symbols-outlined {
@@ -47,49 +96,103 @@
       vertical-align: bottom;
     }
 
-    /* Custom focus ring for the new theme */
+    /* Custom focus ring */
     *:focus-visible {
-      outline: 2px solid #ef4444 !important;
-      /* red-500 */
+      outline: 2px solid var(--accent-primary) !important;
       outline-offset: 2px !important;
+      box-shadow: none !important;
     }
 
+    /* Minimal Dropdown */
     .liquid-glass-dropdown {
       position: relative;
-      background: rgba(255, 255, 255, 0.1);
-      backdrop-filter: blur(10px);
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      border-radius: 9999px;
-      color: white;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      color: var(--text-primary);
       overflow: hidden;
-      transition: all 0.3s ease;
+      transition: all 0.2s ease;
     }
 
     .liquid-glass-dropdown::before {
-      content: '';
-      position: absolute;
-      top: -50%;
-      left: -50%;
-      width: 200%;
-      height: 200%;
-      background: conic-gradient(transparent,
-          rgba(255, 255, 255, 0.2),
-          transparent 30%);
-      animation: rotate 4s linear infinite;
+      display: none;
     }
 
     .liquid-glass-dropdown:hover {
-      transform: scale(1.05);
-      box-shadow: 0 0 15px rgba(255, 255, 255, 0.3);
+      background: var(--bg-card-hover);
+      transform: none;
+      box-shadow: none;
     }
 
-    @keyframes rotate {
-      100% {
-        transform: rotate(360deg);
-      }
+    /* Replaced Liquid Glass Utilities with Minimal equivalents */
+    .liquid-glass {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      box-shadow: none;
+      backdrop-filter: none;
+      -webkit-backdrop-filter: none;
+      transition: all 0.2s ease;
     }
 
-    /* Custom Scrollbar */
+    .liquid-glass-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      box-shadow: none;
+      backdrop-filter: none;
+      -webkit-backdrop-filter: none;
+      border-radius: 12px;
+      /* Consistent corner radius */
+      transition: all 0.2s ease;
+    }
+
+    .liquid-glass-card:hover {
+      background: var(--bg-card-hover);
+      border-color: var(--border-color);
+      transform: none;
+      box-shadow: none;
+    }
+
+    .liquid-glass-nav {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      box-shadow: none;
+      backdrop-filter: none;
+      -webkit-backdrop-filter: none;
+    }
+
+    .liquid-glass-modal {
+      background: rgba(9, 9, 11, 0.6);
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+    }
+
+    .liquid-glass-modal-content {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+      backdrop-filter: none;
+      -webkit-backdrop-filter: none;
+    }
+
+    /* Restored Liquid Glass for specific depth elements */
+    .liquid-glass-depth {
+      background: rgba(24, 24, 27, 0.4);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    }
+
+    .glass-depth-1,
+    .glass-depth-2,
+    .glass-depth-3,
+    .glass-refraction::before {
+      box-shadow: none;
+      background: none;
+      display: none;
+    }
+
+    /* Custom Scrollbar - Minimal */
     .custom-scrollbar::-webkit-scrollbar {
       width: 6px;
     }
@@ -99,13 +202,12 @@
     }
 
     .custom-scrollbar::-webkit-scrollbar-thumb {
-      background-color: rgba(156, 163, 175, 0.5);
-      /* slate-400/50 */
+      background-color: var(--border-color);
       border-radius: 20px;
     }
 
     .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-      background-color: rgba(156, 163, 175, 0.8);
+      background-color: var(--text-secondary);
     }
   </style>
   <script type="importmap">

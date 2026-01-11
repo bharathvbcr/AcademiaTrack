@@ -77,6 +77,8 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({
                         <button
                             onClick={() => onSearchChange('')}
                             className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                            aria-label="Clear search"
+                            title="Clear search"
                         >
                             <MaterialIcon name="close" className="text-lg" />
                         </button>
@@ -112,11 +114,13 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                         {/* Status Filter */}
                         <div>
-                            <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Status</label>
+                            <label className="block text-xs font-medium text-[#E8B4B8]/70 mb-1">Status</label>
                             <select
                                 value={filters.status}
                                 onChange={(e) => onFiltersChange({ ...filters, status: e.target.value as any })}
-                                className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm"
+                                className="w-full px-3 py-2 liquid-glass border border-[#E8B4B8]/30 rounded-lg text-sm text-[#F5D7DA]"
+                                aria-label="Filter by application status"
+                                title="Filter by application status"
                             >
                                 <option value="all">All Statuses</option>
                                 {STATUS_OPTIONS.map(s => (
@@ -131,7 +135,9 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({
                             <select
                                 value={filters.programType}
                                 onChange={(e) => onFiltersChange({ ...filters, programType: e.target.value as any })}
-                                className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm"
+                                className="w-full px-3 py-2 liquid-glass border border-[#E8B4B8]/30 rounded-lg text-sm text-[#F5D7DA]"
+                                aria-label="Filter by program type"
+                                title="Filter by program type"
                             >
                                 <option value="all">All Programs</option>
                                 {PROGRAM_TYPE_OPTIONS.map(t => (
@@ -146,7 +152,9 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({
                             <select
                                 value={filters.deadlineRange}
                                 onChange={(e) => onFiltersChange({ ...filters, deadlineRange: e.target.value as any })}
-                                className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm"
+                                className="w-full px-3 py-2 liquid-glass border border-[#E8B4B8]/30 rounded-lg text-sm text-[#F5D7DA]"
+                                aria-label="Filter by deadline range"
+                                title="Filter by deadline range"
                             >
                                 <option value="all">All Deadlines</option>
                                 <option value="overdue">Overdue</option>
@@ -161,7 +169,9 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({
                             <select
                                 value={filters.feeMax ?? 'all'}
                                 onChange={(e) => onFiltersChange({ ...filters, feeMax: e.target.value === 'all' ? null : Number(e.target.value) })}
-                                className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm"
+                                className="w-full px-3 py-2 liquid-glass border border-[#E8B4B8]/30 rounded-lg text-sm text-[#F5D7DA]"
+                                aria-label="Filter by maximum application fee"
+                                title="Filter by maximum application fee"
                             >
                                 <option value="all">Any Fee</option>
                                 <option value="0">Free</option>

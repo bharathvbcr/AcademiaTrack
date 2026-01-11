@@ -71,21 +71,21 @@ const AutoCompleteInput: React.FC<AutoCompleteInputProps> = ({
           setTimeout(() => setIsFocused(false), 200);
         }}
         placeholder={placeholder}
-        className={`w-full px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 focus:ring-2 focus:ring-red-500 focus:border-transparent ${className}`}
+        className={`w-full px-4 py-2 border border-[#27272a] bg-[#18181b] rounded-lg liquid-glass-input focus:ring-2 focus:ring-[#dc2626] focus:border-transparent text-[#f4f4f5] placeholder:text-[#a1a1aa]/50 ${className}`}
       />
-      
+
       {showSuggestions && suggestions.length > 0 && (
         <div
           ref={suggestionsRef}
-          className="absolute z-50 w-full mt-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-lg max-h-60 overflow-y-auto"
+          className="absolute z-50 w-full mt-1 liquid-glass-modal-content rounded-lg max-h-60 overflow-y-auto"
         >
           {suggestions.map((suggestion, index) => (
             <button
               key={index}
               onClick={() => handleSelect(suggestion)}
-              className="w-full text-left px-4 py-2 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-2"
+              className="w-full text-left px-4 py-2 hover:bg-[#27272a] flex items-center gap-2 text-[#f4f4f5]"
             >
-              <MaterialIcon name="history" className="text-sm text-slate-400" />
+              <MaterialIcon name="history" className="text-sm text-[#a1a1aa]" />
               <span>{suggestion}</span>
             </button>
           ))}

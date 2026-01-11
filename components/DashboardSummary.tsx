@@ -27,9 +27,9 @@ const DashboardSummary: React.FC<DashboardSummaryProps> = ({ applications, viewM
   }, []);
 
   const tooltipStyle = {
-    backgroundColor: isDarkMode ? 'rgba(30, 41, 59, 0.9)' : 'rgba(255, 255, 255, 0.9)',
-    backdropFilter: 'blur(10px)',
-    border: `1px solid ${isDarkMode ? 'rgba(71, 85, 105, 0.3)' : 'rgba(226, 232, 240, 0.7)'}`,
+    backgroundColor: isDarkMode ? '#18181b' : '#ffffff',
+    backdropFilter: 'none',
+    border: `1px solid ${isDarkMode ? '#27272a' : '#e4e4e7'}`,
     borderRadius: '0.75rem',
     color: isDarkMode ? '#e2e8f0' : '#1e293b',
     boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
@@ -127,10 +127,10 @@ const DashboardSummary: React.FC<DashboardSummaryProps> = ({ applications, viewM
 
   if (applications.length === 0) {
     return (
-      <div className="text-center py-16 px-6 bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl rounded-3xl shadow-lg border border-slate-200/50 dark:border-slate-700/50 mb-8">
+      <div className="text-center py-16 px-6 liquid-glass-card rounded-3xl mb-8">
         <img src="./AcademiaTrack.png" alt="AcademiaTrack" className="w-16 h-16 object-contain mx-auto mb-4" />
-        <h2 className="text-2xl font-bold text-slate-700 dark:text-slate-200">Welcome to AcademiaTrack!</h2>
-        <p className="text-slate-500 dark:text-slate-400 mt-2">Click "Add New" to get started and see your dashboard come to life.</p>
+        <h2 className="text-2xl font-bold text-[#f4f4f5]">Welcome to AcademiaTrack!</h2>
+        <p className="text-[#a1a1aa] mt-2">Click "Add New" to get started and see your dashboard come to life.</p>
       </div>
     );
   }
@@ -139,23 +139,23 @@ const DashboardSummary: React.FC<DashboardSummaryProps> = ({ applications, viewM
     <div className="space-y-6 mb-8">
       {/* Summary Cards */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-        <SummaryCard title="Total Applications" value={summaryStats.total} icon="folder_open" color="bg-blue-500" />
-        <SummaryCard title="Pending / In Progress" value={summaryStats.pending} icon="hourglass_empty" color="bg-amber-500" />
-        <SummaryCard title="Accepted" value={summaryStats.accepted} icon="check_circle" color="bg-green-500" />
-        <SummaryCard title="Deadlines (14 Days)" value={summaryStats.upcomingDeadlines} icon="event_busy" color="bg-red-500" />
-        <SummaryCard title="Rejected" value={summaryStats.rejected} icon="cancel" color="bg-rose-500" />
+        <SummaryCard title="Total Applications" value={summaryStats.total} icon="folder_open" color="text-blue-500" />
+        <SummaryCard title="Pending / In Progress" value={summaryStats.pending} icon="hourglass_empty" color="text-amber-500" />
+        <SummaryCard title="Accepted" value={summaryStats.accepted} icon="check_circle" color="text-green-500" />
+        <SummaryCard title="Deadlines (14 Days)" value={summaryStats.upcomingDeadlines} icon="event_busy" color="text-red-500" />
+        <SummaryCard title="Rejected" value={summaryStats.rejected} icon="cancel" color="text-rose-500" />
         <SummaryCard
           title="Total Cost Spent"
           value={`$${summaryStats.totalCost.toLocaleString()}`}
           icon="payments"
-          color="bg-emerald-500"
+          color="text-emerald-500"
         />
       </div>
 
       <div className="flex justify-end">
         <button
           onClick={() => setUserPreference(!showAnalytics)}
-          className="flex items-center gap-2 text-sm font-medium text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors"
+          className="flex items-center gap-2 text-sm font-medium text-[#a1a1aa] hover:text-[#F5D7DA] transition-colors"
         >
           <span className="material-symbols-outlined text-lg">
             {showAnalytics ? 'expand_less' : 'expand_more'}
@@ -175,11 +175,11 @@ const DashboardSummary: React.FC<DashboardSummaryProps> = ({ applications, viewM
           >
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Charts Container */}
-              <div className="bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl p-6 rounded-3xl shadow-lg border border-slate-200/50 dark:border-slate-700/50">
-                <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-100 mb-4">Application Status</h2>
+              <div className="liquid-glass-card p-6 rounded-3xl bg-[#18181b] border border-[#27272a]">
+                <h2 className="text-lg font-semibold text-[#f4f4f5] mb-4">Application Status</h2>
                 {applicationStatusData.length > 0 ? (
                   <div className="h-64 w-full">
-                    <ResponsiveContainer>
+                    <ResponsiveContainer width="100%" height="100%">
                       <PieChart>
                         <Pie
                           data={applicationStatusData}
@@ -209,15 +209,15 @@ const DashboardSummary: React.FC<DashboardSummaryProps> = ({ applications, viewM
                     </ResponsiveContainer>
                   </div>
                 ) : (
-                  <div className="h-64 flex items-center justify-center text-slate-400">No data available</div>
+                  <div className="h-64 flex items-center justify-center text-[#a1a1aa]/50">No data available</div>
                 )}
               </div>
 
-              <div className="bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl p-6 rounded-3xl shadow-lg border border-slate-200/50 dark:border-slate-700/50">
-                <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-100 mb-4">Faculty Outreach</h2>
+              <div className="liquid-glass-card p-6 rounded-3xl bg-[#18181b] border border-[#27272a]">
+                <h2 className="text-lg font-semibold text-[#f4f4f5] mb-4">Faculty Outreach</h2>
                 {facultyContactSummary.length > 0 ? (
                   <div className="h-64 w-full">
-                    <ResponsiveContainer>
+                    <ResponsiveContainer width="100%" height="100%">
                       <PieChart>
                         <Pie
                           data={facultyContactSummary}
@@ -247,17 +247,17 @@ const DashboardSummary: React.FC<DashboardSummaryProps> = ({ applications, viewM
                     </ResponsiveContainer>
                   </div>
                 ) : (
-                  <div className="h-64 flex items-center justify-center text-slate-400">No faculty contacts logged</div>
+                  <div className="h-64 flex items-center justify-center text-[#a1a1aa]/50">No faculty contacts logged</div>
                 )}
               </div>
             </div>
 
             {/* Timeline Chart */}
             {timelineData.length > 0 && (
-              <div className="bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl p-6 rounded-3xl shadow-lg border border-slate-200/50 dark:border-slate-700/50">
-                <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-100 mb-4">Application Deadlines Timeline</h2>
+              <div className="liquid-glass-card p-6 rounded-3xl bg-[#18181b] border border-[#27272a]">
+                <h2 className="text-lg font-semibold text-[#f4f4f5] mb-4">Application Deadlines Timeline</h2>
                 <div className="h-64 w-full">
-                  <ResponsiveContainer>
+                  <ResponsiveContainer width="100%" height="100%">
                     <LineChart data={timelineData} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
                       <CartesianGrid strokeDasharray="3 3" stroke={isDarkMode ? '#334155' : '#e2e8f0'} vertical={false} />
                       <XAxis dataKey="name" stroke={isDarkMode ? '#94a3b8' : '#64748b'} tick={{ fontSize: 12 }} tickLine={false} axisLine={false} />
@@ -273,39 +273,41 @@ const DashboardSummary: React.FC<DashboardSummaryProps> = ({ applications, viewM
         )}
       </AnimatePresence>
 
-      {upcomingInterviews.length > 0 && (
-        <div className="bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl p-6 rounded-3xl shadow-lg border border-slate-200/50 dark:border-slate-700/50">
-          <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-100 mb-4">Upcoming Interviews</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {upcomingInterviews.map(({ app, contact }) => (
-              <div key={`${app.id}-${contact.id}`} className="p-4 rounded-xl bg-white dark:bg-slate-700/50 border border-slate-100 dark:border-slate-600 shadow-sm flex items-center gap-4">
-                <div className="h-12 w-12 rounded-full bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center text-purple-600 dark:text-purple-400">
-                  <span className="material-symbols-outlined">video_camera_front</span>
+      {
+        upcomingInterviews.length > 0 && (
+          <div className="liquid-glass-card p-6 rounded-3xl bg-[#18181b] border border-[#27272a]">
+            <h2 className="text-lg font-semibold text-[#f4f4f5] mb-4">Upcoming Interviews</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {upcomingInterviews.map(({ app, contact }) => (
+                <div key={`${app.id}-${contact.id}`} className="p-4 rounded-xl border border-[#27272a] bg-[#18181b] flex items-center gap-4">
+                  <div className="h-12 w-12 rounded-full bg-[#27272a] flex items-center justify-center text-[#dc2626]">
+                    <span className="material-symbols-outlined">video_camera_front</span>
+                  </div>
+                  <div>
+                    <p className="font-bold text-[#f4f4f5]">{app.universityName}</p>
+                    <p className="text-sm text-[#a1a1aa]">{contact.name}</p>
+                    <p className="text-xs text-[#a1a1aa]/50 mt-1">
+                      {new Date(contact.interviewDate! + 'T00:00:00').toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <p className="font-bold text-slate-800 dark:text-slate-100">{app.universityName}</p>
-                  <p className="text-sm text-slate-600 dark:text-slate-300">{contact.name}</p>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                    {new Date(contact.interviewDate! + 'T00:00:00').toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}
-                  </p>
-                </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
-        </div>
-      )}
-    </div>
+        )
+      }
+    </div >
   );
 };
 
 const SummaryCard: React.FC<{ title: string; value: number | string; icon: string; color: string }> = ({ title, value, icon, color }) => (
-  <div className="bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl p-4 rounded-2xl shadow-sm border border-slate-200/50 dark:border-slate-700/50 flex items-center gap-4">
-    <div className={`h-12 w-12 rounded-xl ${color} bg-opacity-10 flex items-center justify-center shrink-0`}>
-      <span className={`material-symbols-outlined ${color.replace('bg-', 'text-')}`}>{icon}</span>
+  <div className="p-4 rounded-xl border border-[#27272a] bg-[#18181b] flex items-center gap-4 hover:border-[#3f3f46] transition-colors">
+    <div className={`h-12 w-12 rounded-xl bg-opacity-0 flex items-center justify-center shrink-0`}>
+      <span className={`material-symbols-outlined ${color}`}>{icon}</span>
     </div>
     <div>
-      <p className="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">{title}</p>
-      <p className="text-2xl font-bold text-slate-800 dark:text-slate-100">{value}</p>
+      <p className="text-xs font-medium text-[#a1a1aa] uppercase tracking-wider">{title}</p>
+      <p className="text-2xl font-bold text-[#f4f4f5]">{value}</p>
     </div>
   </div>
 );

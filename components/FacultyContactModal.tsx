@@ -75,9 +75,9 @@ const FacultyContactModal: React.FC<FacultyContactModalProps> = ({ isOpen, onClo
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center p-4">
-      <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-xl w-full max-w-md">
-        <h2 className="text-xl font-bold mb-4 text-slate-900 dark:text-white">Add Faculty Contact</h2>
+    <div className="fixed inset-0 liquid-glass-modal z-50 flex justify-center items-center p-4">
+      <div className="liquid-glass-modal-content p-6 rounded-2xl w-full max-w-md">
+        <h2 className="text-xl font-bold mb-4 text-[#F5D7DA]">Add Faculty Contact</h2>
         <form onSubmit={handleSubmit} autoComplete="off">
           <div className="grid grid-cols-1 gap-4">
             <Input
@@ -151,8 +151,8 @@ const FacultyContactModal: React.FC<FacultyContactModalProps> = ({ isOpen, onClo
             />
           </div>
           <div className="mt-6 flex justify-end gap-4">
-            <button type="button" onClick={handleClose} className="px-5 py-2 text-sm font-medium text-slate-700 dark:text-slate-200 bg-transparent rounded-full hover:bg-slate-200 dark:hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500">Cancel</button>
-            <button type="submit" className="px-6 py-2 text-sm font-medium text-white bg-red-600 rounded-full shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">Save</button>
+            <button type="button" onClick={handleClose} className="px-5 py-2 text-sm font-medium text-[#F5D7DA] bg-transparent rounded-full hover:bg-[rgba(192,48,80,0.25)] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#E8B4B8]">Cancel</button>
+            <button type="submit" className="px-6 py-2 text-sm font-medium text-white bg-[#C03050] rounded-full shadow-sm hover:bg-[#E03030] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#C03050]">Save</button>
           </div>
         </form>
       </div>

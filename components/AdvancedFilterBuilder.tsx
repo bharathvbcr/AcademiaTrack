@@ -143,7 +143,7 @@ const AdvancedFilterBuilder: React.FC<AdvancedFilterBuilderProps> = ({
                 const selected = Array.from(e.target.selectedOptions, opt => opt.value);
                 updateCondition(index, { value: selected });
               }}
-              className="px-3 py-2 border rounded-lg"
+              className="px-3 py-2 border border-[#E8B4B8]/30 rounded-lg liquid-glass text-[#F5D7DA]"
               aria-label="Select status values"
             >
               {STATUS_OPTIONS.map(s => (
@@ -175,7 +175,7 @@ const AdvancedFilterBuilder: React.FC<AdvancedFilterBuilderProps> = ({
                 const selected = Array.from(e.target.selectedOptions, opt => opt.value);
                 updateCondition(index, { value: selected });
               }}
-              className="px-3 py-2 border rounded-lg"
+              className="px-3 py-2 border border-[#E8B4B8]/30 rounded-lg liquid-glass text-[#F5D7DA]"
               aria-label="Select program type values"
             >
               {PROGRAM_TYPE_OPTIONS.map(p => (

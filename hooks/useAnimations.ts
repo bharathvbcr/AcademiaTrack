@@ -168,9 +168,69 @@ export const buttonHoverVariants: Variants = {
     initial: { scale: 1 },
     hover: {
         scale: 1.05,
-        transition: { duration: 0.15 },
+        transition: { duration: 0.15, ease: 'easeOut' },
     },
     tap: { scale: 0.95 },
+    focus: {
+        scale: 1.02,
+        boxShadow: '0 0 0 3px rgba(59, 130, 246, 0.5)',
+        transition: { duration: 0.15 },
+    },
+};
+
+// Enhanced button animation with ripple effect
+export const buttonRippleVariants: Variants = {
+    initial: { scale: 1, opacity: 1 },
+    hover: {
+        scale: 1.05,
+        transition: { duration: 0.2, ease: [0.4, 0, 0.2, 1] },
+    },
+    tap: {
+        scale: 0.98,
+        transition: { duration: 0.1 },
+    },
+};
+
+// Smooth scale animation for icons
+export const iconScaleVariants: Variants = {
+    initial: { scale: 1 },
+    hover: {
+        scale: 1.1,
+        transition: { duration: 0.2, ease: 'easeOut' },
+    },
+    tap: { scale: 0.9 },
+};
+
+// Slide in from side animation
+export const slideInVariants: Variants = {
+    hidden: { x: -20, opacity: 0 },
+    visible: {
+        x: 0,
+        opacity: 1,
+        transition: {
+            type: 'spring',
+            damping: 25,
+            stiffness: 300,
+        },
+    },
+};
+
+// Fade and scale for smooth appearance
+export const fadeScaleVariants: Variants = {
+    hidden: { opacity: 0, scale: 0.9 },
+    visible: {
+        opacity: 1,
+        scale: 1,
+        transition: {
+            duration: 0.3,
+            ease: [0.25, 0.1, 0.25, 1],
+        },
+    },
+    exit: {
+        opacity: 0,
+        scale: 0.9,
+        transition: { duration: 0.2 },
+    },
 };
 
 // Spinner/loading animation

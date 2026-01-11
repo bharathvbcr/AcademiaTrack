@@ -162,12 +162,14 @@ const FacultyView: React.FC<FacultyViewProps> = ({ applications, updateApplicati
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         placeholder="Search faculty by name, university, research area, or email..."
-                        className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-red-500"
+                        className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-[#E8B4B8]/30 liquid-glass focus:outline-none focus:ring-2 focus:ring-[#E8B4B8] text-[#F5D7DA] placeholder:text-[#E8B4B8]/50"
                     />
                     {searchQuery && (
                         <button
                             onClick={() => setSearchQuery('')}
                             className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                            aria-label="Clear search"
+                            title="Clear search"
                         >
                             <MaterialIcon name="close" className="text-lg" />
                         </button>
@@ -186,16 +188,16 @@ const FacultyView: React.FC<FacultyViewProps> = ({ applications, updateApplicati
 
             {/* Faculty Table */}
             {filteredFaculty.length === 0 ? (
-                <div className="text-center py-12 bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700">
-                    <MaterialIcon name="person_search" className="text-6xl text-slate-300 dark:text-slate-600" />
-                    <p className="mt-4 text-slate-500 dark:text-slate-400">
+                <div className="text-center py-12 liquid-glass-card rounded-2xl">
+                    <MaterialIcon name="person_search" className="text-6xl text-[#E8B4B8]/50" />
+                    <p className="mt-4 text-[#E8B4B8]/70">
                         {allFaculty.length === 0
                             ? 'No faculty contacts yet. Add faculty contacts to your applications to see them here.'
                             : 'No faculty contacts match your search criteria.'}
                     </p>
                 </div>
             ) : (
-                <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 overflow-hidden">
+                <div className="liquid-glass-card rounded-2xl overflow-hidden">
                     <div className="overflow-x-auto">
                         <table className="w-full">
                             <thead className="bg-slate-50 dark:bg-slate-700/50">
@@ -278,6 +280,8 @@ const FacultyView: React.FC<FacultyViewProps> = ({ applications, updateApplicati
                                                 value={faculty.contactStatus}
                                                 onChange={(e) => handleStatusChange(faculty, e.target.value as FacultyContactStatus)}
                                                 className={`text-xs font-medium px-2.5 py-1 rounded-full border cursor-pointer ${FACULTY_CONTACT_STATUS_COLORS[faculty.contactStatus]}`}
+                                                aria-label={`Change contact status for ${faculty.name}`}
+                                                title={`Change contact status for ${faculty.name}`}
                                             >
                                                 {FACULTY_CONTACT_STATUS_OPTIONS.map(status => (
                                                     <option key={status} value={status}>{status}</option>

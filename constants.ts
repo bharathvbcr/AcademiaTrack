@@ -72,17 +72,17 @@ export const FACULTY_CONTACT_STATUS_OPTIONS: FacultyContactStatus[] = [
 ];
 
 export const STATUS_COLORS: { [key in ApplicationStatus]: string } = {
-  [ApplicationStatus.NotStarted]: 'bg-slate-200 text-slate-700 border-slate-300 dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600',
-  [ApplicationStatus.Pursuing]: 'bg-sky-100 text-sky-800 border-sky-200 dark:bg-sky-500/20 dark:text-sky-200 dark:border-sky-500/30',
-  [ApplicationStatus.InProgress]: 'bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-500/20 dark:text-blue-200 dark:border-blue-500/30',
-  [ApplicationStatus.Skipping]: 'bg-stone-100 text-stone-800 border-stone-200 dark:bg-stone-500/20 dark:text-stone-200 dark:border-stone-500/30',
-  [ApplicationStatus.Submitted]: 'bg-indigo-100 text-indigo-800 border-indigo-200 dark:bg-indigo-500/20 dark:text-indigo-200 dark:border-indigo-500/30',
-  [ApplicationStatus.Interview]: 'bg-purple-100 text-purple-800 border-purple-200 dark:bg-purple-500/20 dark:text-purple-200 dark:border-purple-500/30',
-  [ApplicationStatus.Accepted]: 'bg-green-100 text-green-800 border-green-200 dark:bg-green-500/20 dark:text-green-200 dark:border-green-500/30',
-  [ApplicationStatus.Attending]: 'bg-emerald-100 text-emerald-800 border-emerald-200 dark:bg-emerald-500/20 dark:text-emerald-200 dark:border-emerald-500/30',
-  [ApplicationStatus.Rejected]: 'bg-red-100 text-red-800 border-red-200 dark:bg-red-500/20 dark:text-red-200 dark:border-red-500/30',
-  [ApplicationStatus.Waitlisted]: 'bg-amber-100 text-amber-800 border-amber-200 dark:bg-amber-500/20 dark:text-amber-200 dark:border-amber-500/30',
-  [ApplicationStatus.Withdrawn]: 'bg-neutral-200 text-neutral-800 border-neutral-300 dark:bg-neutral-700 dark:text-neutral-200 dark:border-neutral-600',
+  [ApplicationStatus.NotStarted]: 'bg-[rgba(232,180,184,0.2)] text-[#E8B4B8] border-[#E8B4B8]/30 backdrop-blur-sm',
+  [ApplicationStatus.Pursuing]: 'bg-[rgba(192,48,80,0.25)] text-[#F5D7DA] border-[#E8B4B8]/40 backdrop-blur-sm',
+  [ApplicationStatus.InProgress]: 'bg-[rgba(224,48,48,0.25)] text-[#F5D7DA] border-[#E03030]/40 backdrop-blur-sm',
+  [ApplicationStatus.Skipping]: 'bg-[rgba(232,180,184,0.15)] text-[#E8B4B8] border-[#E8B4B8]/20 backdrop-blur-sm',
+  [ApplicationStatus.Submitted]: 'bg-[rgba(192,48,80,0.3)] text-[#F5D7DA] border-[#C03050]/40 backdrop-blur-sm',
+  [ApplicationStatus.Interview]: 'bg-[rgba(224,48,48,0.3)] text-[#F5D7DA] border-[#E03030]/40 backdrop-blur-sm',
+  [ApplicationStatus.Accepted]: 'bg-[rgba(76,175,80,0.3)] text-[#C8E6C9] border-[#4CAF50]/40 backdrop-blur-sm',
+  [ApplicationStatus.Attending]: 'bg-[rgba(76,175,80,0.35)] text-[#C8E6C9] border-[#4CAF50]/50 backdrop-blur-sm',
+  [ApplicationStatus.Rejected]: 'bg-[rgba(192,48,80,0.4)] text-[#FFCDD2] border-[#C03050]/50 backdrop-blur-sm',
+  [ApplicationStatus.Waitlisted]: 'bg-[rgba(255,193,7,0.3)] text-[#FFF9C4] border-[#FFC107]/40 backdrop-blur-sm',
+  [ApplicationStatus.Withdrawn]: 'bg-[rgba(232,180,184,0.15)] text-[#E8B4B8] border-[#E8B4B8]/20 backdrop-blur-sm',
 };
 
 export const STATUS_LABELS: { [key in ApplicationStatus]: string } = {

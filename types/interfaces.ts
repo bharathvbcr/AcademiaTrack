@@ -15,10 +15,13 @@ import {
 export interface CustomFieldDefinition {
     id: string; // uuid
     name: string;
-    type: 'text' | 'number' | 'boolean' | 'date' | 'select';
+    type: 'text' | 'number' | 'boolean' | 'date' | 'select' | 'calculated';
     options?: string[]; // For 'select' type
     placeholder?: string;
     required?: boolean;
+    visible?: boolean; // Field visibility (default: true)
+    order?: number; // Display order
+    calculatedFormula?: string; // For calculated fields, e.g., "deadline - today" or "applicationFee * 0.1"
 }
 
 export interface Correspondence {
