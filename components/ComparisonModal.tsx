@@ -18,20 +18,20 @@ const ComparisonModal: React.FC<ComparisonModalProps> = ({ isOpen, onClose, appl
             <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
                 {/* Background overlay */}
                 <div
-                    className="fixed inset-0 bg-slate-500/75 dark:bg-slate-900/75 transition-opacity backdrop-blur-sm"
+                    className="fixed inset-0 liquid-glass-modal transition-opacity"
                     aria-hidden="true"
                     onClick={onClose}
                 ></div>
 
                 {/* Modal panel */}
-                <div className="inline-block align-bottom bg-white dark:bg-slate-800 rounded-2xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:w-full sm:max-w-6xl">
-                    <div className="px-4 pt-5 pb-4 sm:p-6 sm:pb-4 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center">
-                        <h3 className="text-xl font-bold text-slate-900 dark:text-white" id="modal-title">
+                <div className="inline-block align-bottom liquid-glass-modal-content rounded-2xl text-left overflow-hidden transform transition-all sm:my-8 sm:align-middle sm:w-full sm:max-w-6xl">
+                    <div className="px-4 pt-5 pb-4 sm:p-6 sm:pb-4 border-b border-[#E8B4B8]/30 flex justify-between items-center">
+                        <h3 className="text-xl font-bold text-[#F5D7DA]" id="modal-title">
                             Compare Applications
                         </h3>
                         <button
                             onClick={onClose}
-                            className="bg-white dark:bg-slate-800 rounded-md text-slate-400 hover:text-slate-500 focus:outline-none"
+                            className="rounded-md text-[#E8B4B8] hover:text-[#F5D7DA] focus:outline-none hover:bg-[rgba(192,48,80,0.25)] p-1"
                         >
                             <span className="material-symbols-outlined">close</span>
                         </button>
@@ -166,10 +166,10 @@ const ComparisonModal: React.FC<ComparisonModalProps> = ({ isOpen, onClose, appl
                         </table>
                     </div>
 
-                    <div className="bg-slate-50 dark:bg-slate-700/30 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse border-t border-slate-200 dark:border-slate-700">
+                    <div className="px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse border-t border-[#E8B4B8]/30">
                         <button
                             type="button"
-                            className="mt-3 w-full inline-flex justify-center rounded-xl border border-slate-300 dark:border-slate-600 shadow-sm px-4 py-2 bg-white dark:bg-slate-800 text-base font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 focus:outline-none sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
+                            className="mt-3 w-full inline-flex justify-center rounded-xl border border-[#E8B4B8]/30 shadow-sm px-4 py-2 liquid-glass text-base font-medium text-[#F5D7DA] hover:bg-[rgba(192,48,80,0.25)] focus:outline-none sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
                             onClick={onClose}
                         >
                             Close

@@ -3,7 +3,10 @@ import { motion } from 'framer-motion';
 import { Application, ApplicationStatus, TestStatus } from '../types';
 import { STATUS_COLORS, STATUS_LABELS, getDeadlineInfo, TAG_PRESETS } from '../constants';
 import { cardContainerVariants, cardVariants } from '../hooks/useAnimations';
+import Tooltip from './Tooltip';
 import VirtualizedList from './VirtualizedList';
+import { SkeletonCard } from './SkeletonLoader';
+import EmptyState from './EmptyState';
 
 interface ApplicationListProps {
   applications: Application[];
@@ -48,7 +51,7 @@ const calculateProgress = (app: Application): number => {
   return Math.min(100, Math.round(progress));
 };
 
-const ApplicationList: React.FC<ApplicationListProps> = ({
+const ApplicationList: React.FC<ApplicationListProps> = React.memo(({
   applications,
   onEdit,
   onDelete,
@@ -91,24 +94,24 @@ const ApplicationList: React.FC<ApplicationListProps> = ({
 
   if (applications.length === 0) {
     return (
-      <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.3 }}
-        className="text-center py-16 px-6 bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl rounded-3xl shadow-lg border border-slate-200/50 dark:border-slate-700/50"
-      >
-        <div className="bg-slate-100 dark:bg-slate-700/50 h-20 w-20 rounded-full flex items-center justify-center mx-auto mb-6">
-          <MaterialIcon name={hasActiveFilter ? "filter_list_off" : "post_add"} className="text-4xl text-slate-400 dark:text-slate-500" />
-        </div>
-        <h3 className="text-xl font-semibold text-slate-900 dark:text-white mb-2">
-          {hasActiveFilter ? "No matching applications found" : "No applications yet"}
-        </h3>
-        <p className="text-slate-500 dark:text-slate-400 max-w-md mx-auto">
-          {hasActiveFilter
-            ? "Try adjusting your search or filters to find what you're looking for."
-            : "Start tracking your academic journey by adding your first application."}
-        </p>
-      </motion.div>
+      <EmptyState
+        icon={hasActiveFilter ? "filter_list_off" : "post_add"}
+        title={hasActiveFilter ? "No matching applications found" : "No applications yet"}
+        message={hasActiveFilter
+          ? "Try adjusting your search or filters to find what you're looking for."
+          : "Start tracking your academic journey by adding your first application."}
+        actionLabel={!hasActiveFilter ? "Add Your First Application" : undefined}
+        onAction={!hasActiveFilter ? onEdit.bind(null, null as any) : undefined}
+        tips={!hasActiveFilter ? [
+          "Use Quick Capture (Ctrl+Shift+C) to quickly add applications",
+          "Import existing data from CSV or JSON files",
+          "Create templates for common application types"
+        ] : [
+          "Clear your search query to see all applications",
+          "Try different filter combinations",
+          "Check if your filters are too restrictive"
+        ]}
+      />
     );
   }
 
@@ -146,11 +149,11 @@ const ApplicationList: React.FC<ApplicationListProps> = ({
                   e.preventDefault();
                   handleLongPress(app);
                 }}
-                className={`group bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl rounded-2xl p-5 border-2 shadow-sm cursor-pointer transition-shadow hover:shadow-md ${isSelected
-                  ? 'border-red-500 dark:border-red-400 ring-2 ring-red-500/20'
+                className={`group liquid-glass-card rounded-2xl p-5 border-2 shadow-sm cursor-pointer transition-shadow hover:shadow-md ${isSelected
+                  ? 'border-[#dc2626] ring-2 ring-[#dc2626]/20'
                   : app.isPinned
-                    ? 'border-amber-400 dark:border-amber-500'
-                    : 'border-slate-200/50 dark:border-slate-700/50'
+                    ? 'border-amber-500/50'
+                    : 'border-[#27272a]'
                   }`}
               >
                 {/* Selection Checkbox */}
@@ -274,11 +277,20 @@ const ApplicationList: React.FC<ApplicationListProps> = ({
                 e.preventDefault();
                 handleLongPress(app);
               }}
-              className={`group relative bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl rounded-2xl p-5 border-2 shadow-sm cursor-pointer ${isSelected
-                ? 'border-red-500 dark:border-red-400 ring-2 ring-red-500/20'
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  handleCardClick(app);
+                }
+              }}
+              tabIndex={0}
+              role="button"
+              aria-label={`Application for ${app.universityName}, ${app.programName}`}
+              className={`group relative liquid-glass-card rounded-2xl p-5 border-2 shadow-sm cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#dc2626] focus:ring-offset-2 ${isSelected
+                ? 'border-[#dc2626] ring-2 ring-[#dc2626]/20'
                 : app.isPinned
-                  ? 'border-amber-400 dark:border-amber-500'
-                  : 'border-slate-200/50 dark:border-slate-700/50'
+                  ? 'border-amber-500/50'
+                  : 'border-[#27272a]'
                 }`}
             >
               {/* Selection Checkbox */}
@@ -291,8 +303,8 @@ const ApplicationList: React.FC<ApplicationListProps> = ({
                   }}
                 >
                   <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${isSelected
-                    ? 'bg-red-500 border-red-500 text-white'
-                    : 'border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800'
+                    ? 'bg-[#dc2626] border-[#dc2626] text-white'
+                    : 'border-[#27272a] liquid-glass'
                     }`}>
                     {isSelected && <MaterialIcon name="check" className="text-sm" />}
                   </div>
@@ -311,41 +323,49 @@ const ApplicationList: React.FC<ApplicationListProps> = ({
               {/* Edit/Delete/Pin buttons (hide in selection mode) */}
               {!isSelectionMode && (
                 <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <button
-                    onClick={(e) => { e.stopPropagation(); onUpdate({ ...app, isPinned: !app.isPinned }); }}
-                    className={`p-2 bg-white dark:bg-slate-700 rounded-full shadow-sm transition-colors ${app.isPinned
-                      ? 'text-amber-500 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-900/30'
-                      : 'text-slate-600 dark:text-slate-300 hover:bg-amber-50 dark:hover:bg-amber-900/30 hover:text-amber-500 dark:hover:text-amber-400'
-                      }`}
-                    title={app.isPinned ? 'Unpin' : 'Pin to top'}
-                    aria-label={app.isPinned ? 'Unpin application' : 'Pin application to top'}
-                  >
-                    <MaterialIcon name={app.isPinned ? 'push_pin' : 'push_pin'} className="text-lg" />
-                  </button>
-                  <button
-                    onClick={(e) => { e.stopPropagation(); onEdit(app); }}
-                    className="p-2 bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-full shadow-sm hover:bg-blue-50 dark:hover:bg-blue-900/30 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
-                    title="Edit"
-                    aria-label="Edit application"
-                  >
-                    <MaterialIcon name="edit" className="text-lg" />
-                  </button>
-                  <button
-                    onClick={(e) => { e.stopPropagation(); onDuplicate(app.id); }}
-                    className="p-2 bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-full shadow-sm hover:bg-indigo-50 dark:hover:bg-indigo-900/30 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
-                    title="Duplicate"
-                    aria-label="Duplicate application"
-                  >
-                    <MaterialIcon name="content_copy" className="text-lg" />
-                  </button>
-                  <button
-                    onClick={(e) => { e.stopPropagation(); onDelete(app.id); }}
-                    className="p-2 bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-full shadow-sm hover:bg-red-50 dark:hover:bg-red-900/30 hover:text-red-600 dark:hover:text-red-400 transition-colors"
-                    title="Delete"
-                    aria-label="Delete application"
-                  >
-                    <MaterialIcon name="delete" className="text-lg" />
-                  </button>
+                  <Tooltip content={app.isPinned ? 'Unpin Application' : 'Pin to Top'}>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); onUpdate({ ...app, isPinned: !app.isPinned }); }}
+                      className={`p-2 liquid-glass rounded-full shadow-sm transition-colors ${app.isPinned
+                        ? 'text-amber-500 hover:bg-amber-500/10'
+                        : 'text-slate-400 hover:bg-slate-500/10'
+                        }`}
+                      title={app.isPinned ? 'Unpin' : 'Pin to top'}
+                      aria-label={app.isPinned ? 'Unpin application' : 'Pin application to top'}
+                    >
+                      <MaterialIcon name={app.isPinned ? 'push_pin' : 'push_pin'} className="text-lg" />
+                    </button>
+                  </Tooltip>
+                  <Tooltip content="Edit Application">
+                    <button
+                      onClick={(e) => { e.stopPropagation(); onEdit(app); }}
+                      className="p-2 liquid-glass text-slate-400 rounded-full shadow-sm hover:bg-[#27272a] hover:text-white transition-colors"
+                      title="Edit"
+                      aria-label="Edit application"
+                    >
+                      <MaterialIcon name="edit" className="text-lg" />
+                    </button>
+                  </Tooltip>
+                  <Tooltip content="Duplicate Application">
+                    <button
+                      onClick={(e) => { e.stopPropagation(); onDuplicate(app.id); }}
+                      className="p-2 liquid-glass text-slate-400 rounded-full shadow-sm hover:bg-[#27272a] hover:text-white transition-colors"
+                      title="Duplicate"
+                      aria-label="Duplicate application"
+                    >
+                      <MaterialIcon name="content_copy" className="text-lg" />
+                    </button>
+                  </Tooltip>
+                  <Tooltip content="Delete Application">
+                    <button
+                      onClick={(e) => { e.stopPropagation(); onDelete(app.id); }}
+                      className="p-2 liquid-glass text-slate-400 rounded-full shadow-sm hover:bg-red-900/20 hover:text-red-500 transition-colors"
+                      title="Delete"
+                      aria-label="Delete application"
+                    >
+                      <MaterialIcon name="delete" className="text-lg" />
+                    </button>
+                  </Tooltip>
                 </div>
               )}
 
@@ -387,7 +407,7 @@ const ApplicationList: React.FC<ApplicationListProps> = ({
                 </p>
               </div>
 
-              <div className="space-y-3 pt-4 border-t border-slate-100 dark:border-slate-700/50">
+              <div className="space-y-3 pt-4 border-t border-[#27272a]">
                 <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
                   <span className="flex items-center gap-1.5">
                     <MaterialIcon name="school" className="text-sm" />
@@ -402,9 +422,9 @@ const ApplicationList: React.FC<ApplicationListProps> = ({
                 </div>
 
                 {/* Progress Bar */}
-                <div className="w-full bg-slate-100 dark:bg-slate-700 rounded-full h-1.5 overflow-hidden">
+                <div className="w-full bg-[#27272a] rounded-full h-1.5 overflow-hidden">
                   <motion.div
-                    className="bg-slate-900 dark:bg-slate-100 h-1.5 rounded-full"
+                    className="bg-[#dc2626] h-1.5 rounded-full"
                     initial={{ width: 0 }}
                     animate={{ width: `${progress}%` }}
                     transition={{ duration: 0.5, ease: 'easeOut' }}
@@ -417,6 +437,22 @@ const ApplicationList: React.FC<ApplicationListProps> = ({
       </motion.div>
     </div>
   );
-};
+}, (prevProps, nextProps) => {
+  // Custom comparison for better memoization
+  if (prevProps.applications.length !== nextProps.applications.length) return false;
+  if (prevProps.hasActiveFilter !== nextProps.hasActiveFilter) return false;
+  if (prevProps.isSelectionMode !== nextProps.isSelectionMode) return false;
+  if (prevProps.selectedIds?.size !== nextProps.selectedIds?.size) return false;
+  // Check if any application IDs changed
+  const prevIds = new Set(prevProps.applications.map(a => a.id));
+  const nextIds = new Set(nextProps.applications.map(a => a.id));
+  if (prevIds.size !== nextIds.size) return false;
+  for (const id of prevIds) {
+    if (!nextIds.has(id)) return false;
+  }
+  return true;
+});
 
-export default React.memo(ApplicationList);
+ApplicationList.displayName = 'ApplicationList';
+
+export default ApplicationList;

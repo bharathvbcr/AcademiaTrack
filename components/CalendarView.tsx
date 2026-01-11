@@ -71,28 +71,28 @@ const CalendarView: React.FC<CalendarViewProps> = ({ applications, onEdit }) => 
     };
 
     return (
-        <div className="bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl rounded-3xl shadow-lg border border-slate-200/50 dark:border-slate-700/50 p-6 h-[calc(100vh-200px)] flex flex-col">
+        <div className="liquid-glass rounded-3xl p-6 h-[calc(100vh-200px)] flex flex-col">
             {/* Calendar Header */}
             <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-100">
+                <h2 className="text-2xl font-bold text-[#F5D7DA]">
                     {format(currentMonth, 'MMMM yyyy')}
                 </h2>
                 <div className="flex items-center gap-2">
                     <button
                         onClick={prevMonth}
-                        className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition-colors"
+                        className="p-2 rounded-full hover:bg-[rgba(192,48,80,0.25)] text-[#E8B4B8] hover:text-[#F5D7DA] transition-colors"
                     >
                         <span className="material-symbols-outlined">chevron_left</span>
                     </button>
                     <button
                         onClick={goToToday}
-                        className="px-4 py-1.5 text-sm font-medium rounded-full bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors"
+                        className="px-4 py-1.5 text-sm font-medium rounded-full liquid-glass text-[#F5D7DA] hover:bg-[rgba(192,48,80,0.25)] transition-colors"
                     >
                         Today
                     </button>
                     <button
                         onClick={nextMonth}
-                        className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition-colors"
+                        className="p-2 rounded-full hover:bg-[rgba(192,48,80,0.25)] text-[#E8B4B8] hover:text-[#F5D7DA] transition-colors"
                     >
                         <span className="material-symbols-outlined">chevron_right</span>
                     </button>
@@ -102,7 +102,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({ applications, onEdit }) => 
             {/* Days Header */}
             <div className="grid grid-cols-7 mb-2">
                 {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
-                    <div key={day} className="text-center text-sm font-semibold text-slate-500 dark:text-slate-400 py-2">
+                    <div key={day} className="text-center text-sm font-semibold text-[#E8B4B8]/70 py-2">
                         {day}
                     </div>
                 ))}
@@ -120,11 +120,11 @@ const CalendarView: React.FC<CalendarViewProps> = ({ applications, onEdit }) => 
                             key={day.toString()}
                             className={`
                 relative flex flex-col p-2 rounded-xl border transition-all overflow-hidden
-                ${isCurrentMonth ? 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700' : 'bg-slate-50 dark:bg-slate-900/50 border-slate-100 dark:border-slate-800 text-slate-400 dark:text-slate-600'}
-                ${isTodayDate ? 'ring-2 ring-red-500 ring-offset-2 dark:ring-offset-slate-900' : ''}
+                ${isCurrentMonth ? 'liquid-glass border-[#E8B4B8]/30' : 'liquid-glass border-[#E8B4B8]/20 text-[#E8B4B8]/50'}
+                ${isTodayDate ? 'ring-2 ring-[#C03050] ring-offset-2' : ''}
               `}
                         >
-                            <span className={`text-sm font-semibold mb-1 ${isTodayDate ? 'text-red-600 dark:text-red-400' : 'text-slate-700 dark:text-slate-300'}`}>
+                            <span className={`text-sm font-semibold mb-1 ${isTodayDate ? 'text-[#C03050]' : 'text-[#F5D7DA]'}`}>
                                 {format(day, 'd')}
                             </span>
 

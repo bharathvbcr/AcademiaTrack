@@ -11,63 +11,27 @@ const escapeCsvCell = (cell: string | number | boolean | null | undefined): stri
   return cellStr;
 };
 
-export const exportToCSV = (applications: Application[]) => {
-  const headers = [
-    'University Name', 'Program Name', 'Program Type', 'Department', 'Location',
-    'Status', 'Deadline', 'Preferred Deadline', 'Application Fee', 'Fee Waiver Status',
-    'Portal Link', 'University Ranking', 'Department Ranking', 'Is R1',
-    'CV Required', 'CV Submitted Date',
-    'Statement of Purpose Required', 'Statement of Purpose Submitted Date',
-    'Transcripts Required', 'Transcripts Submitted Date',
-    'LOR1 Required', 'LOR1 Submitted Date',
-    'LOR2 Required', 'LOR2 Submitted Date',
-    'LOR3 Required', 'LOR3 Submitted Date',
-    'Writing Sample Required', 'Writing Sample Submitted Date',
-    'GRE Status', 'English Test Type', 'English Test Status',
-    'Faculty Contacts', 'Preferred Faculty', 'Notes'
+// Import field getters from exportFormats
+import { getFieldValue, getFieldLabel } from './utils/exportFormats';
+
+export const exportToCSV = (applications: Application[], selectedFields?: string[]) => {
+  // Use selected fields or default to all common fields
+  const fields = selectedFields || [
+    'universityName', 'programName', 'programType', 'department', 'location',
+    'status', 'deadline', 'preferredDeadline', 'applicationFee', 'feeWaiverStatus',
+    'portalLink', 'universityRanking', 'departmentRanking', 'isR1',
+    'cv', 'statementOfPurpose', 'transcripts', 'lor1', 'lor2', 'lor3', 'writingSample',
+    'greStatus', 'englishTestType', 'englishTestStatus',
+    'facultyContacts', 'preferredFaculty', 'notes'
   ];
 
-  const rows = applications.map(app => {
-    const programType = app.programType === 'Other' ? app.customProgramType || 'Other' : app.programType;
-    const facultyContacts = (app.facultyContacts || []).map(f => f.name).filter(Boolean).join('; ');
-
-    return [
-      app.universityName,
-      app.programName,
-      programType,
-      app.department,
-      app.location,
-      app.status,
-      app.deadline,
-      app.preferredDeadline || '',
-      app.applicationFee,
-      app.feeWaiverStatus,
-      app.portalLink,
-      app.universityRanking,
-      app.departmentRanking,
-      app.isR1 ? 'Yes' : 'No',
-      app.documents.cv.required ? 'Yes' : 'No',
-      app.documents.cv.submitted || '',
-      app.documents.statementOfPurpose.required ? 'Yes' : 'No',
-      app.documents.statementOfPurpose.submitted || '',
-      app.documents.transcripts.required ? 'Yes' : 'No',
-      app.documents.transcripts.submitted || '',
-      app.documents.lor1.required ? 'Yes' : 'No',
-      app.documents.lor1.submitted || '',
-      app.documents.lor2.required ? 'Yes' : 'No',
-      app.documents.lor2.submitted || '',
-      app.documents.lor3.required ? 'Yes' : 'No',
-      app.documents.lor3.submitted || '',
-      app.documents.writingSample.required ? 'Yes' : 'No',
-      app.documents.writingSample.submitted || '',
-      app.gre.status,
-      app.englishTest.type,
-      app.englishTest.status,
-      facultyContacts,
-      app.preferredFaculty,
-      app.notes
-    ].map(escapeCsvCell);
-  });
+  const headers = fields.map(fieldId => getFieldLabel(fieldId));
+  const rows = applications.map(app => 
+    fields.map(fieldId => {
+      const value = getFieldValue(app, fieldId);
+      return escapeCsvCell(value);
+    })
+  );
 
   const csvContent = [
     headers.join(','),

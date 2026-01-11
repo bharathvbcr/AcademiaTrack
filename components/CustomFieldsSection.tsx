@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Application, CustomFieldDefinition } from '../types';
 import { useCustomFields } from '../hooks/useCustomFields';
 
@@ -7,10 +7,72 @@ interface CustomFieldsSectionProps {
     handleCustomFieldChange: (fieldId: string, value: string | number | boolean) => void;
 }
 
-const CustomFieldsSection: React.FC<CustomFieldsSectionProps> = ({ appData, handleCustomFieldChange }) => {
-    const { customFields } = useCustomFields();
+const MaterialIcon: React.FC<{ name: string; className?: string }> = ({ name, className }) => (
+    <span className={`material-symbols-outlined ${className}`}>{name}</span>
+);
 
-    if (customFields.length === 0) return null;
+// Calculate value for calculated fields
+const calculateFieldValue = (field: CustomFieldDefinition, app: Application): string | number | boolean => {
+    if (!field.calculatedFormula) return '';
+
+    try {
+        const formula = field.calculatedFormula.toLowerCase();
+
+        // Days until deadline
+        if (formula.includes('deadline') && formula.includes('days')) {
+            if (app.deadline) {
+                const deadline = new Date(app.deadline);
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                deadline.setHours(0, 0, 0, 0);
+                const diffTime = deadline.getTime() - today.getTime();
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                return diffDays;
+            }
+            return 0;
+        }
+
+        // Days since submitted
+        if (formula.includes('submitted') && formula.includes('days')) {
+            const submittedDate = app.statusHistory?.find(s => s.status === 'Submitted')?.timestamp;
+            if (submittedDate) {
+                const submitted = new Date(submittedDate);
+                const today = new Date();
+                const diffTime = today.getTime() - submitted.getTime();
+                const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+                return diffDays;
+            }
+            return 0;
+        }
+
+        // Application fee with percentage
+        if (formula.includes('fee') && formula.includes('%')) {
+            const match = formula.match(/(\d+(?:\.\d+)?)/);
+            if (match && app.applicationFee) {
+                const percentage = parseFloat(match[1]);
+                return app.applicationFee * (percentage / 100);
+            }
+        }
+
+        // Total cost (fee + tests)
+        if (formula.includes('total') && formula.includes('cost')) {
+            let total = app.applicationFee || 0;
+            if (app.englishTest?.cost) total += app.englishTest.cost;
+            if (app.gre?.cost) total += app.gre.cost;
+            return total;
+        }
+
+        return '';
+    } catch (error) {
+        console.error('Error calculating field value:', error);
+        return '';
+    }
+};
+
+const CustomFieldsSection: React.FC<CustomFieldsSectionProps> = ({ appData, handleCustomFieldChange }) => {
+    const { visibleFields } = useCustomFields();
+
+    if (visibleFields.length === 0) return null;
 
     return (
         <div className="space-y-6">
@@ -20,31 +82,55 @@ const CustomFieldsSection: React.FC<CustomFieldsSectionProps> = ({ appData, hand
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {customFields.map(field => {
-                    const value = appData.customFields?.[field.id] ?? '';
+                {visibleFields.map(field => {
+                    // For calculated fields, compute the value; otherwise use stored value
+                    const value = field.type === 'calculated'
+                        ? calculateFieldValue(field, appData)
+                        : (appData.customFields?.[field.id] ?? '');
+
+                    // Calculated fields are read-only
+                    const isReadOnly = field.type === 'calculated';
+
+                    const fieldId = `custom-field-${field.id}`;
 
                     return (
                         <div key={field.id}>
-                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                            <label htmlFor={fieldId} className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
                                 {field.name}
+                                {field.required && <span className="text-red-500 ml-1">*</span>}
+                                {field.type === 'calculated' && (
+                                    <span className="ml-2 text-xs text-slate-500 dark:text-slate-400">
+                                        <MaterialIcon name="calculate" className="text-xs align-middle" />
+                                    </span>
+                                )}
                             </label>
+
+                            {field.type === 'calculated' && (
+                                <div className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg text-slate-700 dark:text-slate-300">
+                                    {typeof value === 'number' ? value.toLocaleString() : String(value)}
+                                </div>
+                            )}
 
                             {field.type === 'text' && (
                                 <input
+                                    id={fieldId}
                                     type="text"
                                     value={value as string}
                                     onChange={(e) => handleCustomFieldChange(field.id, e.target.value)}
-                                    className="w-full px-4 py-2 bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all"
+                                    className="w-full px-4 py-2 liquid-glass-input border border-[#27272a] bg-[#18181b] rounded-lg focus:ring-2 focus:ring-[#dc2626] focus:border-transparent transition-all text-[#f4f4f5] placeholder:text-[#a1a1aa]/50"
                                     placeholder={field.placeholder}
+                                    readOnly={isReadOnly}
+                                    disabled={isReadOnly}
                                 />
                             )}
 
                             {field.type === 'number' && (
                                 <input
+                                    id={fieldId}
                                     type="number"
                                     value={value as string | number}
                                     onChange={(e) => handleCustomFieldChange(field.id, parseFloat(e.target.value))}
-                                    className="w-full px-4 py-2 bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all"
+                                    className="w-full px-4 py-2 liquid-glass-input border border-[#27272a] bg-[#18181b] rounded-lg focus:ring-2 focus:ring-[#dc2626] focus:border-transparent transition-all text-[#f4f4f5] placeholder:text-[#a1a1aa]/50"
                                     placeholder={field.placeholder}
                                 />
                             )}
@@ -53,6 +139,7 @@ const CustomFieldsSection: React.FC<CustomFieldsSectionProps> = ({ appData, hand
                                 <div className="flex items-center h-[42px]">
                                     <label className="relative inline-flex items-center cursor-pointer">
                                         <input
+                                            id={fieldId}
                                             type="checkbox"
                                             checked={!!value}
                                             onChange={(e) => handleCustomFieldChange(field.id, e.target.checked)}
@@ -68,6 +155,7 @@ const CustomFieldsSection: React.FC<CustomFieldsSectionProps> = ({ appData, hand
 
                             {field.type === 'date' && (
                                 <input
+                                    id={fieldId}
                                     type="date"
                                     value={value as string}
                                     onChange={(e) => handleCustomFieldChange(field.id, e.target.value)}
@@ -77,6 +165,7 @@ const CustomFieldsSection: React.FC<CustomFieldsSectionProps> = ({ appData, hand
 
                             {field.type === 'select' && (
                                 <select
+                                    id={fieldId}
                                     value={value as string}
                                     onChange={(e) => handleCustomFieldChange(field.id, e.target.value)}
                                     className="w-full px-4 py-2 bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all"

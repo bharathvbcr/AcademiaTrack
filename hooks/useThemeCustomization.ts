@@ -23,28 +23,28 @@ export interface CustomTheme {
 const defaultThemes: CustomTheme[] = [
   {
     id: 'default',
-    name: 'Default',
+    name: 'Liquid Glass Crimson',
     colors: {
-      primary: '#ef4444',
-      secondary: '#64748b',
-      accent: '#f59e0b',
-      background: '#ffffff',
-      surface: '#f8fafc',
-      text: '#0f172a',
-      border: '#e2e8f0',
+      primary: '#DC143C', // Diffused Crimson
+      secondary: '#FF2400', // Scarlet Red
+      accent: '#E8B4B8', // Rose Gold
+      background: '#1a0a0f', // Deep crimson-tinted dark
+      surface: '#2d0f1a', // Lighter crimson-tinted dark
+      text: '#F5D7DA', // Pale Pink for text
+      border: '#E8B4B8', // Rose Gold border
     },
   },
   {
     id: 'dark-default',
-    name: 'Dark Default',
+    name: 'Liquid Glass Dark',
     colors: {
-      primary: '#ef4444',
-      secondary: '#94a3b8',
-      accent: '#f59e0b',
-      background: '#0f172a',
-      surface: '#1e293b',
-      text: '#f1f5f9',
-      border: '#334155',
+      primary: '#DC143C', // Diffused Crimson
+      secondary: '#FF2400', // Scarlet Red
+      accent: '#E8B4B8', // Rose Gold
+      background: '#1a0a0f', // Deep crimson-tinted dark
+      surface: '#2d0f1a', // Lighter crimson-tinted dark
+      text: '#F5D7DA', // Pale Pink for text
+      border: '#D4A5A9', // Darker Rose Gold border
     },
   },
 ];

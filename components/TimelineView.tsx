@@ -95,7 +95,7 @@ const TimelineView: React.FC<TimelineViewProps> = ({ applications, onEdit }) => 
 
     if (applications.length === 0) {
         return (
-            <div className="flex flex-col items-center justify-center h-64 text-slate-500">
+            <div className="flex flex-col items-center justify-center h-64 text-[#E8B4B8]/70">
                 <span className="material-symbols-outlined text-4xl mb-2">timeline</span>
                 <p>No applications to display on timeline.</p>
             </div>
@@ -105,7 +105,7 @@ const TimelineView: React.FC<TimelineViewProps> = ({ applications, onEdit }) => 
     const todayX = getXPosition(new Date());
 
     return (
-        <div className="bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl rounded-3xl shadow-lg border border-slate-200/50 dark:border-slate-700/50 overflow-hidden flex flex-col h-[calc(100vh-200px)]">
+        <div className="liquid-glass rounded-3xl overflow-hidden flex flex-col h-[calc(100vh-200px)]">
 
             {/* Scrollable Container */}
             <div className="overflow-auto flex-1 relative custom-scrollbar">
@@ -139,7 +139,7 @@ const TimelineView: React.FC<TimelineViewProps> = ({ applications, onEdit }) => 
                         {months.map((_, index) => (
                             <div
                                 key={`grid-${index}`}
-                                className="absolute top-0 bottom-0 border-r border-slate-100 dark:border-slate-700/30 w-px"
+                                className="absolute top-0 bottom-0 border-r border-[#E8B4B8]/20 w-px"
                                 style={{ left: (index + 1) * MONTH_WIDTH }} // +1 to draw at end of month
                             />
                         ))}
@@ -174,29 +174,29 @@ const TimelineView: React.FC<TimelineViewProps> = ({ applications, onEdit }) => 
                                         onClick={() => onEdit(app)}
                                         title={`Deadline: ${new Date(app.deadline).toLocaleDateString()}`}
                                     >
-                                        <div className="absolute right-0 top-1/2 -translate-y-1/2 px-2 text-xs font-semibold text-slate-700 dark:text-slate-300 translate-x-full whitespace-nowrap">
+                                        <div className="absolute right-0 top-1/2 -translate-y-1/2 px-2 text-xs font-semibold text-[#F5D7DA] translate-x-full whitespace-nowrap">
                                             {new Date(app.deadline).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
                                         </div>
                                     </div>
                                 );
                             } else {
                                 barContent = (
-                                    <div className="px-4 flex items-center h-full text-xs text-slate-400 italic">
+                                    <div className="px-4 flex items-center h-full text-xs text-[#E8B4B8]/50 italic">
                                         No deadline set
                                     </div>
                                 );
                             }
 
                             return (
-                                <div key={app.id} className="flex relative hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors group border-b border-slate-50 dark:border-slate-700/10">
+                                <div key={app.id} className="flex relative hover:bg-[rgba(139,0,0,0.2)] transition-colors group border-b border-[#E8B4B8]/10">
                                     {/* Fixed Sidebar Row */}
                                     <div
-                                        className="sticky left-0 bg-white/95 dark:bg-slate-800/95 z-10 border-r border-slate-200 dark:border-slate-700 p-3 flex items-center shrink-0"
+                                        className="sticky left-0 liquid-glass z-10 border-r border-[#E8B4B8]/30 p-3 flex items-center shrink-0"
                                         style={{ width: SIDEBAR_WIDTH, height: ROW_HEIGHT }}
                                     >
                                         <div className="truncate w-full cursor-pointer" onClick={() => onEdit(app)}>
-                                            <div className="font-medium text-slate-800 dark:text-slate-200 truncate" title={app.universityName}>{app.universityName}</div>
-                                            <div className="text-xs text-slate-500 truncate" title={app.programName}>{app.programName}</div>
+                                            <div className="font-medium text-[#F5D7DA] truncate" title={app.universityName}>{app.universityName}</div>
+                                            <div className="text-xs text-[#E8B4B8]/70 truncate" title={app.programName}>{app.programName}</div>
                                         </div>
                                     </div>
 

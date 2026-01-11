@@ -10,9 +10,10 @@ interface QuickCaptureModalProps {
     isOpen: boolean;
     onClose: () => void;
     onSave: (app: Application) => void;
+    initialText?: string;
 }
 
-const QuickCaptureModal: React.FC<QuickCaptureModalProps> = ({ isOpen, onClose, onSave }) => {
+const QuickCaptureModal: React.FC<QuickCaptureModalProps> = ({ isOpen, onClose, onSave, initialText }) => {
     useLockBodyScroll(isOpen);
     const [input, setInput] = useState('');
     const [isProcessing, setIsProcessing] = useState(false);
@@ -21,52 +22,109 @@ const QuickCaptureModal: React.FC<QuickCaptureModalProps> = ({ isOpen, onClose, 
     useEffect(() => {
         if (isOpen) {
             setTimeout(() => inputRef.current?.focus(), 100);
-            setInput('');
+            setInput(initialText || '');
         }
-    }, [isOpen]);
+    }, [isOpen, initialText]);
 
     const parseAndSubmit = async () => {
         if (!input.trim()) return;
         setIsProcessing(true);
 
         try {
-            // Basic natural language parsing
+            // Enhanced natural language parsing
             // Expected formats:
             // "University Name"
             // "University Name, PhD"
             // "University Name, PhD in CS"
-            // "MIT, MS, Dec 1"
+            // "MIT, MS, Dec 15"
+            // "Stanford CS PhD due Dec 1"
+            // "Harvard, $75 fee, Dec 1"
+            // "MIT PhD CS #dream Dec 15"
 
-            const parts = input.split(',').map(p => p.trim());
-            const universityName = parts[0];
+            const text = input.trim();
+            let universityName = '';
             let programType = ProgramType.PhD;
             let programName = '';
-            let deadline = null;
+            let deadline: string | null = null;
             let department = '';
+            let applicationFee = 0;
+            const tags: string[] = [];
 
-            // Try to infer other fields
+            // Extract tags (words starting with #)
+            const tagMatches = text.match(/#(\w+)/g);
+            if (tagMatches) {
+                tagMatches.forEach(tag => tags.push(tag.substring(1)));
+            }
+
+            // Remove tags from text for parsing
+            let cleanText = text.replace(/#\w+/g, '').trim();
+
+            // Try to extract fee (e.g., "$75", "$100 fee", "fee: $50")
+            const feeMatches = cleanText.match(/\$(\d+)/i);
+            if (feeMatches) {
+                applicationFee = parseInt(feeMatches[1], 10);
+                cleanText = cleanText.replace(/\$\d+/i, '').trim();
+            }
+
+            // Split by commas or common separators
+            const parts = cleanText.split(/[,|]/).map(p => p.trim()).filter(Boolean);
+            
+            if (parts.length === 0) return;
+            
+            universityName = parts[0];
+
+            // Parse remaining parts
             for (let i = 1; i < parts.length; i++) {
                 const part = parts[i];
                 const lowerPart = part.toLowerCase();
 
                 // Check for program type
-                if (lowerPart.includes('phd') || lowerPart.includes('doctorate')) programType = ProgramType.PhD;
-                else if (lowerPart.includes('ms') || lowerPart.includes('master')) programType = ProgramType.Masters;
+                if (lowerPart.includes('phd') || lowerPart.includes('doctorate') || lowerPart.includes('ph.d')) {
+                    programType = ProgramType.PhD;
+                } else if (lowerPart.includes('ms') || lowerPart.includes('m.s') || lowerPart.includes('master')) {
+                    programType = ProgramType.Masters;
+                } else if (lowerPart.includes('bachelor') || lowerPart.includes('bs') || lowerPart.includes('b.s')) {
+                    programType = ProgramType.Bachelors;
+                } else if (lowerPart.includes('postdoc') || lowerPart.includes('post-doc')) {
+                    programType = ProgramType.Postdoc;
+                }
 
-                // Check for date (very basic check)
-                if (part.match(/\b(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\b/i)) {
-                    // Assume current or next year
-                    const date = new Date(part + " " + new Date().getFullYear());
-                    if (!isNaN(date.getTime())) {
-                        if (date < new Date()) date.setFullYear(date.getFullYear() + 1);
-                        deadline = date.toISOString().split('T')[0];
+                // Check for department/program (e.g., "in CS", "CS", "Computer Science")
+                if (lowerPart.startsWith('in ')) {
+                    const dept = part.substring(3);
+                    programName = dept;
+                    department = dept;
+                } else if (part.length > 0 && !part.match(/\d/) && !lowerPart.includes('dec') && !lowerPart.includes('jan') && !lowerPart.includes('feb')) {
+                    // Likely a department if it's not a date and not already set
+                    if (!programName) {
+                        programName = part;
+                        department = part;
                     }
                 }
 
-                // Check for "in [Department]"
-                if (lowerPart.startsWith('in ')) {
-                    programName = part.substring(3);
-                    department = part.substring(3);
+                // Enhanced date parsing
+                const datePatterns = [
+                    /\b(jan|january|feb|february|mar|march|apr|april|may|jun|june|jul|july|aug|august|sep|september|oct|october|nov|november|dec|december)\s+(\d{1,2})\b/i,
+                    /\b(\d{1,2})\s+(jan|january|feb|february|mar|march|apr|april|may|jun|june|jul|july|aug|august|sep|september|oct|october|nov|november|dec|december)\b/i,
+                    /\b(\d{1,2})\/(\d{1,2})\b/,
+                    /\b(\d{4}-\d{2}-\d{2})\b/,
+                ];
+
+                for (const pattern of datePatterns) {
+                    const match = part.match(pattern);
+                    if (match) {
+                        let dateStr = match[0];
+                        // Try to parse the date
+                        const date = new Date(dateStr + " " + new Date().getFullYear());
+                        if (!isNaN(date.getTime())) {
+                            // If date is in the past, assume next year
+                            if (date < new Date()) {
+                                date.setFullYear(date.getFullYear() + 1);
+                            }
+                            deadline = date.toISOString().split('T')[0];
+                            break;
+                        }
+                    }
                 }
             }
 
@@ -90,6 +148,8 @@ const QuickCaptureModal: React.FC<QuickCaptureModalProps> = ({ isOpen, onClose, 
                 department,
                 location,
                 deadline,
+                applicationFee: applicationFee || 0,
+                tags: tags.length > 0 ? tags : undefined,
                 status: ApplicationStatus.NotStarted,
                 universityRanking: '0',
                 departmentRanking: '0',
@@ -121,7 +181,7 @@ const QuickCaptureModal: React.FC<QuickCaptureModalProps> = ({ isOpen, onClose, 
                 <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
                     <motion.div
                         onClick={onClose}
-                        className="fixed inset-0 bg-black/40 backdrop-blur-sm"
+                        className="fixed inset-0 liquid-glass-modal"
                         variants={backdropVariants}
                         initial="hidden"
                         animate="visible"
@@ -135,11 +195,11 @@ const QuickCaptureModal: React.FC<QuickCaptureModalProps> = ({ isOpen, onClose, 
                         animate="visible"
                         exit="exit"
                     >
-                        <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-700 overflow-hidden">
+                        <div className="liquid-glass-modal-content rounded-2xl overflow-hidden">
                             <div className="p-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500"></div>
                             <div className="p-6">
-                                <h3 className="text-lg font-semibold text-slate-800 dark:text-white mb-4 flex items-center gap-2">
-                                    <span className="material-symbols-outlined text-blue-500">bolt</span>
+                                <h3 className="text-lg font-semibold text-[#F5D7DA] mb-4 flex items-center gap-2">
+                                    <span className="material-symbols-outlined text-[#C03050]">bolt</span>
                                     Quick Capture
                                 </h3>
 
@@ -150,18 +210,18 @@ const QuickCaptureModal: React.FC<QuickCaptureModalProps> = ({ isOpen, onClose, 
                                     onChange={(e) => setInput(e.target.value)}
                                     onKeyDown={handleKeyDown}
                                     placeholder="e.g. Stanford University, PhD in CS, Dec 15"
-                                    className="w-full text-xl bg-transparent border-b-2 border-slate-200 dark:border-slate-700 focus:border-blue-500 focus:outline-none py-2 px-1 text-slate-800 dark:text-slate-100 placeholder:text-slate-400"
+                                    className="w-full text-xl bg-transparent border-b-2 border-[#E8B4B8]/30 focus:border-[#C03050] focus:outline-none py-2 px-1 text-[#F5D7DA] placeholder:text-[#E8B4B8]/50"
                                     autoComplete="off"
                                     disabled={isProcessing}
                                 />
 
-                                <div className="flex justify-between items-center mt-4 text-xs text-slate-500 dark:text-slate-400">
+                                <div className="flex justify-between items-center mt-4 text-xs text-[#E8B4B8]/70">
                                     <div className="flex gap-4">
-                                        <span>Hit <kbd className="font-mono bg-slate-100 dark:bg-slate-700 px-1 rounded">Enter</kbd> to save</span>
-                                        <span><kbd className="font-mono bg-slate-100 dark:bg-slate-700 px-1 rounded">Esc</kbd> to close</span>
+                                        <span>Hit <kbd className="font-mono liquid-glass px-1 rounded">Enter</kbd> to save</span>
+                                        <span><kbd className="font-mono liquid-glass px-1 rounded">Esc</kbd> to close</span>
                                     </div>
                                     {isProcessing && (
-                                        <div className="flex items-center gap-2 text-blue-500">
+                                        <div className="flex items-center gap-2 text-[#C03050]">
                                             <span className="animate-spin material-symbols-outlined text-sm">sync</span>
                                             Processing...
                                         </div>

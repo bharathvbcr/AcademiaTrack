@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useMemo, useState } from 'react';
+import { motion } from 'framer-motion';
 import confetti from 'canvas-confetti';
 import { Application, ApplicationStatus, ProgramType, FacultyContactStatus, DocumentStatus } from '../../types';
 import { FEE_WAIVER_STATUS_COLORS, TEST_STATUS_COLORS } from '../../constants';
@@ -20,8 +21,8 @@ const MaterialIcon: React.FC<{ name: string; className?: string }> = ({ name, cl
 
 const DetailsSection: React.FC<{ title: string; children: React.ReactNode }> = ({ title, children }) => (
     <div>
-        <h4 className="text-sm font-bold text-slate-700 dark:text-slate-200 mb-2">{title}</h4>
-        <div className="space-y-1.5 pl-1 border-l-2 border-slate-200 dark:border-slate-700 ml-1">
+        <h4 className="text-sm font-bold text-[#F5D7DA] mb-2">{title}</h4>
+        <div className="space-y-1.5 pl-1 border-l-2 border-[#E8B4B8]/30 ml-1">
             <div className="pl-3">
                 {children}
             </div>
@@ -32,16 +33,16 @@ const DetailsSection: React.FC<{ title: string; children: React.ReactNode }> = (
 const InfoRow: React.FC<{ icon: string; label: string; value?: string; children?: React.ReactNode }> = ({ icon, label, value, children }) => (
     <div className="flex justify-between items-start text-sm">
         <div className="flex items-center gap-2 shrink-0 pr-4">
-            <MaterialIcon name={icon} className="text-base text-slate-400 dark:text-slate-500" />
-            <span className="font-medium text-slate-500 dark:text-slate-400">{label}</span>
+            <MaterialIcon name={icon} className="text-base text-[#E8B4B8]" />
+            <span className="font-medium text-[#E8B4B8]">{label}</span>
         </div>
         <div className="text-right">
-            {value ? <span className="font-semibold text-slate-700 dark:text-slate-200">{value}</span> : children}
+            {value ? <span className="font-semibold text-[#F5D7DA]">{value}</span> : children}
         </div>
     </div>
 );
 
-const ApplicationCard: React.FC<ApplicationCardProps> = ({ application, onEdit, onDelete, onUpdate, isExpanded, onToggleExpand }) => {
+const ApplicationCard: React.FC<ApplicationCardProps> = React.memo(({ application, onEdit, onDelete, onUpdate, isExpanded, onToggleExpand }) => {
     const { id, universityName, programName, deadline, status, portalLink } = application;
     const prevStatusRef = useRef<ApplicationStatus>(status);
     const [logoUrl, setLogoUrl] = useState<string | null>(null);
@@ -133,11 +134,11 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({ application, onEdit, 
         ? application.customProgramType || 'Other'
         : application.programType;
 
-    const handleStatusChange = (newStatus: ApplicationStatus) => {
+    const handleStatusChange = React.useCallback((newStatus: ApplicationStatus) => {
         onUpdate({ ...application, status: newStatus });
-    };
+    }, [application, onUpdate]);
 
-    const handleDocumentStatusChange = (docKey: keyof Application['documents'], newStatus: DocumentStatus) => {
+    const handleDocumentStatusChange = React.useCallback((docKey: keyof Application['documents'], newStatus: DocumentStatus) => {
         const doc = application.documents[docKey];
         const newSubmittedDate = newStatus === DocumentStatus.Submitted
             ? new Date().toISOString().split('T')[0]
@@ -148,12 +149,15 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({ application, onEdit, 
             [docKey]: { ...doc, status: newStatus, submitted: newSubmittedDate }
         };
         onUpdate({ ...application, documents: updatedDocuments });
-    };
+    }, [application, onUpdate]);
 
     return (
-        <div
-            className="bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl rounded-3xl shadow-lg border border-slate-200/50 dark:border-slate-700/50 p-5 flex flex-col justify-between transition-all duration-300 hover:shadow-2xl hover:-translate-y-1"
+        <motion.div
+            className="liquid-glass-card rounded-3xl p-5 flex flex-col justify-between relative overflow-hidden"
             onClick={onToggleExpand}
+            whileHover={{ y: -4, scale: 1.01, boxShadow: '0 20px 25px -5px rgba(220, 20, 60, 0.3), 0 10px 10px -5px rgba(220, 20, 60, 0.2)' }}
+            whileTap={{ scale: 0.98 }}
+            transition={{ type: 'spring', stiffness: 300, damping: 20 }}
         >
             <div className="cursor-pointer">
                 {/* Header */}
@@ -169,7 +173,7 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({ application, onEdit, 
                 />
 
                 {/* At-a-glance Details */}
-                <div className="flex flex-wrap gap-x-4 gap-y-2 text-xs text-slate-600 dark:text-slate-300 mb-4">
+                <div className="flex flex-wrap gap-x-4 gap-y-2 text-xs text-[#E8B4B8] mb-4">
                     <div className="flex items-center gap-1.5">
                         <MaterialIcon name="school" className="text-sm" />
                         <span>{programTypeValue}</span>
@@ -187,7 +191,7 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({ application, onEdit, 
                         </div>
                     )}
                     {upcomingInterview && (
-                        <div className="flex items-center gap-1.5 text-red-600 dark:text-red-400 font-semibold">
+                        <div className="flex items-center gap-1.5 text-[#E03030] font-semibold">
                             <MaterialIcon name="event_upcoming" className="text-sm" />
                             <span>Interview: {new Date(upcomingInterview.interviewDate! + 'T00:00:00').toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span>
                         </div>
@@ -233,7 +237,7 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({ application, onEdit, 
 
                         {application.notes && (
                             <DetailsSection title="Notes">
-                                <p className="text-sm text-slate-600 dark:text-slate-300 whitespace-pre-wrap">{application.notes}</p>
+                                <p className="text-sm text-[#E8B4B8] whitespace-pre-wrap">{application.notes}</p>
                             </DetailsSection>
                         )}
                     </div>
@@ -247,8 +251,21 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({ application, onEdit, 
                 onEdit={() => onEdit(application)}
                 onDelete={() => onDelete(id)}
             />
-        </div>
+        </motion.div>
     );
-};
+}, (prevProps, nextProps) => {
+    // Custom comparison function for better memoization
+    return (
+        prevProps.application.id === nextProps.application.id &&
+        prevProps.application.status === nextProps.application.status &&
+        prevProps.application.deadline === nextProps.application.deadline &&
+        prevProps.isExpanded === nextProps.isExpanded &&
+        JSON.stringify(prevProps.application.documents) === JSON.stringify(nextProps.application.documents) &&
+        JSON.stringify(prevProps.application.facultyContacts) === JSON.stringify(nextProps.application.facultyContacts) &&
+        prevProps.application.notes === nextProps.application.notes
+    );
+});
+
+ApplicationCard.displayName = 'ApplicationCard';
 
 export default ApplicationCard;

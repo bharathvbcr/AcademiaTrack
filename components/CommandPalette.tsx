@@ -26,9 +26,15 @@ interface CommandPaletteProps {
   onSettings: () => void;
 }
 
-const MaterialIcon: React.FC<{ name: string; className?: string }> = ({ name, className }) => (
-  <span className={`material-symbols-outlined ${className}`}>{name}</span>
-);
+const MaterialIcon: React.FC<{ name: string; className?: string; 'aria-hidden'?: boolean }> = ({ name, className, 'aria-hidden': ariaHidden = true }) => {
+  const props: React.HTMLAttributes<HTMLSpanElement> = {
+    className: `material-symbols-outlined ${className}`,
+    'aria-hidden': ariaHidden ? 'true' : 'false',
+  };
+  return (
+    <span {...props}>{name}</span>
+  );
+};
 
 const CommandPalette: React.FC<CommandPaletteProps> = ({
   isOpen,
@@ -144,6 +150,18 @@ const CommandPalette: React.FC<CommandPaletteProps> = ({
     } else if (e.key === 'Escape') {
       e.preventDefault();
       onClose();
+    } else if (e.key === 'Home') {
+      e.preventDefault();
+      setSelectedIndex(0);
+    } else if (e.key === 'End') {
+      e.preventDefault();
+      setSelectedIndex(filteredCommands.length - 1);
+    } else if (e.key === 'PageDown') {
+      e.preventDefault();
+      setSelectedIndex(prev => Math.min(prev + 10, filteredCommands.length - 1));
+    } else if (e.key === 'PageUp') {
+      e.preventDefault();
+      setSelectedIndex(prev => Math.max(prev - 10, 0));
     }
   };
 
@@ -156,7 +174,7 @@ const CommandPalette: React.FC<CommandPaletteProps> = ({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 bg-black/50 backdrop-blur-sm"
+          className="fixed inset-0 liquid-glass-modal"
           onClick={onClose}
         />
         <motion.div
@@ -167,9 +185,9 @@ const CommandPalette: React.FC<CommandPaletteProps> = ({
           className="relative w-full max-w-2xl mx-4"
           onClick={(e) => e.stopPropagation()}
         >
-          <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-700 overflow-hidden">
+          <div className="liquid-glass-modal-content rounded-2xl overflow-hidden">
             {/* Search Input */}
-            <div className="flex items-center gap-3 p-4 border-b border-slate-200 dark:border-slate-700">
+            <div className="flex items-center gap-3 p-4 border-b border-[#E8B4B8]/20">
               <img src="./AcademiaTrack.png" alt="" className="w-6 h-6 object-contain" />
               <input
                 type="text"
@@ -177,70 +195,88 @@ const CommandPalette: React.FC<CommandPaletteProps> = ({
                 onChange={(e) => setQuery(e.target.value)}
                 onKeyDown={handleKeyDown}
                 placeholder="Type a command or search..."
-                className="flex-1 bg-transparent border-none outline-none text-slate-900 dark:text-slate-100 text-lg placeholder-slate-400"
+                className="flex-1 bg-transparent border-none outline-none text-[#F5D7DA] text-lg placeholder-[#E8B4B8]/50"
                 autoFocus
               />
-              <kbd className="px-2 py-1 text-xs font-semibold text-slate-500 bg-slate-100 dark:bg-slate-700 rounded border border-slate-300 dark:border-slate-600">
+              <kbd className="px-2 py-1 text-xs font-semibold text-[#E8B4B8] bg-[rgba(139,0,0,0.4)] rounded border border-[#E8B4B8]/30">
                 ESC
               </kbd>
             </div>
 
             {/* Commands List */}
-            <div className="max-h-96 overflow-y-auto">
+            <div
+              className="max-h-96 overflow-y-auto"
+              {...(filteredCommands.length > 0 ? { role: 'listbox', 'aria-label': 'Command palette options' } : {})}
+            >
               {filteredCommands.length === 0 ? (
-                <div className="p-8 text-center text-slate-500 dark:text-slate-400">
+                <div className="p-8 text-center text-[#E8B4B8]">
                   <MaterialIcon name="search_off" className="text-4xl mb-2 opacity-50" />
                   <p>No commands found</p>
                 </div>
               ) : (
-                Object.entries(groupedCommands).map(([category, cmds]) => (
-                  <div key={category} className="py-2">
-                    <div className="px-4 py-1 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                      {category}
-                    </div>
-                    {cmds.map((cmd, idx) => {
-                      const globalIndex = filteredCommands.indexOf(cmd);
-                      const isSelected = globalIndex === selectedIndex;
-                      return (
-                        <button
-                          key={cmd.id}
-                          onClick={cmd.action}
-                          onMouseEnter={() => setSelectedIndex(globalIndex)}
-                          className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-colors ${
-                            isSelected
-                              ? 'bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300'
-                              : 'hover:bg-slate-50 dark:hover:bg-slate-700/50 text-slate-700 dark:text-slate-200'
-                          }`}
-                        >
-                          <MaterialIcon
-                            name={cmd.icon}
-                            className={`text-xl ${isSelected ? 'text-red-600 dark:text-red-400' : 'text-slate-400'}`}
-                          />
-                          <div className="flex-1">
-                            <div className="font-medium">{cmd.label}</div>
+                <>
+                  {Object.entries(groupedCommands).map(([category, cmds]) => (
+                    <div key={category} className="py-2" role="group" aria-label={category}>
+                      <div className="px-4 py-1 text-xs font-semibold text-[#E8B4B8] uppercase tracking-wider" role="presentation">
+                        {category}
+                      </div>
+                      {cmds.map((cmd, idx) => {
+                        const globalIndex = filteredCommands.indexOf(cmd);
+                        const isSelected = globalIndex === selectedIndex;
+                        const handleClick = () => {
+                          cmd.action();
+                        };
+                        const handleKeyDown = (e: React.KeyboardEvent) => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            cmd.action();
+                          }
+                        };
+                        const divProps: React.HTMLAttributes<HTMLDivElement> = {
+                          onClick: handleClick,
+                          onKeyDown: handleKeyDown,
+                          onMouseEnter: () => setSelectedIndex(globalIndex),
+                          className: `w-full flex items-center gap-3 px-4 py-3 text-left transition-colors cursor-pointer ${isSelected
+                              ? 'bg-[rgba(139,0,0,0.5)] text-[#F5D7DA]'
+                              : 'hover:bg-[rgba(139,0,0,0.35)] text-[#F5D7DA]'
+                            }`,
+                          'aria-label': cmd.label,
+                          'aria-selected': isSelected ? 'true' : 'false',
+                          role: 'option',
+                          tabIndex: isSelected ? 0 : -1,
+                        };
+                        return (
+                          <div key={cmd.id} {...divProps}>
+                            <MaterialIcon
+                              name={cmd.icon}
+                              className={`text-xl ${isSelected ? 'text-[#E8B4B8]' : 'text-[#E8B4B8]/60'}`}
+                            />
+                            <div className="flex-1">
+                              <div className="font-medium">{cmd.label}</div>
+                            </div>
+                            {cmd.shortcut && (
+                              <kbd className="px-2 py-1 text-xs font-semibold text-[#E8B4B8] bg-[rgba(139,0,0,0.4)] rounded border border-[#E8B4B8]/30">
+                                {cmd.shortcut}
+                              </kbd>
+                            )}
                           </div>
-                          {cmd.shortcut && (
-                            <kbd className="px-2 py-1 text-xs font-semibold text-slate-500 bg-slate-100 dark:bg-slate-700 rounded border border-slate-300 dark:border-slate-600">
-                              {cmd.shortcut}
-                            </kbd>
-                          )}
-                        </button>
-                      );
-                    })}
-                  </div>
-                ))
+                        );
+                      })}
+                    </div>
+                  ))}
+                </>
               )}
             </div>
 
             {/* Footer */}
-            <div className="px-4 py-2 border-t border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
+            <div className="px-4 py-2 border-t border-[#E8B4B8]/20 bg-[rgba(139,0,0,0.3)] flex items-center justify-between text-xs text-[#E8B4B8]">
               <div className="flex items-center gap-4">
                 <span className="flex items-center gap-1">
-                  <kbd className="px-1.5 py-0.5 rounded bg-slate-200 dark:bg-slate-700">↑↓</kbd>
+                  <kbd className="px-1.5 py-0.5 rounded bg-[rgba(139,0,0,0.4)] border border-[#E8B4B8]/30">↑↓</kbd>
                   <span>Navigate</span>
                 </span>
                 <span className="flex items-center gap-1">
-                  <kbd className="px-1.5 py-0.5 rounded bg-slate-200 dark:bg-slate-700">Enter</kbd>
+                  <kbd className="px-1.5 py-0.5 rounded bg-[rgba(139,0,0,0.4)] border border-[#E8B4B8]/30">Enter</kbd>
                   <span>Select</span>
                 </span>
               </div>

@@ -9,7 +9,9 @@ import { useUniversityData } from '../hooks/useUniversityData';
 import { useDebounce } from '../hooks/useDebounce';
 import { useApplicationForm } from '../hooks/useApplicationForm';
 import { useLockBodyScroll } from '../hooks/useLockBodyScroll';
+import { useFocusManagement } from '../hooks/useFocusManagement';
 import { MaterialIcon } from './ApplicationFormUI';
+import Tooltip from './Tooltip';
 import ProgramDetailsSection from './ProgramDetailsSection';
 import RankingsStatusSection from './RankingsStatusSection';
 import RemindersSection from './RemindersSection';
@@ -38,6 +40,8 @@ const ApplicationModal: React.FC<ApplicationModalProps> = ({ isOpen, onClose, ap
   } = useUniversityData();
 
   useLockBodyScroll(isOpen);
+  const modalRef = React.useRef<HTMLDivElement>(null);
+  useFocusManagement(isOpen, modalRef as React.RefObject<HTMLElement>);
 
   const {
     appData,
@@ -195,13 +199,47 @@ const ApplicationModal: React.FC<ApplicationModalProps> = ({ isOpen, onClose, ap
     onClose();
   };
 
+  // Context-aware keyboard shortcuts for modal
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Cmd/Ctrl + Enter to save
+      if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+        e.preventDefault();
+        const finalAppData = { ...appData };
+        if (finalAppData.programType !== ProgramType.Other) {
+          finalAppData.customProgramType = '';
+        }
+        onSave({ ...finalAppData, id: applicationToEdit?.id || '' });
+        onClose();
+      }
+      // Cmd/Ctrl + Shift + D to duplicate (if editing)
+      if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key === 'D') {
+        e.preventDefault();
+        // Duplicate functionality would need to be passed as prop
+        // For now, just close and let parent handle
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, appData, applicationToEdit, onSave, onClose]);
+
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+        <div
+          ref={modalRef}
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          aria-labelledby="modal-title"
+          role="dialog"
+          aria-modal="true"
+          aria-describedby="modal-description"
+        >
           <motion.div
             onClick={onClose}
-            className="fixed inset-0 bg-black/60 backdrop-blur-md"
+            className="fixed inset-0 liquid-glass-modal"
             aria-hidden="true"
             variants={backdropVariants}
             initial="hidden"
@@ -210,20 +248,37 @@ const ApplicationModal: React.FC<ApplicationModalProps> = ({ isOpen, onClose, ap
           />
 
           <motion.div
-            className="relative bg-white dark:bg-slate-800 rounded-3xl shadow-xl w-full max-w-3xl"
+            className="relative liquid-glass-modal-content rounded-3xl w-full max-w-3xl"
             variants={modalVariants}
             initial="hidden"
             animate="visible"
             exit="exit"
           >
-            <div className="flex items-center justify-between p-5 border-b border-slate-200 dark:border-slate-700">
-              <h3 className="text-xl font-semibold text-slate-900 dark:text-white" id="modal-title">{applicationToEdit ? 'Edit Application' : 'Add New Application'}</h3>
-              <button type="button" onClick={onClose} className="p-1.5 rounded-full text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-700 hover:text-slate-700 dark:hover:text-slate-200 transition-colors">
-                <MaterialIcon name="close" className="text-xl" />
-              </button>
+            <div className="flex items-center justify-between p-5 border-b border-[#27272a]">
+              <div>
+                <h3 className="text-xl font-semibold text-[#f4f4f5]" id="modal-title">{applicationToEdit ? 'Edit Application' : 'Add New Application'}</h3>
+                <p id="modal-description" className="sr-only">
+                  {applicationToEdit ? 'Edit application details and save changes' : 'Fill in the form to add a new application'}
+                </p>
+              </div>
+              <Tooltip content="Close (Esc)">
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="p-1.5 rounded-full text-[#a1a1aa] hover:bg-[#27272a] hover:text-[#f4f4f5] transition-colors"
+                  aria-label="Close modal"
+                >
+                  <MaterialIcon name="close" className="text-xl" aria-hidden="true" />
+                </button>
+              </Tooltip>
             </div>
             <form onSubmit={handleSubmit}>
-              <div className="p-6 max-h-[70vh] overflow-y-auto space-y-8">
+              <div className="p-6 max-h-[70vh] overflow-y-auto space-y-8" onKeyDown={(e) => {
+                // Prevent form submission on Enter in text areas
+                if (e.key === 'Enter' && (e.target instanceof HTMLTextAreaElement)) {
+                  return;
+                }
+              }}>
                 <ProgramDetailsSection
                   appData={appData}
                   handleChange={handleChange}
@@ -311,9 +366,27 @@ const ApplicationModal: React.FC<ApplicationModalProps> = ({ isOpen, onClose, ap
                   setAppData={setAppData}
                 />
               </div>
-              <div className="flex items-center justify-end p-4 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-200 dark:border-slate-700 rounded-b-3xl space-x-3">
-                <button type="button" onClick={onClose} className="px-5 py-2 text-sm font-medium text-slate-700 dark:text-slate-200 bg-transparent rounded-full hover:bg-slate-200 dark:hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500">Cancel</button>
-                <button type="submit" className="px-6 py-2 text-sm font-medium text-white bg-red-600 rounded-full shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">Save</button>
+              <div className="flex items-center justify-between p-4 border-t border-[#27272a] rounded-b-3xl">
+                <div className="text-xs text-[#a1a1aa]/70" aria-label="Keyboard shortcut">
+                  <kbd className="px-1.5 py-0.5 bg-[#27272a] rounded text-xs text-[#a1a1aa]" aria-label="Command key">⌘</kbd> + <kbd className="px-1.5 py-0.5 bg-[#27272a] rounded text-xs text-[#a1a1aa]" aria-label="Enter key">Enter</kbd> to save
+                </div>
+                <div className="flex space-x-3">
+                  <button
+                    type="button"
+                    onClick={onClose}
+                    className="px-5 py-2 text-sm font-medium text-[#a1a1aa] bg-transparent rounded-full hover:bg-[#27272a] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#dc2626]"
+                    aria-label="Cancel and close modal"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-6 py-2 text-sm font-medium text-white bg-[#dc2626] rounded-full shadow-sm hover:bg-[#b91c1c] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#dc2626]"
+                    aria-label="Save application"
+                  >
+                    Save
+                  </button>
+                </div>
               </div>
             </form>
           </motion.div>

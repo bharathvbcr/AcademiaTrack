@@ -1,4 +1,4 @@
-import { test, expect, _electron as electron } from '@playwright/test';
+import { test, expect, _electron as electron, ElectronApplication, Page } from '@playwright/test';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
@@ -6,7 +6,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 test.describe('Application Launch', () => {
-    let electronApp;
+    let electronApp: ElectronApplication;
 
     test.beforeEach(async () => {
         electronApp = await electron.launch({
@@ -21,7 +21,7 @@ test.describe('Application Launch', () => {
     });
 
     test('should launch the application', async () => {
-        const appPath = await electronApp.evaluate(async ({ app }) => {
+        const appPath = await electronApp.evaluate(async ({ app }: { app: { getAppPath: () => string } }) => {
             return app.getAppPath();
         });
         console.log('App Launch Path:', appPath);
@@ -29,14 +29,14 @@ test.describe('Application Launch', () => {
     });
 
     test('should verify main window title', async () => {
-        const window = await electronApp.firstWindow();
+        const window: Page = await electronApp.firstWindow();
         const title = await window.title();
         // Allow for slight variations or just check it contains the main name
         expect(title).toContain('AcademiaTrack');
     });
 
     test('should load the main dashboard', async () => {
-        const window = await electronApp.firstWindow();
+        const window: Page = await electronApp.firstWindow();
         // Wait for a key element. Assuming there's a sidebar or header.
         // Adjust selector based on actual app content.
         await window.waitForLoadState('domcontentloaded');

@@ -54,11 +54,13 @@ const FacultyContactsSection: React.FC<FacultyContactsSectionProps> = ({
     return (
         <FieldSet legend="Faculty Contacts">
             <div className="md:col-span-2 space-y-2">
-                {appData.facultyContacts.map((faculty, index) => (
+                {appData.facultyContacts.map((faculty, index) => {
+                    const isExpanded = isFacultyOpen[index] || false;
+                    return (
                     <div key={faculty.id} className="bg-slate-100 dark:bg-slate-700/50 rounded-lg border border-slate-200 dark:border-slate-700">
                         <div className="flex items-center p-2">
-                            <button type="button" onClick={() => setIsFacultyOpen(p => p.map((s, i) => i === index ? !s : s))} className="flex-grow flex items-center gap-2 text-left" aria-expanded={isFacultyOpen[index]}>
-                                <MaterialIcon name="expand_more" className={`transition-transform transform ${isFacultyOpen[index] ? 'rotate-180' : ''}`} />
+                            <button type="button" onClick={() => setIsFacultyOpen(p => p.map((s, i) => i === index ? !s : s))} className="flex-grow flex items-center gap-2 text-left" aria-expanded={isExpanded}>
+                                <MaterialIcon name="expand_more" className={`transition-transform transform ${isExpanded ? 'rotate-180' : ''}`} />
                                 <span className="font-medium text-sm text-slate-800 dark:text-slate-200 truncate">{faculty.name || `Faculty Contact #${index + 1}`}</span>
                             </button>
                             <span className={`px-2 py-0.5 text-xs font-semibold rounded-full border shrink-0 ${FACULTY_CONTACT_STATUS_COLORS[faculty.contactStatus]}`}>{faculty.contactStatus}</span>
@@ -66,7 +68,7 @@ const FacultyContactsSection: React.FC<FacultyContactsSectionProps> = ({
                                 <MaterialIcon name="delete" className="text-base" />
                             </button>
                         </div>
-                        {isFacultyOpen[index] && (
+                        {isExpanded && (
                             <div className="p-4 border-t border-slate-200 dark:border-slate-600 space-y-6">
                                 {/* Basic Info */}
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -93,9 +95,10 @@ const FacultyContactsSection: React.FC<FacultyContactsSectionProps> = ({
                                     </h4>
                                     <div className="space-y-4">
                                         <div>
-                                            <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 uppercase mb-1">Fit Score (1-10)</label>
+                                            <label htmlFor={`fit-score-${index}`} className="block text-xs font-medium text-slate-500 dark:text-slate-400 uppercase mb-1">Fit Score (1-10)</label>
                                             <div className="flex items-center gap-4">
                                                 <input
+                                                    id={`fit-score-${index}`}
                                                     type="range"
                                                     min="1"
                                                     max="10"
@@ -117,7 +120,7 @@ const FacultyContactsSection: React.FC<FacultyContactsSectionProps> = ({
                                                 {faculty.papersRead?.map((paper, pIndex) => (
                                                     <div key={pIndex} className="flex items-center justify-between bg-white dark:bg-slate-800 p-2 rounded border border-slate-200 dark:border-slate-600">
                                                         <span className="text-sm text-slate-700 dark:text-slate-300 truncate">{paper}</span>
-                                                        <button type="button" onClick={() => removePaperRead(index, pIndex)} className="text-slate-400 hover:text-red-500">
+                                                        <button type="button" onClick={() => removePaperRead(index, pIndex)} className="text-slate-400 hover:text-red-500" aria-label={`Remove paper: ${paper}`}>
                                                             <MaterialIcon name="close" className="text-sm" />
                                                         </button>
                                                     </div>
@@ -153,7 +156,7 @@ const FacultyContactsSection: React.FC<FacultyContactsSectionProps> = ({
                                                     </span>
                                                     <div className="flex items-center gap-2">
                                                         <span className="text-slate-400 text-xs">{corr.date}</span>
-                                                        <button type="button" onClick={() => removeCorrespondence(index, corr.id)} className="text-slate-400 hover:text-red-500">
+                                                        <button type="button" onClick={() => removeCorrespondence(index, corr.id)} className="text-slate-400 hover:text-red-500" aria-label={`Remove correspondence: ${corr.subject}`}>
                                                             <MaterialIcon name="delete" className="text-xs" />
                                                         </button>
                                                     </div>
@@ -164,22 +167,30 @@ const FacultyContactsSection: React.FC<FacultyContactsSectionProps> = ({
                                         ))}
                                         <div className="bg-slate-50 dark:bg-slate-800/50 p-3 rounded border border-dashed border-slate-300 dark:border-slate-600 space-y-2">
                                             <div className="grid grid-cols-2 gap-2">
-                                                <select
-                                                    value={newCorrespondence[index]?.type || 'Email Sent'}
-                                                    onChange={e => setNewCorrespondence(prev => ({ ...prev, [index]: { ...prev[index], type: e.target.value } }))}
-                                                    className="px-2 py-1.5 text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded"
-                                                >
-                                                    <option>Email Sent</option>
-                                                    <option>Email Received</option>
-                                                    <option>Meeting</option>
-                                                    <option>Other</option>
-                                                </select>
-                                                <input
-                                                    type="date"
-                                                    value={newCorrespondence[index]?.date || new Date().toISOString().split('T')[0]}
-                                                    onChange={e => setNewCorrespondence(prev => ({ ...prev, [index]: { ...prev[index], date: e.target.value } }))}
-                                                    className="px-2 py-1.5 text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded"
-                                                />
+                                                <div>
+                                                    <label htmlFor={`correspondence-type-${index}`} className="sr-only">Correspondence Type</label>
+                                                    <select
+                                                        id={`correspondence-type-${index}`}
+                                                        value={newCorrespondence[index]?.type || 'Email Sent'}
+                                                        onChange={e => setNewCorrespondence(prev => ({ ...prev, [index]: { ...prev[index], type: e.target.value } }))}
+                                                        className="px-2 py-1.5 text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded"
+                                                    >
+                                                        <option>Email Sent</option>
+                                                        <option>Email Received</option>
+                                                        <option>Meeting</option>
+                                                        <option>Other</option>
+                                                    </select>
+                                                </div>
+                                                <div>
+                                                    <label htmlFor={`correspondence-date-${index}`} className="sr-only">Correspondence Date</label>
+                                                    <input
+                                                        id={`correspondence-date-${index}`}
+                                                        type="date"
+                                                        value={newCorrespondence[index]?.date || new Date().toISOString().split('T')[0]}
+                                                        onChange={e => setNewCorrespondence(prev => ({ ...prev, [index]: { ...prev[index], date: e.target.value } }))}
+                                                        className="px-2 py-1.5 text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded"
+                                                    />
+                                                </div>
                                             </div>
                                             <input
                                                 type="text"
@@ -234,9 +245,10 @@ const FacultyContactsSection: React.FC<FacultyContactsSectionProps> = ({
                             </div>
                         )}
                     </div>
-                ))}
+                    );
+                })}
                 {appData.facultyContacts.length < 3 && (
-                    <button type="button" onClick={addFacultyContact} className="w-full flex items-center justify-center gap-2 px-3 py-2 text-sm font-semibold text-slate-600 dark:text-slate-300 border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 hover:border-slate-400 dark:hover:border-slate-500 transition-colors">
+                    <button type="button" onClick={addFacultyContact} className="w-full flex items-center justify-center gap-2 px-3 py-2 text-sm font-semibold text-[#E8B4B8] border-2 border-dashed border-[#E8B4B8]/30 rounded-lg hover:bg-[rgba(220,20,60,0.25)] hover:border-[#E8B4B8] transition-colors">
                         <MaterialIcon name="add" /><span>Add Faculty Contact</span>
                     </button>
                 )}

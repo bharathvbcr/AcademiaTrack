@@ -20,15 +20,18 @@ interface KanbanCardProps {
   onDuplicate?: (id: string) => void;
 }
 
-const KanbanCard: React.FC<KanbanCardProps> = ({ application, index, onEdit, onUpdate, onDuplicate }) => {
-  const deadlineDate = application.deadline ? new Date(application.deadline) : null;
+const KanbanCard: React.FC<KanbanCardProps> = React.memo(({ application, index, onEdit, onUpdate, onDuplicate }) => {
+  const deadlineDate = React.useMemo(() => 
+    application.deadline ? new Date(application.deadline) : null,
+    [application.deadline]
+  );
 
-  const handlePinClick = (e: React.MouseEvent) => {
+  const handlePinClick = React.useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
     if (onUpdate) {
       onUpdate({ ...application, isPinned: !application.isPinned });
     }
-  };
+  }, [application, onUpdate]);
 
   return (
     <Draggable draggableId={application.id} index={index}>
@@ -37,15 +40,15 @@ const KanbanCard: React.FC<KanbanCardProps> = ({ application, index, onEdit, onU
           ref={provided.innerRef}
           {...provided.draggableProps}
           {...provided.dragHandleProps}
-          className={`group bg-white dark:bg-slate-800 p-3 rounded-xl shadow-sm border mb-3 transition-shadow hover:shadow-md ${snapshot.isDragging ? 'shadow-lg ring-2 ring-red-500 rotate-2' : ''
-            } ${application.isPinned ? 'border-amber-400 dark:border-amber-500' : 'border-slate-200 dark:border-slate-700'}`}
+          className={`group liquid-glass-card p-3 rounded-xl mb-3 transition-all ${snapshot.isDragging ? 'shadow-lg ring-2 ring-[#E8B4B8] rotate-2' : ''
+            } ${application.isPinned ? 'border-[#E8B4B8]' : ''}`}
           onClick={() => onEdit(application)}
           style={provided.draggableProps.style}
         >
           <div className="flex items-start justify-between">
-            <h4 className="font-bold text-slate-800 dark:text-slate-100 text-sm truncate flex-1">
+            <h4 className="font-bold text-[#F5D7DA] text-sm truncate flex-1">
               {application.isPinned && (
-                <span className="text-amber-500 dark:text-amber-400 mr-1 inline-block align-text-bottom">
+                <span className="text-[#E8B4B8] mr-1 inline-block align-text-bottom">
                   <span className="material-symbols-outlined text-sm">push_pin</span>
                 </span>
               )}
@@ -55,7 +58,7 @@ const KanbanCard: React.FC<KanbanCardProps> = ({ application, index, onEdit, onU
               {onDuplicate && (
                 <button
                   onClick={(e) => { e.stopPropagation(); onDuplicate(application.id); }}
-                  className="p-1 rounded-full text-slate-400 hover:text-indigo-500 dark:hover:text-indigo-400"
+                  className="p-1 rounded-full text-[#E8B4B8] hover:text-[#F5D7DA] hover:bg-[rgba(192,48,80,0.2)]"
                   title="Duplicate"
                   aria-label="Duplicate application"
                 >
@@ -66,8 +69,8 @@ const KanbanCard: React.FC<KanbanCardProps> = ({ application, index, onEdit, onU
                 <button
                   onClick={handlePinClick}
                   className={`p-1 rounded-full transition-colors ${application.isPinned
-                    ? 'text-amber-500 dark:text-amber-400 opacity-100'
-                    : 'text-slate-400 hover:text-amber-500 dark:hover:text-amber-400'
+                    ? 'text-[#E8B4B8] opacity-100'
+                    : 'text-[#E8B4B8]/60 hover:text-[#E8B4B8] hover:bg-[rgba(192,48,80,0.2)]'
                     }`}
                   title={application.isPinned ? 'Unpin' : 'Pin to top'}
                   aria-label={application.isPinned ? 'Unpin' : 'Pin to top'}
@@ -77,13 +80,13 @@ const KanbanCard: React.FC<KanbanCardProps> = ({ application, index, onEdit, onU
               )}
             </div>
           </div>
-          <p className="text-xs text-slate-500 dark:text-slate-400 truncate mb-2">
+          <p className="text-xs text-[#E8B4B8] truncate mb-2">
             {application.programName}
           </p>
 
           <div className="flex justify-between items-center text-xs gap-1">
             {application.tags && application.tags.length > 0 && (
-              <span className="text-xs text-pink-500 dark:text-pink-400" title={application.tags.join(', ')}>
+              <span className="text-xs text-[#F5D7DA]" title={application.tags.join(', ')}>
                 <span className="material-symbols-outlined text-xs">sell</span>
               </span>
             )}
@@ -92,12 +95,23 @@ const KanbanCard: React.FC<KanbanCardProps> = ({ application, index, onEdit, onU
             ) : (
               <span></span>
             )}
-            <span className="material-symbols-outlined text-slate-400 text-sm ml-auto">drag_indicator</span>
+            <span className="material-symbols-outlined text-[#E8B4B8]/60 text-sm ml-auto">drag_indicator</span>
           </div>
         </div>
       )}
     </Draggable>
   );
-};
+}, (prevProps, nextProps) => {
+    // Custom comparison for better memoization
+    return (
+        prevProps.application.id === nextProps.application.id &&
+        prevProps.application.status === nextProps.application.status &&
+        prevProps.application.deadline === nextProps.application.deadline &&
+        prevProps.application.isPinned === nextProps.application.isPinned &&
+        prevProps.index === nextProps.index
+    );
+});
 
-export default React.memo(KanbanCard);
+KanbanCard.displayName = 'KanbanCard';
+
+export default KanbanCard;
