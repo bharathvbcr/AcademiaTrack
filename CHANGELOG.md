@@ -15,6 +15,11 @@ All notable changes to this project will be documented in this file.
 ### CI/CD
 - **GitHub Actions:** Split verification builds from tag-based releases so tagged versions publish packaged desktop artifacts through GitHub Releases.
 
+## [5.1.3] - 2026-03-11
+
+### Changed
+- **Release Metadata:** Added stricter tag, lockfile, changelog, and duplicate-release validation in the release workflow.
+
 ## [5.1.2] - 2026-03-10
 
 ### Changed
