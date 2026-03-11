@@ -128,7 +128,13 @@ jobs:
         shell: bash
         run: |
           node --version
-          test "$(node --version)" = "v$(tr -d '\r\n' < .nvmrc)"
+          case "$(node --version)" in
+            v"$(tr -d '\r\n' < .nvmrc)".*) ;;
+            *)
+              echo "::error::Node version does not match .nvmrc"
+              exit 1
+              ;;
+          esac
 
       - name: Install Bun (Linux)
         shell: bash
@@ -191,7 +197,13 @@ jobs:
         shell: bash
         run: |
           node --version
-          test "$(node --version)" = "v$(tr -d '\r\n' < .nvmrc)"
+          case "$(node --version)" in
+            v"$(tr -d '\r\n' < .nvmrc)".*) ;;
+            *)
+              echo "::error::Node version does not match .nvmrc"
+              exit 1
+              ;;
+          esac
 
       - name: Install Bun (macOS/Linux)
         if: runner.os != 'Windows'
