@@ -139,7 +139,7 @@ jobs:
   build:
     name: Build Desktop App
     permissions:
-      contents: read
+      contents: write
     needs: [test, resolve]
     runs-on: ${{ matrix.os }}
     strategy:
