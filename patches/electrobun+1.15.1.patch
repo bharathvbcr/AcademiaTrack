@@ -22,7 +22,7 @@ new file mode 100644
 index 0000000..2f6a148
 Binary files /dev/null and b/node_modules/electrobun/.cache/win-path-shim/a/electrobun/electrobun/package/node_modules/rcedit/bin/rcedit.exe differ
 diff --git a/node_modules/electrobun/bin/electrobun.cjs b/node_modules/electrobun/bin/electrobun.cjs
-index c85043d..f108f9d 100644
+index c85043d..238f4a8 100644
 --- a/node_modules/electrobun/bin/electrobun.cjs
 +++ b/node_modules/electrobun/bin/electrobun.cjs
 @@ -1,7 +1,7 @@
@@ -35,7 +35,7 @@ index c85043d..f108f9d 100644
  const { join, dirname } = require('path');
  const https = require('https');
  
-@@ -32,6 +32,84 @@ const binExt = platform === 'win' ? '.exe' : '';
+@@ -32,6 +32,88 @@ const binExt = platform === 'win' ? '.exe' : '';
  const electrobunDir = join(__dirname, '..');
  const cacheDir = join(electrobunDir, '.cache');
  const cliBinary = join(cacheDir, `electrobun${binExt}`);
@@ -51,6 +51,10 @@ index c85043d..f108f9d 100644
 +
 +function ensurePowershellShim() {
 +  if (process.platform !== 'win32') {
++    return null;
++  }
++
++  if (process.env.GITHUB_ACTIONS === 'true') {
 +    return null;
 +  }
 +
@@ -120,7 +124,7 @@ index c85043d..f108f9d 100644
  
  async function downloadFile(url, filePath) {
    return new Promise((resolve, reject) => {
-@@ -130,18 +208,26 @@ async function main() {
+@@ -130,18 +212,26 @@ async function main() {
    try {
      const args = process.argv.slice(2);
      const cliPath = await ensureCliBinary();
