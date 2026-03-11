@@ -1,0 +1,11 @@
+{
+  "platform": "win32",
+  "arch": "x64",
+  "totalMemory": 34029162496,
+  "cpus": 20,
+  "startTime": 1768064480213,
+  "samples": [],
+  "endTime": 1768064480240,
+  "duration": 27,
+  "exitCode": 0
+}

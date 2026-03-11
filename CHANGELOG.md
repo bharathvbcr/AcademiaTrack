@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## [5.2.0] - 2026-03-11
+
+### Changed
+- **Runtime Migration:** Successfully migrated the entire application from Electrobun/Bun to a standard Electron/Node.js setup for improved stability and packaging reliability on Windows.
+- **Main Process:** Re-implemented the desktop integration layer using Electron's `ipcMain` and `app` modules.
+- **Preload Bridge:** Re-implemented the desktop bridge using Electron's `contextBridge` for enhanced security.
+- **Build System:** Switched to `electron-builder` for multi-platform packaging and `electron-updater` for OTA updates.
+
+### Removed
+- All Electrobun and Bun dependencies, configurations, and patches.
+
 ## [5.1.5] - 2026-03-11
 
 ### Added

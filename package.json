@@ -1,7 +1,7 @@
 {
   "name": "academia-track",
   "private": true,
-  "version": "5.1.5",
+  "version": "5.2.0",
   "description": "Academic Application Tracker - Track universities, programs, deadlines, and submissions",
   "author": "BHARATH CHANDRA VADDARAM <bharath.vbcr@gmail.com>",
   "homepage": "https://github.com/bharathvbcr/AcademiaTrack",
@@ -10,8 +10,8 @@
     "url": "https://github.com/bharathvbcr/AcademiaTrack.git"
   },
   "type": "module",
+  "main": "dist-electron/main.js",
   "engines": {
-    "bun": ">=1.3.0",
     "node": ">=20 <25"
   },
   "scripts": {
@@ -20,19 +20,38 @@
     "test:run": "vitest run",
     "dev": "vite",
     "build": "vite build",
-    "package": "bun run build:desktop",
-    "postinstall": "patch-package",
+    "package": "npm run build:electron",
     "preview": "vite preview",
-    "dev:desktop": "concurrently \"npm run dev\" \"wait-on http://localhost:3000 && cross-env NODE_ENV=development electrobun dev\"",
-    "build:desktop": "cross-env NODE_ENV=production electrobun build --env=stable",
-    "dev:electron": "npm run dev:desktop",
-    "build:electron": "npm run build:desktop"
+    "build:main": "tsc -p electron/tsconfig.json",
+    "dev:electron": "npm-run-all --parallel dev start:electron",
+    "start:electron": "wait-on http://localhost:3000 && npm run build:main && electron .",
+    "build:electron": "npm run build && npm run build:main && electron-builder"
+  },
+  "build": {
+    "appId": "com.bharathvbcr.academiatrack",
+    "productName": "AcademiaTrack",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*",
+      "dist-electron/**/*"
+    ],
+    "win": {
+      "target": "nsis"
+    },
+    "mac": {
+      "target": "dmg"
+    },
+    "linux": {
+      "target": "AppImage"
+    }
   },
   "dependencies": {
     "@hello-pangea/dnd": "^18.0.1",
     "canvas-confetti": "^1.9.3",
     "date-fns": "^4.1.0",
-    "electrobun": "1.15.1",
+    "electron-updater": "^6.8.3",
     "framer-motion": "^12.23.24",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
@@ -53,11 +72,14 @@
     "autoprefixer": "^10.4.23",
     "concurrently": "^9.2.1",
     "cross-env": "^10.1.0",
+    "electron": "^41.0.0",
+    "electron-builder": "^26.8.1",
     "jsdom": "^27.4.0",
+    "npm-run-all": "^4.1.5",
     "png2icons": "^2.0.1",
     "postcss": "^8.5.6",
-    "patch-package": "^8.0.0",
     "tailwindcss": "^4.1.18",
+    "tsx": "^4.21.0",
     "typescript": "~5.8.2",
     "vite": "^6.2.0",
     "vitest": "^4.0.16",
