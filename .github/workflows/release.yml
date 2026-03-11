@@ -15,6 +15,8 @@ jobs:
   resolve:
     name: Resolve Release Metadata
     runs-on: ubuntu-latest
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
     outputs:
       tag: ${{ steps.release_meta.outputs.tag }}
       version: ${{ steps.release_meta.outputs.version }}
@@ -49,6 +51,8 @@ jobs:
   test:
     name: Run Tests
     runs-on: ubuntu-latest
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -80,6 +84,8 @@ jobs:
       contents: read
     needs: [test, resolve]
     runs-on: ${{ matrix.os }}
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
     strategy:
       matrix:
         os: [windows-latest, macos-latest, ubuntu-latest]
@@ -127,6 +133,8 @@ jobs:
     name: Collect Release Artifacts
     needs: [build, resolve]
     runs-on: ubuntu-latest
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
     strategy:
       matrix:
         os: [windows-latest, macos-latest, ubuntu-latest]
@@ -161,6 +169,8 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
