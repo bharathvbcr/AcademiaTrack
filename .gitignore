@@ -36,6 +36,7 @@ playwright-report/
 build-profile.json
 build-timings.json
 log-analysis-report.md
+.github/release-notes.md
 
 # Tool specific
 .claude/

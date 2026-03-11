@@ -1,4 +1,4 @@
-name: Build/Release
+name: CI
 
 on:
   push:
@@ -9,11 +9,11 @@ on:
       - main
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
-  build:
-    name: Verify And Package
+  verify:
+    name: Verify
     runs-on: ${{ matrix.os }}
 
     strategy:
@@ -51,32 +51,7 @@ jobs:
       - name: Run Test Suite
         run: npm run test:run
 
-      - name: Build Profiler (Start)
-        shell: bash
-        run: |
-          # Start profiler in background or just run a sample check
-          # For this integration, we wrap the build command
-          echo "Profiler ready."
-
-      - name: Build Electrobun App (Measured)
+      - name: Build Desktop App
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          node scripts/measure-build.cjs "Electrobun Build" npm run build:desktop > build.log 2>&1
-          cat build.log
-
-      - name: Analyze Build Logs
-        if: always()
-        run: node scripts/log-analyzer.cjs build.log
-
-      - name: Upload Artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: release-${{ matrix.os }}
-          path: |
-            release/
-            build/
-            build-timings.json
-            log-analysis-report.md
-            test-results/
-          retention-days: 5
+        run: npm run build:desktop
