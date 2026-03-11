@@ -22,7 +22,7 @@ new file mode 100644
 index 0000000..2f6a148
 Binary files /dev/null and b/node_modules/electrobun/.cache/win-path-shim/a/electrobun/electrobun/package/node_modules/rcedit/bin/rcedit.exe differ
 diff --git a/node_modules/electrobun/bin/electrobun.cjs b/node_modules/electrobun/bin/electrobun.cjs
-index c85043d..77e7868 100644
+index c85043d..f108f9d 100644
 --- a/node_modules/electrobun/bin/electrobun.cjs
 +++ b/node_modules/electrobun/bin/electrobun.cjs
 @@ -1,7 +1,7 @@
@@ -31,11 +31,11 @@ index c85043d..77e7868 100644
 -const { execSync, spawn } = require('child_process');
 -const { existsSync, mkdirSync, unlinkSync, chmodSync, copyFileSync, createWriteStream } = require('fs');
 +const { execSync, execFileSync, spawn } = require('child_process');
-+const { existsSync, mkdirSync, unlinkSync, chmodSync, copyFileSync, createWriteStream, writeFileSync } = require('fs');
++const { existsSync, mkdirSync, unlinkSync, chmodSync, copyFileSync, createWriteStream, writeFileSync, rmSync } = require('fs');
  const { join, dirname } = require('path');
  const https = require('https');
  
-@@ -32,6 +32,68 @@ const binExt = platform === 'win' ? '.exe' : '';
+@@ -32,6 +32,84 @@ const binExt = platform === 'win' ? '.exe' : '';
  const electrobunDir = join(__dirname, '..');
  const cacheDir = join(electrobunDir, '.cache');
  const cliBinary = join(cacheDir, `electrobun${binExt}`);
@@ -47,6 +47,7 @@ index c85043d..77e7868 100644
 +const shimDrive = 'D:';
 +const rceditShimRoot = join(cacheDir, 'win-path-shim');
 +const rceditShimDir = join(rceditShimRoot, 'a', 'electrobun', 'electrobun', 'package', 'node_modules', 'rcedit', 'bin');
++const directWindowsShimDir = `${shimDrive}\\a\\electrobun\\electrobun\\package\\node_modules\\rcedit\\bin`;
 +
 +function ensurePowershellShim() {
 +  if (process.platform !== 'win32') {
@@ -63,22 +64,27 @@ index c85043d..77e7868 100644
 +
 +function setupWindowsRceditShim() {
 +  if (process.platform !== 'win32') {
-+    return false;
++    return { enabled: false, mode: null };
 +  }
 +
 +  const localRceditDir = join(electrobunDir, '..', 'rcedit', 'bin');
 +  if (!existsSync(join(localRceditDir, 'rcedit-x64.exe'))) {
-+    return false;
++    return { enabled: false, mode: null };
++  }
++
++  const copyShimFiles = (targetDir) => {
++    mkdirSync(targetDir, { recursive: true });
++    copyFileSync(join(localRceditDir, 'rcedit-x64.exe'), join(targetDir, 'rcedit-x64.exe'));
++    copyFileSync(join(localRceditDir, 'rcedit.exe'), join(targetDir, 'rcedit.exe'));
++  };
++
++  if (existsSync(`${shimDrive}\\`)) {
++    copyShimFiles(directWindowsShimDir);
++    return { enabled: true, mode: 'direct' };
 +  }
 +
 +  const existingShimPath = `${shimDrive}\\a\\electrobun\\electrobun\\package\\node_modules\\rcedit\\bin\\rcedit-x64.exe`;
-+  if (existsSync(`${shimDrive}\\`) && !existsSync(existingShimPath)) {
-+    throw new Error(`Cannot reserve ${shimDrive} for the Electrobun Windows shim because that drive already exists.`);
-+  }
-+
-+  mkdirSync(rceditShimDir, { recursive: true });
-+  copyFileSync(join(localRceditDir, 'rcedit-x64.exe'), join(rceditShimDir, 'rcedit-x64.exe'));
-+  copyFileSync(join(localRceditDir, 'rcedit.exe'), join(rceditShimDir, 'rcedit.exe'));
++  copyShimFiles(rceditShimDir);
 +
 +  try {
 +    execFileSync(substExe, [shimDrive, rceditShimRoot], { stdio: 'ignore' });
@@ -88,28 +94,38 @@ index c85043d..77e7868 100644
 +    }
 +  }
 +
-+  return true;
++  return { enabled: true, mode: 'subst' };
 +}
 +
-+function teardownWindowsRceditShim(enabled) {
-+  if (!enabled || process.platform !== 'win32') {
++function teardownWindowsRceditShim(state) {
++  if (!state || !state.enabled || process.platform !== 'win32') {
 +    return;
 +  }
 +
-+  try {
-+    execFileSync(substExe, [shimDrive, '/D'], { stdio: 'ignore' });
-+  } catch (_error) {
++  if (state.mode === 'direct') {
++    try {
++      rmSync(`${shimDrive}\\a\\electrobun`, { recursive: true, force: true });
++    } catch (_error) {
++    }
++    return;
++  }
++
++  if (state.mode === 'subst') {
++    try {
++      execFileSync(substExe, [shimDrive, '/D'], { stdio: 'ignore' });
++    } catch (_error) {
++    }
 +  }
 +}
  
  async function downloadFile(url, filePath) {
    return new Promise((resolve, reject) => {
-@@ -130,18 +192,26 @@ async function main() {
+@@ -130,18 +208,26 @@ async function main() {
    try {
      const args = process.argv.slice(2);
      const cliPath = await ensureCliBinary();
 +    const powershellPathPrefix = ensurePowershellShim();
-+    const rceditShimEnabled = setupWindowsRceditShim();
++    const rceditShimState = setupWindowsRceditShim();
  
      // Replace this process with the actual CLI
      const child = spawn(cliPath, args, {
@@ -123,12 +139,12 @@ index c85043d..77e7868 100644
      });
  
      child.on('exit', (code) => {
-+      teardownWindowsRceditShim(rceditShimEnabled);
++      teardownWindowsRceditShim(rceditShimState);
        process.exit(code || 0);
      });
  
      child.on('error', (error) => {
-+      teardownWindowsRceditShim(rceditShimEnabled);
++      teardownWindowsRceditShim(rceditShimState);
        console.error('Failed to start electrobun CLI:', error.message);
        process.exit(1);
      });
