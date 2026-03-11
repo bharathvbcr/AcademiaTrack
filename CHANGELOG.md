@@ -15,6 +15,11 @@ All notable changes to this project will be documented in this file.
 ### CI/CD
 - **GitHub Actions:** Split verification builds from tag-based releases so tagged versions publish packaged desktop artifacts through GitHub Releases.
 
+## [5.1.1] - 2026-03-10
+
+### Changed
+- **Release Pipeline:** Hardened release tag and metadata validation, and switched release artifacts to matrix-based collection with per-OS artifact naming.
+
 ## [4.2.2] - 2025-12-14
 
 ### Fixed
