@@ -16,7 +16,6 @@ describe('Module Linking & Dependency Integrity', () => {
         const criticalDeps = [
             'react',
             'react-dom',
-            'electrobun',
             'date-fns'
         ];
 
@@ -24,16 +23,13 @@ describe('Module Linking & Dependency Integrity', () => {
             expect(packageJson.dependencies[dep]).toBeDefined();
         });
 
-        expect(packageJson.dependencies.electrobun).toBe('1.15.1');
+        expect(packageJson.devDependencies.electron).toBeDefined();
     });
 
-    it('should have electrobun desktop scripts configured', () => {
-        expect(packageJson.scripts['package']).toBe('bun run build:desktop');
-        expect(packageJson.scripts['postinstall']).toBe('patch-package');
-        expect(packageJson.scripts['dev:desktop']).toContain('electrobun dev');
-        expect(packageJson.scripts['build:desktop']).toContain('electrobun build --env=stable');
-        expect(packageJson.scripts['dev:electron']).toBe('npm run dev:desktop');
-        expect(packageJson.scripts['build:electron']).toBe('npm run build:desktop');
+    it('should have electron desktop scripts configured', () => {
+        expect(packageJson.scripts['package']).toBe('npm run build:electron');
+        expect(packageJson.scripts['dev:electron']).toContain('npm-run-all --parallel dev start:electron');
+        expect(packageJson.scripts['build:electron']).toContain('npm run build && npm run build:main && electron-builder');
     });
 
     it('should resolve key native modules', async () => {
@@ -54,12 +50,12 @@ describe('Module Linking & Dependency Integrity', () => {
         }
     });
 
-    it('should verify vite and electrobun config existence', () => {
+    it('should verify vite and electron config existence', () => {
         const viteConfig = path.join(__dirname, '../../vite.config.ts');
-        const electrobunConfig = path.join(__dirname, '../../electrobun.config.ts');
-        const electrobunPatch = path.join(__dirname, '../../patches/electrobun+1.15.1.patch');
+        const electronMain = path.join(__dirname, '../../electron/main.ts');
+        const electronPreload = path.join(__dirname, '../../electron/preload.ts');
         expect(fs.existsSync(viteConfig)).toBe(true);
-        expect(fs.existsSync(electrobunConfig)).toBe(true);
-        expect(fs.existsSync(electrobunPatch)).toBe(true);
+        expect(fs.existsSync(electronMain)).toBe(true);
+        expect(fs.existsSync(electronPreload)).toBe(true);
     });
 });

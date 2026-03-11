@@ -260,7 +260,7 @@ export interface DesktopAPI {
     getVersionInfo: () => Promise<{
         version: string;
         name: string;
-        bun: string;
+        node: string;
         platform: string;
         arch: string;
     }>;
