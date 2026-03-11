@@ -3,6 +3,9 @@ name: Release
 permissions:
   contents: write
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 on:
   push:
     tags:
@@ -136,7 +139,14 @@ jobs:
         with:
           name: release-${{ needs.resolve.outputs.tag }}-${{ matrix.os }}
           path: release-${{ matrix.os }}
-          if-no-files-found: error
+
+      - name: Verify platform artifact download
+        shell: bash
+        run: |
+          if [ -z "$(find "release-${{ matrix.os }}" -type f | head -n 1)" ]; then
+            echo "::error::Missing artifacts for ${{ matrix.os }}."
+            exit 1
+          fi
 
       - name: Upload collected artifact shard
         uses: actions/upload-artifact@v4
@@ -163,7 +173,14 @@ jobs:
           pattern: release-artifacts-${{ needs.resolve.outputs.tag }}-*
           path: release
           merge-multiple: true
-          if-no-files-found: error
+
+      - name: Verify merged artifacts
+        shell: bash
+        run: |
+          if [ -z "$(find release -type f | head -n 1)" ]; then
+            echo "::error::Merged release artifacts are missing."
+            exit 1
+          fi
 
       - name: Generate Release Notes
         env:
