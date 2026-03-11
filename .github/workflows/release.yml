@@ -143,7 +143,6 @@ jobs:
         with:
           name: release-artifacts-${{ needs.resolve.outputs.tag }}-${{ matrix.os }}
           path: release-${{ matrix.os }}
-          if-no-files-found: error
           retention-days: 7
 
   release:
