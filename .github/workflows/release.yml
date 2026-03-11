@@ -17,6 +17,9 @@ jobs:
       version: ${{ steps.release_meta.outputs.version }}
       release_name: ${{ steps.release_meta.outputs.release_name }}
     steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
       - name: Validate tag and derive release metadata
         id: release_meta
         shell: bash
