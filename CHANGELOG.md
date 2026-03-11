@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [5.1.4] - 2026-03-10
+
+### Changed
+- **Release Validation:** Added a follow-up hardening pass and duplicate release safeguards for tagged releases.
+
 ## [5.1.0] - 2026-03-10
 
 ### Changed
