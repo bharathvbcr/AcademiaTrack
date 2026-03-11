@@ -1,32 +1,18 @@
-import { useEffect } from 'react';
+import { useEnhancedKeyboardShortcuts } from './useEnhancedKeyboardShortcuts';
 
-export const useKeyboardShortcuts = (shortcuts: { [key: string]: () => void }) => {
-    useEffect(() => {
-        const handleKeyDown = (event: KeyboardEvent) => {
-            // Ignore if typing in an input or textarea
-            if (
-                document.activeElement instanceof HTMLInputElement ||
-                document.activeElement instanceof HTMLTextAreaElement
-            ) {
-                return;
-            }
+interface KeyboardShortcutOptions {
+  enabled?: boolean;
+  ignoreInputs?: boolean;
+}
 
-            const key = event.key.toLowerCase();
-            const ctrl = event.ctrlKey || event.metaKey; // Support Cmd on Mac
-
-            if (ctrl) {
-                if (shortcuts[`Ctrl+${key}`]) {
-                    event.preventDefault();
-                    shortcuts[`Ctrl+${key}`]();
-                }
-            } else {
-                if (shortcuts[key]) {
-                    shortcuts[key]();
-                }
-            }
-        };
-
-        window.addEventListener('keydown', handleKeyDown);
-        return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [shortcuts]);
+export const useKeyboardShortcuts = (
+  extraShortcuts: { [key: string]: () => void } = {},
+  options: KeyboardShortcutOptions = {}
+) => {
+  return useEnhancedKeyboardShortcuts(extraShortcuts, {
+    enabled: options.enabled,
+    ignoreInputs: options.ignoreInputs,
+    listen: true,
+  });
 };
+

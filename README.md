@@ -89,52 +89,20 @@ npm install
 # Start development server (web)
 npm run dev
 
-# Start Electron development mode
-npm run dev:electron
+# Start desktop development mode with Electrobun
+npm run dev:desktop
 ```
 
 ### Building from Source
 
 ```bash
-# Build for current platform
-npm run build:electron
+# Build desktop app for current platform
+npm run build:desktop
 
-# Output will be in the 'release' directory
+# Output will be in the 'build' and 'release' directories
 ```
 
-## 🔐 Code Signing (Optional)
-
-For production releases, you can enable code signing to avoid security warnings.
-
-### macOS Notarization
-
-1. **Get an Apple Developer Account** at [developer.apple.com](https://developer.apple.com)
-
-2. **Create an App-Specific Password** at [appleid.apple.com](https://appleid.apple.com)
-
-3. **Export your Developer ID certificate** as a `.p12` file and base64 encode it:
-   ```bash
-   base64 -i certificate.p12 | pbcopy
-   ```
-
-4. **Add these secrets** to your GitHub repository (Settings → Secrets):
-   - `APPLE_ID` — Your Apple developer email
-   - `APPLE_APP_SPECIFIC_PASSWORD` — App-specific password
-   - `APPLE_TEAM_ID` — Your Team ID (found in Membership)
-   - `CSC_LINK` — Base64-encoded .p12 certificate
-   - `CSC_KEY_PASSWORD` — Certificate password
-
-5. **Enable signing** in `package.json`:
-   ```json
-   "mac": {
-     "identity": "Developer ID Application: Your Name (TEAM_ID)",
-     "notarize": true
-   }
-   ```
-
-### Windows Code Signing
-
-For Windows, you'll need an EV Code Signing Certificate from a trusted CA.
+The desktop runtime uses `electrobun`. Desktop packaging and release settings live in `electrobun.config.ts`. Legacy `npm run dev:electron` and `npm run build:electron` aliases remain for compatibility.
 
 ## 🤝 Contributing
 

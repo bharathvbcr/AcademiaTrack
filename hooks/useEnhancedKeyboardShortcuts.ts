@@ -1,164 +1,189 @@
-import { useEffect, useCallback } from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
+import { useCommandRegistry } from '../contexts/CommandContext';
 import { useLocalStorage } from './useLocalStorage';
+import { CommandShortcut, CommandShortcutScope } from '../types/commands';
 
-export type ShortcutAction =
-  | 'new-application'
-  | 'open-command-palette'
-  | 'save'
-  | 'delete'
-  | 'duplicate'
-  | 'undo'
-  | 'redo'
-  | 'next-application'
-  | 'previous-application'
-  | 'focus-search'
-  | 'toggle-selection-mode'
-  | 'select-all'
-  | 'clear-selection'
-  | 'view-list'
-  | 'view-kanban'
-  | 'view-calendar'
-  | 'view-timeline'
-  | 'view-budget'
-  | 'view-faculty'
-  | 'view-recommenders'
-  | 'export-csv'
-  | 'export-json'
-  | 'close-modal'
-  | 'export-json'
-  | 'close-modal'
-  | 'toggle-theme'
-  | 'quick-capture';
+interface StoredShortcut {
+  id: string;
+  keys: string;
+}
 
 export interface KeyboardShortcut {
   id: string;
-  action: ShortcutAction;
-  keys: string; // e.g., "Ctrl+N", "Cmd+K"
+  commandId: string;
+  keys: string;
   description: string;
-  category: 'navigation' | 'actions' | 'views' | 'selection' | 'modals';
-  global?: boolean; // Works even when modals are open
+  category: string;
+  shortcutScope: CommandShortcutScope;
+  enabled: boolean;
 }
 
-const defaultShortcuts: KeyboardShortcut[] = [
-  { id: 'new-app', action: 'new-application', keys: 'Ctrl+N', description: 'New Application', category: 'actions', global: true },
-  { id: 'cmd-palette', action: 'open-command-palette', keys: 'Ctrl+K', description: 'Command Palette', category: 'navigation', global: true },
-  { id: 'save', action: 'save', keys: 'Ctrl+S', description: 'Save', category: 'actions' },
-  { id: 'delete', action: 'delete', keys: 'Delete', description: 'Delete', category: 'actions' },
-  { id: 'duplicate', action: 'duplicate', keys: 'Ctrl+D', description: 'Duplicate', category: 'actions' },
-  { id: 'undo', action: 'undo', keys: 'Ctrl+Z', description: 'Undo', category: 'actions', global: true },
-  { id: 'redo', action: 'redo', keys: 'Ctrl+Y', description: 'Redo', category: 'actions', global: true },
-  { id: 'next', action: 'next-application', keys: 'Ctrl+J', description: 'Next Application', category: 'navigation' },
-  { id: 'prev', action: 'previous-application', keys: 'Ctrl+K', description: 'Previous Application', category: 'navigation' },
-  { id: 'focus-search', action: 'focus-search', keys: '/', description: 'Focus Search', category: 'navigation', global: true },
-  { id: 'toggle-select', action: 'toggle-selection-mode', keys: 'Ctrl+Shift+S', description: 'Toggle Selection Mode', category: 'selection' },
-  { id: 'select-all', action: 'select-all', keys: 'Ctrl+A', description: 'Select All', category: 'selection' },
-  { id: 'clear-selection', action: 'clear-selection', keys: 'Escape', description: 'Clear Selection', category: 'selection' },
-  { id: 'view-list', action: 'view-list', keys: 'Ctrl+1', description: 'List View', category: 'views', global: true },
-  { id: 'view-kanban', action: 'view-kanban', keys: 'Ctrl+2', description: 'Kanban View', category: 'views', global: true },
-  { id: 'view-calendar', action: 'view-calendar', keys: 'Ctrl+3', description: 'Calendar View', category: 'views', global: true },
-  { id: 'view-budget', action: 'view-budget', keys: 'Ctrl+4', description: 'Budget View', category: 'views', global: true },
-  { id: 'view-faculty', action: 'view-faculty', keys: 'Ctrl+5', description: 'Faculty View', category: 'views', global: true },
-  { id: 'view-recommenders', action: 'view-recommenders', keys: 'Ctrl+6', description: 'Recommenders View', category: 'views', global: true },
-  { id: 'view-timeline', action: 'view-timeline', keys: 'Ctrl+7', description: 'Timeline View', category: 'views', global: true },
-  { id: 'close-modal', action: 'close-modal', keys: 'Escape', description: 'Close Modal', category: 'modals' },
-  { id: 'toggle-theme', action: 'toggle-theme', keys: 'Ctrl+Shift+T', description: 'Toggle Theme', category: 'actions', global: true },
-  { id: 'quick-capture', action: 'quick-capture', keys: 'Ctrl+Shift+C', description: 'Quick Capture', category: 'actions', global: true },
-];
+interface HookOptions {
+  enabled?: boolean;
+  ignoreInputs?: boolean;
+  listen?: boolean;
+}
+
+const toShortcutScope = (scope?: CommandShortcutScope): CommandShortcutScope => scope ?? 'local';
+
+const normalizeShortcut = (keys: string) => keys.trim();
+
+const parseShortcut = (shortcut: string) => {
+  const parts = shortcut.split('+').map(s => s.trim().toLowerCase()).filter(Boolean);
+  return {
+    key: parts[parts.length - 1] ?? '',
+    ctrl: parts.includes('ctrl'),
+    shift: parts.includes('shift'),
+    alt: parts.includes('alt'),
+    meta: parts.includes('cmd') || parts.includes('meta'),
+  };
+};
+
+const toKeyName = (event: KeyboardEvent) => event.key.length === 1 ? event.key.toLowerCase() : event.key.toLowerCase();
+
+const isEditableElement = () =>
+  document.activeElement instanceof HTMLInputElement ||
+  document.activeElement instanceof HTMLTextAreaElement ||
+  (document.activeElement as HTMLElement)?.isContentEditable;
+
+const eventHasModifier = (event: KeyboardEvent, hasMeta: boolean, hasCtrl: boolean) => {
+  if (hasMeta) {
+    return event.metaKey || event.ctrlKey;
+  }
+
+  if (hasCtrl) {
+    return event.ctrlKey || event.metaKey;
+  }
+
+  return !(event.ctrlKey || event.metaKey);
+};
+
+const isShortcutMatch = (event: KeyboardEvent, keys: string): boolean => {
+  const parsed = parseShortcut(keys);
+  const eventKey = toKeyName(event);
+
+  if (parsed.key !== eventKey) return false;
+
+  if (parsed.shift !== event.shiftKey) return false;
+  if (parsed.alt !== event.altKey) return false;
+  if (!eventHasModifier(event, parsed.meta, parsed.ctrl)) return false;
+
+  if (parsed.ctrl && parsed.meta) {
+    return false;
+  }
+
+  return true;
+};
 
 export const useEnhancedKeyboardShortcuts = (
-  handlers: Partial<Record<ShortcutAction, () => void>>,
-  options?: { enabled?: boolean; ignoreInputs?: boolean }
+  handlers: Record<string, () => void> = {},
+  options: HookOptions = {}
 ) => {
-  const [customShortcuts, setCustomShortcuts] = useLocalStorage<KeyboardShortcut[]>('custom-keyboard-shortcuts', []);
+  const { commands, getCommandShortcuts, executeCommand } = useCommandRegistry();
+  const [customShortcuts, setCustomShortcuts] = useLocalStorage<StoredShortcut[]>('custom-keyboard-shortcuts', []);
   const [enabled, setEnabled] = useLocalStorage<boolean>('keyboard-shortcuts-enabled', true);
 
+  const commandShortcuts = useMemo(() => {
+    const registryShortcuts = getCommandShortcuts().map(shortcut => ({
+      ...shortcut,
+      shortcutScope: toShortcutScope(shortcut.shortcutScope),
+      keys: normalizeShortcut(shortcut.keys),
+      description: shortcut.description,
+    }));
+
+    const registryById = new Map(commands.map(c => [c.id, c]));
+    const customById = new Map(customShortcuts.map(s => [s.id, s.keys]));
+
+    return registryShortcuts
+      .filter(shortcut => registryById.has(shortcut.commandId))
+      .map(shortcut => ({
+        ...shortcut,
+        keys: normalizeShortcut(customById.get(shortcut.commandId) ?? shortcut.keys),
+      }))
+      .filter(shortcut => shortcut.keys.length > 0);
+  }, [commands, customShortcuts, getCommandShortcuts]);
+
   const allShortcuts = useCallback(() => {
-    const merged = [...defaultShortcuts];
-    customShortcuts.forEach(custom => {
-      const index = merged.findIndex(s => s.id === custom.id);
-      if (index >= 0) {
-        merged[index] = custom;
-      } else {
-        merged.push(custom);
+    if (!commands.length) return [] as CommandShortcut[];
+    return commandShortcuts;
+  }, [commandShortcuts, commands]);
+
+  const shortcutsForSettings: KeyboardShortcut[] = useMemo(() => (
+    allShortcuts().map(shortcut => ({
+      id: shortcut.id,
+      commandId: shortcut.commandId,
+      keys: shortcut.keys,
+      description: shortcut.description,
+      category: shortcut.section,
+      shortcutScope: shortcut.shortcutScope,
+      enabled: shortcut.enabled,
+    }))
+  ), [allShortcuts]);
+
+  const resolveHandler = useCallback((shortcut: CommandShortcut) => {
+    const commandHandler = handlers[shortcut.commandId];
+    if (commandHandler) {
+      return commandHandler;
+    }
+
+    return () => executeCommand(shortcut.commandId);
+  }, [executeCommand, handlers]);
+
+  const findDirectHandler = useCallback((event: KeyboardEvent) => {
+    const match = Object.entries(handlers).find(([shortcut]) => isShortcutMatch(event, shortcut));
+    if (!match) return null;
+
+    return match[1];
+  }, [handlers]);
+
+  const updateShortcut = useCallback((id: string, keys: string) => {
+    const trimmed = normalizeShortcut(keys);
+    setCustomShortcuts(prev => {
+      const existing = prev.find(s => s.id === id);
+      if (existing) {
+        return prev.map(s => s.id === id ? { ...s, keys: trimmed } : s);
       }
+      return [...prev, { id, keys: trimmed }];
     });
-    return merged;
-  }, [customShortcuts]);
+  }, [setCustomShortcuts]);
 
-  const parseKey = useCallback((keyString: string): { key: string; ctrl: boolean; shift: boolean; alt: boolean; meta: boolean } => {
-    const parts = keyString.split('+').map(s => s.trim().toLowerCase());
-    return {
-      key: parts[parts.length - 1],
-      ctrl: parts.includes('ctrl'),
-      shift: parts.includes('shift'),
-      alt: parts.includes('alt'),
-      meta: parts.includes('cmd') || parts.includes('meta'),
-    };
-  }, []);
-
-  const matchesKey = useCallback((event: KeyboardEvent, shortcut: KeyboardShortcut): boolean => {
-    const parsed = parseKey(shortcut.keys);
-    const key = event.key.toLowerCase();
-
-    return (
-      key === parsed.key &&
-      event.ctrlKey === parsed.ctrl &&
-      event.shiftKey === parsed.shift &&
-      event.altKey === parsed.alt &&
-      (event.metaKey === parsed.meta || event.ctrlKey === parsed.meta) // Cmd on Mac, Ctrl on Windows
-    );
-  }, [parseKey]);
+  const resetShortcuts = useCallback(() => setCustomShortcuts([]), [setCustomShortcuts]);
 
   useEffect(() => {
-    if (!enabled || options?.enabled === false) return;
+    if (!enabled || options.enabled === false) return;
+    if (options.listen === false) return;
 
     const handleKeyDown = (event: KeyboardEvent) => {
-      // Ignore if typing in input/textarea (unless global)
-      const isInput = document.activeElement instanceof HTMLInputElement ||
-        document.activeElement instanceof HTMLTextAreaElement;
-
-      if (isInput && options?.ignoreInputs !== false) {
-        // Check for global shortcuts
-        const globalShortcuts = allShortcuts().filter(s => s.global);
-        const matched = globalShortcuts.find(s => matchesKey(event, s));
-        if (matched && handlers[matched.action]) {
-          event.preventDefault();
-          handlers[matched.action]!();
-        }
+      const directHandler = findDirectHandler(event);
+      if (directHandler && event.cancelable) {
+        event.preventDefault();
+        directHandler();
         return;
       }
 
-      const matched = allShortcuts().find(s => matchesKey(event, s));
-      if (matched && handlers[matched.action]) {
-        event.preventDefault();
-        handlers[matched.action]!();
+      const shortcuts = allShortcuts();
+      const activeShortcut = shortcuts.find(shortcut => isShortcutMatch(event, shortcut.keys));
+      if (!activeShortcut) {
+        return;
       }
+
+      const isInput = isEditableElement();
+      const isGlobal = activeShortcut.shortcutScope === 'global';
+      if (isInput && !isGlobal && options.ignoreInputs !== false) {
+        return;
+      }
+
+      const handler = resolveHandler(activeShortcut);
+      event.preventDefault();
+      handler();
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [enabled, handlers, allShortcuts, matchesKey, options]);
-
-  const updateShortcut = useCallback((id: string, keys: string) => {
-    setCustomShortcuts(prev => {
-      const existing = prev.find(s => s.id === id);
-      if (existing) {
-        return prev.map(s => s.id === id ? { ...s, keys } : s);
-      }
-      const defaultShortcut = defaultShortcuts.find(s => s.id === id);
-      if (defaultShortcut) {
-        return [...prev, { ...defaultShortcut, keys }];
-      }
-      return prev;
-    });
-  }, [setCustomShortcuts]);
-
-  const resetShortcuts = useCallback(() => {
-    setCustomShortcuts([]);
-  }, [setCustomShortcuts]);
+  }, [allShortcuts, enabled, findDirectHandler, options.enabled, options.ignoreInputs, options.listen, resolveHandler]);
 
   return {
-    shortcuts: allShortcuts(),
+    shortcuts: shortcutsForSettings,
     updateShortcut,
     resetShortcuts,
     enabled,

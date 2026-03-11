@@ -15,8 +15,8 @@ export const useApplications = () => {
       let retries = 3;
       while (retries > 0) {
         try {
-          if (window.electron) {
-            const rawData = await window.electron.loadData();
+          if (window.desktop) {
+            const rawData = await window.desktop.loadData();
             if (rawData) {
               // Migrate data from any version to current version
               const migratedData = migrateData(rawData);
@@ -59,8 +59,8 @@ export const useApplications = () => {
         // Wrap applications in versioned schema before saving
         const dataToSave = wrapInSchema(debouncedApplications);
 
-        if (window.electron) {
-          await window.electron.saveData(dataToSave);
+        if (window.desktop) {
+          await window.desktop.saveData(dataToSave);
         } else {
           localStorage.setItem('phd-applications', JSON.stringify(dataToSave));
         }
@@ -70,8 +70,8 @@ export const useApplications = () => {
         setTimeout(() => {
           try {
             const dataToSave = wrapInSchema(debouncedApplications);
-            if (window.electron) {
-              window.electron.saveData(dataToSave).catch(e => {
+            if (window.desktop) {
+              window.desktop.saveData(dataToSave).catch(e => {
                 console.error('Retry save also failed:', e);
               });
             } else {
@@ -119,7 +119,7 @@ export const useApplications = () => {
 
         if (diffDays === 7 || diffDays === 3 || diffDays === 1) {
           const timeString = diffDays === 7 ? '1 week' : `${diffDays} ${diffDays === 1 ? 'day' : 'days'}`;
-          window.electron.showNotification(
+          window.desktop?.showNotification(
             'Upcoming Deadline',
             `Application for ${app.universityName} is due in ${timeString}!`
           );
@@ -191,7 +191,7 @@ export const useApplications = () => {
     });
 
     setApplications(apps => [...apps, newApp]);
-    if (window.electron) window.electron.showNotification('Success', 'Application duplicated successfully');
+    window.desktop?.showNotification('Success', 'Application duplicated successfully');
   };
 
   const addFacultyContact = (contact: FacultyContact, universityName: string, isNewUniversity: boolean, defaultProgramType: ProgramType) => {
@@ -243,8 +243,8 @@ export const useApplications = () => {
         };
         setApplications(apps => apps.map(app => app.id === updatedApp.id ? updatedApp : app));
       } else {
-        if (window.electron) {
-          window.electron.showNotification('Error', `Could not find an application for "${universityName}". Please add an application for this university first.`);
+        if (window.desktop) {
+          window.desktop.showNotification('Error', `Could not find an application for "${universityName}". Please add an application for this university first.`);
         } else {
           console.warn(`Could not find an application for "${universityName}".`);
         }

@@ -192,11 +192,14 @@ const ShortcutsTab = () => (
         <Section title="Keyboard Shortcuts" icon="keyboard">
             <div className="space-y-3">
                 {[
+                    { keys: ['Ctrl', 'K'], action: 'Open command palette (Ctrl+K / Cmd+K)' },
                     { keys: ['Ctrl', 'N'], action: 'Add new application' },
                     { keys: ['Ctrl', '1'], action: 'Switch to List view' },
                     { keys: ['Ctrl', '2'], action: 'Switch to Kanban view' },
                     { keys: ['Ctrl', '3'], action: 'Switch to Calendar view' },
                     { keys: ['Ctrl', '4'], action: 'Switch to Budget view' },
+                    { keys: ['Cmd'], action: 'Use command palette mode tokens: >, @, #' },
+                    { keys: ['Ctrl', 'Shift', 'Q'], action: 'Open Quick Capture' },
                     { keys: ['Escape'], action: 'Close modal / Exit selection mode' },
                 ].map(({ keys, action }) => (
                     <div key={action} className="flex items-center justify-between py-2 border-b border-[#E8B4B8]/30 last:border-0">

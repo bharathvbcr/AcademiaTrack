@@ -9,14 +9,6 @@ export default defineConfig({
         trace: 'on-first-retry',
         screenshot: 'only-on-failure',
     },
-    projects: [
-        {
-            name: 'electron',
-            use: {
-                // Playwright Electron launch will be handled in the test file itself usually using _electron.launch
-                // But we can define global config here.
-            }
-        },
-    ],
+    projects: [{ name: 'desktop' }],
     outputDir: 'test-results/',
 });

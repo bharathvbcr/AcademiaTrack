@@ -16,7 +16,7 @@ describe('Module Linking & Dependency Integrity', () => {
         const criticalDeps = [
             'react',
             'react-dom',
-            'electron-updater',
+            'electrobun',
             'date-fns'
         ];
 
@@ -25,11 +25,11 @@ describe('Module Linking & Dependency Integrity', () => {
         });
     });
 
-    it('should have correct electron builder config', () => {
-        expect(packageJson.build).toBeDefined();
-        expect(packageJson.build.appId).toBe('com.bharathvbcr.academia-track');
-        expect(packageJson.build.files).toContain('dist/**/*');
-        expect(packageJson.build.files).toContain('electron/main.cjs');
+    it('should have electrobun desktop scripts configured', () => {
+        expect(packageJson.scripts['dev:desktop']).toContain('electrobun dev');
+        expect(packageJson.scripts['build:desktop']).toContain('electrobun build stable');
+        expect(packageJson.scripts['dev:electron']).toBe('npm run dev:desktop');
+        expect(packageJson.scripts['build:electron']).toBe('npm run build:desktop');
     });
 
     it('should resolve key native modules', async () => {
@@ -50,8 +50,10 @@ describe('Module Linking & Dependency Integrity', () => {
         }
     });
 
-    it('should verify vite config existence', () => {
+    it('should verify vite and electrobun config existence', () => {
         const viteConfig = path.join(__dirname, '../../vite.config.ts');
+        const electrobunConfig = path.join(__dirname, '../../electrobun.config.ts');
         expect(fs.existsSync(viteConfig)).toBe(true);
+        expect(fs.existsSync(electrobunConfig)).toBe(true);
     });
 });

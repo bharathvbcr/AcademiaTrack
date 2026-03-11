@@ -2,15 +2,16 @@
 
 ## ✅ Completed Features
 
-### 1. Command Palette (Cmd+K)
-- **Status**: ✅ Fully Implemented
-- **Location**: `components/CommandPalette.tsx`, `hooks/useCommandPalette.ts`
+### 1. Unified Command Palette & Omnibox (Cmd+K)
+- **Status**: 🚧 In progress
+- **Location**: `components/CommandPalette.tsx`, `contexts/CommandContext.tsx`, `hooks/useCommandRegistry.ts`, `hooks/useAppCommands.ts`
 - **Features**:
-  - Universal command interface accessible via Cmd/Ctrl+K
-  - Searchable command list with categories
-  - Keyboard navigation (arrow keys, Enter, Escape)
-  - Quick access to all major actions
-  - Application-specific commands
+  - **Centralized Command Registry**: Core actions are generated from a shared command model in `useAppCommands`.
+  - **Deep Omnibox**: Mixed ranked results across commands, applications, and search history/saved queries.
+  - **Search Tokens**: Explicit modes for command/action/filter/entity views (`>`, `#`, `@`).
+  - **Unified Shortcut Routing**: Palette command shortcuts come from the same registry used by keyboard handlers.
+  - **Entity Result Capping**: Application results are now intentionally limited with incremental “Show more” expansion.
+  - **Gap Areas**: Settings and advanced-filter entry coverage is improving; some specialized flows still require manual verification.
 
 ### 2. Advanced Filtering System
 - **Status**: ✅ Fully Implemented

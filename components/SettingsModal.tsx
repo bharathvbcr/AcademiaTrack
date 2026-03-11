@@ -10,19 +10,26 @@ import { CustomFieldDefinition } from '../types';
 interface SettingsModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onShortcutAction?: (action: string) => void;
   onOpenKanbanConfig?: () => void;
   onOpenAutomationRules?: () => void;
   onOpenViewPresets?: () => void;
+  initialTab?: 'shortcuts' | 'views' | 'general' | 'fields' | 'kanban' | 'automation';
 }
 
 const MaterialIcon: React.FC<{ name: string; className?: string }> = ({ name, className }) => (
   <span className={`material-symbols-outlined ${className}`}>{name}</span>
 );
 
-const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, onShortcutAction, onOpenKanbanConfig, onOpenAutomationRules, onOpenViewPresets }) => {
+const SettingsModal: React.FC<SettingsModalProps> = ({
+  isOpen,
+  onClose,
+  onOpenKanbanConfig,
+  onOpenAutomationRules,
+  onOpenViewPresets,
+  initialTab,
+}) => {
   useLockBodyScroll(isOpen);
-  const { shortcuts, updateShortcut, resetShortcuts, enabled, setEnabled } = useEnhancedKeyboardShortcuts({});
+  const { shortcuts, updateShortcut, resetShortcuts, enabled, setEnabled } = useEnhancedKeyboardShortcuts({}, { listen: false });
   const [viewDensity, setViewDensity] = useLocalStorage<'compact' | 'comfortable' | 'spacious'>('view-density', 'comfortable');
 
   const [editingShortcut, setEditingShortcut] = useState<string | null>(null);
@@ -30,9 +37,15 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, onShortc
 
   // Custom Fields
   const { customFields, addField, updateField, deleteField, reorderFields, toggleFieldVisibility } = useCustomFields();
-  const [activeTab, setActiveTab] = useState<'shortcuts' | 'views' | 'general' | 'fields' | 'kanban' | 'automation'>('shortcuts');
+  const [activeTab, setActiveTab] = useState<'shortcuts' | 'views' | 'general' | 'fields' | 'kanban' | 'automation'>(initialTab ?? 'shortcuts');
   const [isAddingField, setIsAddingField] = useState(false);
   const [newField, setNewField] = useState<Partial<CustomFieldDefinition>>({ type: 'text', visible: true });
+
+  React.useEffect(() => {
+    if (initialTab) {
+      setActiveTab(initialTab);
+    }
+  }, [initialTab]);
 
   if (!isOpen) return null;
 
@@ -124,15 +137,15 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, onShortc
                       {category}
                     </h3>
                     <div className="space-y-2">
-                      {categoryShortcuts.map(shortcut => (
-                        <div
-                          key={shortcut.id}
-                          className="flex items-center justify-between p-3 bg-[#18181b] rounded-lg border border-[#27272a]"
-                        >
-                          <div className="flex-1">
-                            <div className="font-medium">{shortcut.description}</div>
-                            <div className="text-xs text-[#a1a1aa]">{shortcut.action}</div>
-                          </div>
+                          {categoryShortcuts.map(shortcut => (
+                            <div
+                              key={shortcut.id}
+                              className="flex items-center justify-between p-3 bg-[#18181b] rounded-lg border border-[#27272a]"
+                            >
+                              <div className="flex-1">
+                                <div className="font-medium">{shortcut.description}</div>
+                                <div className="text-xs text-[#a1a1aa]">{shortcut.commandId}</div>
+                              </div>
                           {editingShortcut === shortcut.id ? (
                             <input
                               type="text"
