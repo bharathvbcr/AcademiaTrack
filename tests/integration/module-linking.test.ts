@@ -23,9 +23,13 @@ describe('Module Linking & Dependency Integrity', () => {
         criticalDeps.forEach(dep => {
             expect(packageJson.dependencies[dep]).toBeDefined();
         });
+
+        expect(packageJson.dependencies.electrobun).toBe('1.15.1');
     });
 
     it('should have electrobun desktop scripts configured', () => {
+        expect(packageJson.scripts['package']).toBe('bun run build:desktop');
+        expect(packageJson.scripts['postinstall']).toBe('patch-package');
         expect(packageJson.scripts['dev:desktop']).toContain('electrobun dev');
         expect(packageJson.scripts['build:desktop']).toContain('electrobun build --env=stable');
         expect(packageJson.scripts['dev:electron']).toBe('npm run dev:desktop');
@@ -53,7 +57,9 @@ describe('Module Linking & Dependency Integrity', () => {
     it('should verify vite and electrobun config existence', () => {
         const viteConfig = path.join(__dirname, '../../vite.config.ts');
         const electrobunConfig = path.join(__dirname, '../../electrobun.config.ts');
+        const electrobunPatch = path.join(__dirname, '../../patches/electrobun+1.15.1.patch');
         expect(fs.existsSync(viteConfig)).toBe(true);
         expect(fs.existsSync(electrobunConfig)).toBe(true);
+        expect(fs.existsSync(electrobunPatch)).toBe(true);
     });
 });

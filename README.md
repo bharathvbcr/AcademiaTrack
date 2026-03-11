@@ -73,9 +73,11 @@ AcademiaTrack helps you keep track of universities, programs, deadlines, and sub
 
 ### Prerequisites
 
-- [Node.js](https://nodejs.org/) 20.x or later
-- npm (included with Node.js)
+- [Bun](https://bun.sh/) 1.3.8
+- [Node.js](https://nodejs.org/) 22.x if you want npm as a fallback package manager
 - Windows, macOS, or Linux
+
+For desktop development and packaging, Bun should be installed and available on `PATH`. This repo treats Bun as the primary local toolchain even though `electrobun` is installed from npm. CI is pinned to Bun `1.3.8` and Node `22`, and local development should match that baseline when possible.
 
 ### Running Locally
 
@@ -84,21 +86,25 @@ AcademiaTrack helps you keep track of universities, programs, deadlines, and sub
 git clone https://github.com/bharathvbcr/AcademiaTrack.git
 cd AcademiaTrack
 
-# Install dependencies
-npm install
+# Install dependencies (primary workflow)
+bun install
 
 # Start development server (web)
-npm run dev
+bun run dev
 
 # Start desktop development mode with Electrobun
-npm run dev:desktop
+bun run dev:desktop
 ```
+
+If you need npm for dependency installation, use an actively supported Node.js release line and treat it as a fallback workflow rather than the default.
+
+This repository also applies a `patch-package` patch to `electrobun@1.15.1` during install. Do not skip `postinstall` in CI or local packaging environments, because the Windows packaging fix depends on that patch being applied to `node_modules`.
 
 ### Building from Source
 
 ```bash
 # Build desktop app for current platform
-npm run build:desktop
+bun run package
 
 # Stable desktop artifacts are written to the 'build' and 'release' directories
 ```
@@ -110,6 +116,7 @@ The desktop runtime uses `electrobun`. Desktop packaging and release settings li
 GitHub Actions is configured in two parts:
 
 - `CI` runs on pushes and pull requests to `main` and performs install, typecheck, tests, and a desktop package build on Windows, macOS, and Linux.
+- `CI` also runs a dedicated Windows `bun run package` smoke job to verify the patched ElectroBun packaging path.
 - `Release` runs when a tag matching `v*` is pushed. It builds platform packages, uploads the artifacts, and creates a GitHub Release with generated notes plus the matching patch notes from `CHANGELOG.md`.
 
 To publish a release:
