@@ -70,7 +70,7 @@ jobs:
             fi
           fi
 
-          if ! node -e 'const fs = require("node:fs"); const version = process.env.VERSION; const changelog = fs.readFileSync("CHANGELOG.md", "utf8"); const escaped = version.replace(/[.*+?^${}()|[\\]\\\\]/g, "\\$&"); const sectionRegex = new RegExp("^## \\\\[" + escaped + "\\\\]", "m"); if (!sectionRegex.test(changelog)) { console.error("Missing changelog section for version [" + version + "]."); process.exit(1); }'
+          if ! grep -Fq "## [${VERSION}]" CHANGELOG.md
           then
             echo "::error::Release notes section for ${VERSION} is missing from CHANGELOG.md."
             exit 1
