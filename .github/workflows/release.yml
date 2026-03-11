@@ -4,6 +4,7 @@ permissions:
   contents: write
 
 env:
+  BUN_VERSION: 1.3.8
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 on:
@@ -115,10 +116,17 @@ jobs:
           cache: 'npm'
           cache-dependency-path: package-lock.json
 
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: 1.3.8
+      - name: Install Bun (Linux)
+        shell: bash
+        run: |
+          curl -fsSL https://bun.com/install | bash -s "bun-v${BUN_VERSION}"
+          echo "$HOME/.bun/bin" >> "$GITHUB_PATH"
+
+      - name: Verify Bun Version
+        shell: bash
+        run: |
+          bun --version
+          test "$(bun --version)" = "${BUN_VERSION}"
 
       - name: Install Dependencies
         run: npm ci
@@ -156,10 +164,25 @@ jobs:
           cache: 'npm'
           cache-dependency-path: package-lock.json
 
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: 1.3.8
+      - name: Install Bun (macOS/Linux)
+        if: runner.os != 'Windows'
+        shell: bash
+        run: |
+          curl -fsSL https://bun.com/install | bash -s "bun-v${BUN_VERSION}"
+          echo "$HOME/.bun/bin" >> "$GITHUB_PATH"
+
+      - name: Install Bun (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          iex "& {$(irm https://bun.com/install.ps1)} -Version ${env:BUN_VERSION}"
+          Add-Content -Path $env:GITHUB_PATH -Value "$env:USERPROFILE\.bun\bin"
+
+      - name: Verify Bun Version
+        shell: bash
+        run: |
+          bun --version
+          test "$(bun --version)" = "${BUN_VERSION}"
 
       - name: Install Dependencies
         run: npm ci
