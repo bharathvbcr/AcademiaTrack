@@ -1,6 +1,7 @@
 import { mkdir, readdir, readFile, rename, stat, unlink, writeFile, copyFile } from "node:fs/promises";
 import fs from "node:fs";
 import path from "node:path";
+import { execFileSync } from "node:child_process";
 import { BrowserView, BrowserWindow, BuildConfig, Updater, Utils } from "electrobun";
 import packageJson from "../../package.json";
 
@@ -377,4 +378,64 @@ function createMainWindow() {
   });
 }
 
+/**
+ * Check whether the WebView2 Evergreen Runtime is installed on Windows.
+ * If missing, attempt to run the bundled bootstrapper.  If the bootstrapper
+ * is unavailable or fails (e.g. offline), show a notification with manual
+ * install instructions rather than crashing silently.
+ */
+function ensureWebView2() {
+  if (process.platform !== "win32") {
+    return;
+  }
+
+  // Detect WebView2 via the registry key Microsoft documents
+  const regKey =
+    "HKLM\\SOFTWARE\\WOW6432Node\\Microsoft\\EdgeUpdate\\Clients\\{F3017226-FE2A-4295-8BEF-ED47D884521F}";
+  try {
+    execFileSync("reg", ["query", regKey, "/v", "pv", "/t", "REG_SZ"], {
+      stdio: "ignore",
+    });
+    // Key exists → WebView2 is installed
+    return;
+  } catch {
+    // Key not found → WebView2 is missing, continue below
+  }
+
+  console.warn("[AcademiaTrack] WebView2 runtime not detected — attempting bootstrapper install…");
+
+  // The bootstrapper is copied into the Resources folder at build time
+  const bootstrapperPath = path.resolve("../Resources/MicrosoftEdgeWebview2Setup.exe");
+
+  if (!fs.existsSync(bootstrapperPath)) {
+    console.error(
+      "[AcademiaTrack] WebView2 bootstrapper not found at",
+      bootstrapperPath,
+    );
+    Utils.showNotification({
+      title: "AcademiaTrack — WebView2 Required",
+      body: "The Microsoft WebView2 Runtime is required but was not found. Please install it from: https://go.microsoft.com/fwlink/p/?LinkId=2124703",
+    });
+    return;
+  }
+
+  try {
+    // The Evergreen Bootstrapper is small (~1.8 MB) and will silently
+    // download + install WebView2.  /silent suppresses UI.
+    execFileSync(bootstrapperPath, ["/silent", "/install"], {
+      stdio: "ignore",
+      timeout: 120_000, // 2 minutes max
+    });
+    console.log("[AcademiaTrack] WebView2 installed successfully via bootstrapper");
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error("[AcademiaTrack] WebView2 bootstrapper failed:", message);
+    Utils.showNotification({
+      title: "AcademiaTrack — WebView2 Required",
+      body: "Could not install WebView2 automatically. Please install it manually from: https://go.microsoft.com/fwlink/p/?LinkId=2124703",
+    });
+  }
+}
+
+ensureWebView2();
 createMainWindow();

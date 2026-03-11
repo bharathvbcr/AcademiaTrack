@@ -41,6 +41,9 @@ log-analysis-report.md
 # Tool specific
 .claude/
 
+# Build-time downloads
+assets/MicrosoftEdgeWebview2Setup.exe
+
 # Agent & Audit Files
 POWER_USER_AUDIT_REPORT.md
 .agent/

@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [5.1.5] - 2026-03-11
+
+### Added
+- **Windows Reliability:** Integrated the official Microsoft WebView2 Evergreen Bootstrapper into the Windows `.exe` to gracefully handle offline/enterprise machines missing the WebView2 runtime.
+
+
 ## [5.1.4] - 2026-03-10
 
 ### Changed

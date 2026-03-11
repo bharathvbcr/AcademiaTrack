@@ -26,6 +26,8 @@ const config: ElectrobunConfig = {
       "AcademiaTrack.png": "views/app/AcademiaTrack.png",
       "public/favicon.ico": "views/app/favicon.ico",
       "assets/icon.png": "assets/icon.png",
+      "assets/MicrosoftEdgeWebview2Setup.exe":
+        "Resources/MicrosoftEdgeWebview2Setup.exe",
     },
     win: {
       icon: "assets/icon.ico.ico",
@@ -40,6 +42,9 @@ const config: ElectrobunConfig = {
   release: {
     baseUrl: "https://github.com/bharathvbcr/AcademiaTrack/releases/latest/download",
     generatePatch: true,
+  },
+  scripts: {
+    preBuild: "./scripts/pre-build.ts",
   },
 };
 
