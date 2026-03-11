@@ -24,6 +24,8 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
+        env:
+          FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
       - name: Validate tag and derive release metadata
         id: release_meta
@@ -56,9 +58,13 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
+        env:
+          FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
+        env:
+          FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
         with:
           node-version: 22
           cache: 'npm'
@@ -66,6 +72,8 @@ jobs:
 
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
+        env:
+          FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
         with:
           bun-version: latest
 
@@ -93,9 +101,13 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
+        env:
+          FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
+        env:
+          FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
         with:
           node-version: 22
           cache: 'npm'
@@ -103,6 +115,8 @@ jobs:
 
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
+        env:
+          FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
         with:
           bun-version: latest
 
@@ -144,6 +158,8 @@ jobs:
     steps:
       - name: Download platform artifact
         uses: actions/download-artifact@v4
+        env:
+          FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
         with:
           name: release-${{ needs.resolve.outputs.tag }}-${{ matrix.os }}
           path: release-${{ matrix.os }}
@@ -158,6 +174,8 @@ jobs:
 
       - name: Upload collected artifact shard
         uses: actions/upload-artifact@v4
+        env:
+          FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
         with:
           name: release-artifacts-${{ needs.resolve.outputs.tag }}-${{ matrix.os }}
           path: release-${{ matrix.os }}
@@ -174,11 +192,15 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
+        env:
+          FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
         with:
           fetch-depth: 0
 
       - name: Download artifacts
         uses: actions/download-artifact@v4
+        env:
+          FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
         with:
           pattern: release-artifacts-${{ needs.resolve.outputs.tag }}-*
           path: release
@@ -199,6 +221,9 @@ jobs:
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
+        env:
+          FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: ${{ needs.resolve.outputs.tag }}
           name: ${{ needs.resolve.outputs.release_name }}
@@ -209,5 +234,3 @@ jobs:
           append_body: true
           draft: false
           prerelease: false
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
