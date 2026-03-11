@@ -15,17 +15,13 @@ jobs:
   resolve:
     name: Resolve Release Metadata
     runs-on: ubuntu-latest
-    env:
-      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
     outputs:
       tag: ${{ steps.release_meta.outputs.tag }}
       version: ${{ steps.release_meta.outputs.version }}
       release_name: ${{ steps.release_meta.outputs.release_name }}
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v4
-        env:
-          FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+        uses: actions/checkout@v5
 
       - name: Validate tag and derive release metadata
         id: release_meta
@@ -53,29 +49,23 @@ jobs:
   test:
     name: Run Tests
     runs-on: ubuntu-latest
-    env:
-      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v4
-        env:
-          FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+        uses: actions/checkout@v5
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
-        env:
-          FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+        uses: actions/setup-node@v6
         with:
           node-version: 22
           cache: 'npm'
           cache-dependency-path: package-lock.json
 
       - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
-        env:
-          FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
-        with:
-          bun-version: latest
+        shell: bash
+        run: |
+          curl -fsSL https://bun.sh/install | bash
+          echo "$HOME/.bun/bin" >> $GITHUB_PATH
+          echo "BUN_INSTALL=$HOME/.bun" >> $GITHUB_ENV
 
       - name: Install Dependencies
         run: npm ci
@@ -92,33 +82,27 @@ jobs:
       contents: read
     needs: [test, resolve]
     runs-on: ${{ matrix.os }}
-    env:
-      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
     strategy:
       matrix:
         os: [windows-latest, macos-latest, ubuntu-latest]
 
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v4
-        env:
-          FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+        uses: actions/checkout@v5
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
-        env:
-          FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+        uses: actions/setup-node@v6
         with:
           node-version: 22
           cache: 'npm'
           cache-dependency-path: package-lock.json
 
       - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
-        env:
-          FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
-        with:
-          bun-version: latest
+        shell: bash
+        run: |
+          curl -fsSL https://bun.sh/install | bash
+          echo "$HOME/.bun/bin" >> $GITHUB_PATH
+          echo "BUN_INSTALL=$HOME/.bun" >> $GITHUB_ENV
 
       - name: Install Dependencies
         run: npm ci
@@ -147,8 +131,6 @@ jobs:
     name: Collect Release Artifacts
     needs: [build, resolve]
     runs-on: ubuntu-latest
-    env:
-      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
     strategy:
       matrix:
         os: [windows-latest, macos-latest, ubuntu-latest]
@@ -158,8 +140,6 @@ jobs:
     steps:
       - name: Download platform artifact
         uses: actions/download-artifact@v4
-        env:
-          FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
         with:
           name: release-${{ needs.resolve.outputs.tag }}-${{ matrix.os }}
           path: release-${{ matrix.os }}
@@ -174,8 +154,6 @@ jobs:
 
       - name: Upload collected artifact shard
         uses: actions/upload-artifact@v4
-        env:
-          FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
         with:
           name: release-artifacts-${{ needs.resolve.outputs.tag }}-${{ matrix.os }}
           path: release-${{ matrix.os }}
@@ -187,20 +165,14 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-    env:
-      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v4
-        env:
-          FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
       - name: Download artifacts
         uses: actions/download-artifact@v4
-        env:
-          FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
         with:
           pattern: release-artifacts-${{ needs.resolve.outputs.tag }}-*
           path: release
@@ -222,7 +194,6 @@ jobs:
       - name: Create Release
         uses: softprops/action-gh-release@v2
         env:
-          FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: ${{ needs.resolve.outputs.tag }}
