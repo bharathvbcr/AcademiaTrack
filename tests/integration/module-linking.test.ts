@@ -27,7 +27,7 @@ describe('Module Linking & Dependency Integrity', () => {
 
     it('should have electrobun desktop scripts configured', () => {
         expect(packageJson.scripts['dev:desktop']).toContain('electrobun dev');
-        expect(packageJson.scripts['build:desktop']).toContain('electrobun build stable');
+        expect(packageJson.scripts['build:desktop']).toContain('electrobun build --env=stable');
         expect(packageJson.scripts['dev:electron']).toBe('npm run dev:desktop');
         expect(packageJson.scripts['build:electron']).toBe('npm run build:desktop');
     });
