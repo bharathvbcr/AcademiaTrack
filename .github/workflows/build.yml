@@ -13,7 +13,6 @@ permissions:
   contents: read
 
 env:
-  BUN_VERSION: 1.3.8
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
@@ -30,6 +29,15 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v5
 
+      - name: Resolve Bun Version
+        id: bun_version
+        shell: bash
+        run: |
+          test -f .bun-version
+          BUN_VERSION="$(tr -d '\r\n' < .bun-version)"
+          test -n "${BUN_VERSION}"
+          echo "value=${BUN_VERSION}" >> "$GITHUB_OUTPUT"
+
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
@@ -41,21 +49,22 @@ jobs:
         if: runner.os != 'Windows'
         shell: bash
         run: |
-          curl -fsSL https://bun.com/install | bash -s "bun-v${BUN_VERSION}"
+          curl -fsSL https://bun.com/install | bash -s "bun-v${{ steps.bun_version.outputs.value }}"
           echo "$HOME/.bun/bin" >> "$GITHUB_PATH"
 
       - name: Install Bun (Windows)
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
-          iex "& {$(irm https://bun.com/install.ps1)} -Version ${env:BUN_VERSION}"
+          $bunVersion = "${{ steps.bun_version.outputs.value }}"
+          iex "& {$(irm https://bun.com/install.ps1)} -Version $bunVersion"
           Add-Content -Path $env:GITHUB_PATH -Value "$env:USERPROFILE\.bun\bin"
 
       - name: Verify Bun Version
         shell: bash
         run: |
           bun --version
-          test "$(bun --version)" = "${BUN_VERSION}"
+          test "$(bun --version)" = "${{ steps.bun_version.outputs.value }}"
 
       - name: Install Linux Dependencies
         if: runner.os == 'Linux'
@@ -91,6 +100,15 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v5
 
+      - name: Resolve Bun Version
+        id: bun_version
+        shell: bash
+        run: |
+          test -f .bun-version
+          BUN_VERSION="$(tr -d '\r\n' < .bun-version)"
+          test -n "${BUN_VERSION}"
+          echo "value=${BUN_VERSION}" >> "$GITHUB_OUTPUT"
+
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
@@ -101,14 +119,15 @@ jobs:
       - name: Install Bun (Windows)
         shell: pwsh
         run: |
-          iex "& {$(irm https://bun.com/install.ps1)} -Version ${env:BUN_VERSION}"
+          $bunVersion = "${{ steps.bun_version.outputs.value }}"
+          iex "& {$(irm https://bun.com/install.ps1)} -Version $bunVersion"
           Add-Content -Path $env:GITHUB_PATH -Value "$env:USERPROFILE\.bun\bin"
 
       - name: Verify Bun Version
         shell: bash
         run: |
           bun --version
-          test "$(bun --version)" = "${BUN_VERSION}"
+          test "$(bun --version)" = "${{ steps.bun_version.outputs.value }}"
 
       - name: Install Dependencies
         run: bun install --frozen-lockfile
