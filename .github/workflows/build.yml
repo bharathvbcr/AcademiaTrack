@@ -29,15 +29,6 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v5
 
-      - name: Resolve Bun Version
-        id: bun_version
-        shell: bash
-        run: |
-          test -f .bun-version
-          BUN_VERSION="$(tr -d '\r\n' < .bun-version)"
-          test -n "${BUN_VERSION}"
-          echo "value=${BUN_VERSION}" >> "$GITHUB_OUTPUT"
-
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
@@ -56,27 +47,6 @@ jobs:
               exit 1
               ;;
           esac
-
-      - name: Install Bun (macOS/Linux)
-        if: runner.os != 'Windows'
-        shell: bash
-        run: |
-          curl -fsSL https://bun.com/install | bash -s "bun-v${{ steps.bun_version.outputs.value }}"
-          echo "$HOME/.bun/bin" >> "$GITHUB_PATH"
-
-      - name: Install Bun (Windows)
-        if: runner.os == 'Windows'
-        shell: pwsh
-        run: |
-          $bunVersion = "${{ steps.bun_version.outputs.value }}"
-          iex "& {$(irm https://bun.com/install.ps1)} -Version $bunVersion"
-          Add-Content -Path $env:GITHUB_PATH -Value "$env:USERPROFILE\.bun\bin"
-
-      - name: Verify Bun Version
-        shell: bash
-        run: |
-          bun --version
-          test "$(bun --version)" = "${{ steps.bun_version.outputs.value }}"
 
       - name: Install Linux Dependencies
         if: runner.os == 'Linux'
@@ -87,12 +57,6 @@ jobs:
       - name: Install Dependencies
         run: npm ci
 
-      - name: Verify Electrobun Patch Applied
-        shell: bash
-        run: |
-          grep -Fq "setupWindowsRceditShim" node_modules/electrobun/bin/electrobun.cjs
-          grep -Fq "NoProfile -NonInteractive -ExecutionPolicy Bypass" node_modules/electrobun/src/cli/index.ts
-
       - name: Typecheck
         run: npx tsc --noEmit
 
@@ -102,67 +66,4 @@ jobs:
       - name: Build Desktop App
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: npm run build:desktop
-
-  windows-package-smoke:
-    name: Windows Bun Package Smoke
-    runs-on: windows-latest
-
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v5
-
-      - name: Resolve Bun Version
-        id: bun_version
-        shell: bash
-        run: |
-          test -f .bun-version
-          BUN_VERSION="$(tr -d '\r\n' < .bun-version)"
-          test -n "${BUN_VERSION}"
-          echo "value=${BUN_VERSION}" >> "$GITHUB_OUTPUT"
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version-file: ".nvmrc"
-          cache: "npm"
-          cache-dependency-path: package-lock.json
-
-      - name: Verify Node Version
-        shell: bash
-        run: |
-          node --version
-          case "$(node --version)" in
-            v"$(tr -d '\r\n' < .nvmrc)".*) ;;
-            *)
-              echo "::error::Node version does not match .nvmrc"
-              exit 1
-              ;;
-          esac
-
-      - name: Install Bun (Windows)
-        shell: pwsh
-        run: |
-          $bunVersion = "${{ steps.bun_version.outputs.value }}"
-          iex "& {$(irm https://bun.com/install.ps1)} -Version $bunVersion"
-          Add-Content -Path $env:GITHUB_PATH -Value "$env:USERPROFILE\.bun\bin"
-
-      - name: Verify Bun Version
-        shell: bash
-        run: |
-          bun --version
-          test "$(bun --version)" = "${{ steps.bun_version.outputs.value }}"
-
-      - name: Install Dependencies
-        run: bun install --frozen-lockfile
-
-      - name: Verify Electrobun Patch Applied
-        shell: bash
-        run: |
-          grep -Fq "setupWindowsRceditShim" node_modules/electrobun/bin/electrobun.cjs
-          grep -Fq "NoProfile -NonInteractive -ExecutionPolicy Bypass" node_modules/electrobun/src/cli/index.ts
-
-      - name: Bun Package Smoke Test
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: bun run package
+        run: npm run build:electron

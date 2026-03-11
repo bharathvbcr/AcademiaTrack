@@ -108,15 +108,6 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v5
 
-      - name: Resolve Bun Version
-        id: bun_version
-        shell: bash
-        run: |
-          test -f .bun-version
-          BUN_VERSION="$(tr -d '\r\n' < .bun-version)"
-          test -n "${BUN_VERSION}"
-          echo "value=${BUN_VERSION}" >> "$GITHUB_OUTPUT"
-
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
@@ -136,26 +127,8 @@ jobs:
               ;;
           esac
 
-      - name: Install Bun (Linux)
-        shell: bash
-        run: |
-          curl -fsSL https://bun.com/install | bash -s "bun-v${{ steps.bun_version.outputs.value }}"
-          echo "$HOME/.bun/bin" >> "$GITHUB_PATH"
-
-      - name: Verify Bun Version
-        shell: bash
-        run: |
-          bun --version
-          test "$(bun --version)" = "${{ steps.bun_version.outputs.value }}"
-
       - name: Install Dependencies
         run: npm ci
-
-      - name: Verify Electrobun Patch Applied
-        shell: bash
-        run: |
-          grep -Fq "setupWindowsRceditShim" node_modules/electrobun/bin/electrobun.cjs
-          grep -Fq "NoProfile -NonInteractive -ExecutionPolicy Bypass" node_modules/electrobun/src/cli/index.ts
 
       - name: Typecheck
         run: npx tsc --noEmit
@@ -164,7 +137,7 @@ jobs:
         run: npm run test:run
 
   build:
-    name: Build Electrobun App
+    name: Build Desktop App
     permissions:
       contents: read
     needs: [test, resolve]
@@ -177,15 +150,6 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v5
 
-      - name: Resolve Bun Version
-        id: bun_version
-        shell: bash
-        run: |
-          test -f .bun-version
-          BUN_VERSION="$(tr -d '\r\n' < .bun-version)"
-          test -n "${BUN_VERSION}"
-          echo "value=${BUN_VERSION}" >> "$GITHUB_OUTPUT"
-
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
@@ -205,35 +169,8 @@ jobs:
               ;;
           esac
 
-      - name: Install Bun (macOS/Linux)
-        if: runner.os != 'Windows'
-        shell: bash
-        run: |
-          curl -fsSL https://bun.com/install | bash -s "bun-v${{ steps.bun_version.outputs.value }}"
-          echo "$HOME/.bun/bin" >> "$GITHUB_PATH"
-
-      - name: Install Bun (Windows)
-        if: runner.os == 'Windows'
-        shell: pwsh
-        run: |
-          $bunVersion = "${{ steps.bun_version.outputs.value }}"
-          iex "& {$(irm https://bun.com/install.ps1)} -Version $bunVersion"
-          Add-Content -Path $env:GITHUB_PATH -Value "$env:USERPROFILE\.bun\bin"
-
-      - name: Verify Bun Version
-        shell: bash
-        run: |
-          bun --version
-          test "$(bun --version)" = "${{ steps.bun_version.outputs.value }}"
-
       - name: Install Dependencies
         run: npm ci
-
-      - name: Verify Electrobun Patch Applied
-        shell: bash
-        run: |
-          grep -Fq "setupWindowsRceditShim" node_modules/electrobun/bin/electrobun.cjs
-          grep -Fq "NoProfile -NonInteractive -ExecutionPolicy Bypass" node_modules/electrobun/src/cli/index.ts
 
       - name: Install Linux Dependencies
         if: runner.os == 'Linux'
@@ -241,10 +178,10 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y libfuse2
 
-      - name: Build Electrobun App
+      - name: Build Desktop App
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: npm run build:desktop
+        run: npm run build:electron
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
