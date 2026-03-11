@@ -9,6 +9,37 @@ on:
       - 'v*'
 
 jobs:
+  resolve:
+    name: Resolve Release Metadata
+    runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.release_meta.outputs.tag }}
+      version: ${{ steps.release_meta.outputs.version }}
+      release_name: ${{ steps.release_meta.outputs.release_name }}
+    steps:
+      - name: Validate tag and derive release metadata
+        id: release_meta
+        shell: bash
+        run: |
+          TAG="${GITHUB_REF_NAME}"
+          if [[ -z "$TAG" || ! "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::Release tag must be semver-like, e.g. v1.2.3"
+            exit 1
+          fi
+
+          VERSION="${TAG#v}"
+
+          PACKAGE_VERSION="$(node -p "require('./package.json').version")"
+          if [[ "$VERSION" != "$PACKAGE_VERSION" ]]; then
+            echo "::error::Tag version $VERSION must match package.json version $PACKAGE_VERSION"
+            exit 1
+          fi
+
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "release_name=AcademiaTrack v${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "Release metadata resolved for $TAG"
+
   test:
     name: Run Tests
     runs-on: ubuntu-latest
@@ -19,8 +50,9 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: 'npm'
+          cache-dependency-path: package-lock.json
 
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
@@ -40,7 +72,7 @@ jobs:
     name: Build Electrobun App
     permissions:
       contents: read
-    needs: test
+    needs: [test, resolve]
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -53,8 +85,9 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: 'npm'
+          cache-dependency-path: package-lock.json
 
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
@@ -78,15 +111,41 @@ jobs:
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: release-${{ matrix.os }}
+          name: release-${{ needs.resolve.outputs.tag }}-${{ matrix.os }}
           path: |
             release/**
           if-no-files-found: error
           retention-days: 7
 
+  collect:
+    name: Collect Release Artifacts
+    needs: [build, resolve]
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: [windows-latest, macos-latest, ubuntu-latest]
+      fail-fast: false
+    permissions:
+      contents: read
+    steps:
+      - name: Download platform artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: release-${{ needs.resolve.outputs.tag }}-${{ matrix.os }}
+          path: release-${{ matrix.os }}
+          if-no-files-found: error
+
+      - name: Upload collected artifact shard
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-artifacts-${{ needs.resolve.outputs.tag }}-${{ matrix.os }}
+          path: release-${{ matrix.os }}
+          if-no-files-found: error
+          retention-days: 7
+
   release:
     name: Create Release
-    needs: build
+    needs: [collect, resolve]
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -96,30 +155,24 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Download Windows Artifacts
+      - name: Download artifacts
         uses: actions/download-artifact@v4
         with:
-          name: release-windows-latest
+          pattern: release-artifacts-${{ needs.resolve.outputs.tag }}-*
           path: release
-
-      - name: Download macOS Artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: release-macos-latest
-          path: release
-
-      - name: Download Linux Artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: release-ubuntu-latest
-          path: release
+          merge-multiple: true
+          if-no-files-found: error
 
       - name: Generate Release Notes
+        env:
+          GITHUB_REF_NAME: ${{ needs.resolve.outputs.tag }}
         run: node scripts/generate-release-notes.cjs
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ needs.resolve.outputs.tag }}
+          name: ${{ needs.resolve.outputs.release_name }}
           files: |
             release/**
           body_path: .github/release-notes.md
