@@ -25,25 +25,90 @@ jobs:
 
       - name: Validate tag and derive release metadata
         id: release_meta
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_API_URL: ${{ github.api_url }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
         shell: bash
         run: |
+          set -euo pipefail
           TAG="${GITHUB_REF_NAME}"
-          if [[ -z "$TAG" || ! "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-            echo "::error::Release tag must be semver-like, e.g. v1.2.3"
+          if [[ -z "$TAG" || ! "$TAG" =~ ^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]]; then
+            echo "::error::Release tag must be strict semver: vMAJOR.MINOR.PATCH (e.g., v1.2.3)."
             exit 1
           fi
 
           VERSION="${TAG#v}"
+          export VERSION
+          RELEASE_NAME="AcademiaTrack v${VERSION}"
+
+          if [ ! -f "package.json" ]; then
+            echo "::error::package.json is required for release validation."
+            exit 1
+          fi
+
+          if [ ! -f "CHANGELOG.md" ]; then
+            echo "::error::CHANGELOG.md is required for release validation."
+            exit 1
+          fi
+          if [ ! -f "package-lock.json" ]; then
+            echo "::warning::package-lock.json is missing; skipping lockfile version validation."
+          fi
 
           PACKAGE_VERSION="$(node -p "require('./package.json').version")"
           if [[ "$VERSION" != "$PACKAGE_VERSION" ]]; then
-            echo "::error::Tag version $VERSION must match package.json version $PACKAGE_VERSION"
+            echo "::error::Tag version ${VERSION} must match package.json version ${PACKAGE_VERSION}."
             exit 1
+          fi
+
+          if [ -f "package-lock.json" ]; then
+            LOCK_VERSION="$(node -p "JSON.parse(require('fs').readFileSync('package-lock.json','utf8')).version || ''")"
+            if [[ -n "${LOCK_VERSION}" && "${VERSION}" != "${LOCK_VERSION}" ]]; then
+              echo "::error::Tag version ${VERSION} must match package-lock.json version ${LOCK_VERSION}."
+              exit 1
+            fi
+          fi
+
+          if ! node - <<'NODE'
+const fs = require('node:fs');
+const version = process.env.VERSION;
+const changelog = fs.readFileSync('CHANGELOG.md', 'utf8');
+const escaped = version.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+const sectionRegex = new RegExp(`^## \\[${escaped}\\]`, 'm');
+if (!sectionRegex.test(changelog)) {
+  console.error(`Missing changelog section for version [${version}].`);
+  process.exit(1);
+}
+NODE
+          then
+            echo "::error::Release notes section for ${VERSION} is missing from CHANGELOG.md."
+            exit 1
+          fi
+
+          if [ -n "${GITHUB_API_URL}" ] && [ -n "${GITHUB_REPOSITORY}" ] && [ -n "${GH_TOKEN}" ]; then
+            STATUS_CODE="$(curl -sS -o /tmp/release_lookup.json -w "%{http_code}" -H "Authorization: Bearer ${GH_TOKEN}" "${GITHUB_API_URL}/repos/${GITHUB_REPOSITORY}/releases/tags/${TAG}")"
+            if [[ "${STATUS_CODE}" == "200" ]]; then
+              echo "::error::Release ${TAG} already exists in GitHub Releases."
+              exit 1
+            elif [[ "${STATUS_CODE}" != "404" ]]; then
+              echo "::warning::Could not confirm release uniqueness for ${TAG} (HTTP ${STATUS_CODE}). Continuing."
+            fi
+          fi
+
+          if ! git rev-parse -q --verify "refs/tags/${TAG}" >/dev/null; then
+            echo "::error::Tag ${TAG} is not a valid git tag reference."
+            exit 1
+          fi
+
+          TAG_COMMIT="$(git rev-list -n 1 "refs/tags/${TAG}")"
+          if [ "${GITHUB_SHA}" != "${TAG_COMMIT}" ]; then
+            echo "::warning::Tag ${TAG} resolves to ${TAG_COMMIT}, workflow event SHA is ${GITHUB_SHA}."
           fi
 
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-          echo "release_name=AcademiaTrack v${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "release_name=${RELEASE_NAME}" >> "$GITHUB_OUTPUT"
           echo "Release metadata resolved for $TAG"
 
   test:
