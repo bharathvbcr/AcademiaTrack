@@ -29,10 +29,10 @@ AcademiaTrack helps you keep track of universities, programs, deadlines, and sub
 ### Windows
 
 1. **Download the Installer:**  
-   Visit the [Releases](https://github.com/bharathvbcr/AcademiaTrack/releases) page and download the latest `AcademiaTrack-Setup-x.x.x.exe` file.
+   Visit the [Releases](https://github.com/bharathvbcr/AcademiaTrack/releases) page and download the latest Windows package from the most recent tag release.
 
 2. **Run the Installer:**  
-   Execute the downloaded `.exe` file and follow the on-screen instructions.
+   Extract the downloaded archive if needed, then run the included Windows installer.
 
 3. **Launch AcademiaTrack:**  
    Once installed, launch from your Start Menu or desktop shortcut.
@@ -40,7 +40,7 @@ AcademiaTrack helps you keep track of universities, programs, deadlines, and sub
 ### macOS
 
 1. **Download the DMG:**  
-   Visit the [Releases](https://github.com/bharathvbcr/AcademiaTrack/releases) page and download the latest `AcademiaTrack-x.x.x.dmg` file.
+   Visit the [Releases](https://github.com/bharathvbcr/AcademiaTrack/releases) page and download the latest macOS package from the most recent tag release.
 
 2. **Install the App:**  
    Open the `.dmg` file and drag AcademiaTrack to your Applications folder.
@@ -50,8 +50,8 @@ AcademiaTrack helps you keep track of universities, programs, deadlines, and sub
 
 ### Linux
 
-1. **Download the AppImage:**  
-   Visit the [Releases](https://github.com/bharathvbcr/AcademiaTrack/releases) page and download the latest `AcademiaTrack-x.x.x.AppImage` file.
+1. **Download the Linux package:**  
+   Visit the [Releases](https://github.com/bharathvbcr/AcademiaTrack/releases) page and download the latest Linux package from the most recent tag release.
 
 2. **Install Dependencies (if needed):**
    ```bash
@@ -63,10 +63,10 @@ AcademiaTrack helps you keep track of universities, programs, deadlines, and sub
    sudo dnf install fuse
    ```
 
-3. **Make Executable & Run:**
+3. **Extract and Run:**
    ```bash
-   chmod +x AcademiaTrack-*.AppImage
-   ./AcademiaTrack-*.AppImage
+   tar -xzf AcademiaTrack-*.tar.gz
+   ./installer
    ```
 
 ## 🛠️ Development Setup
@@ -75,6 +75,7 @@ AcademiaTrack helps you keep track of universities, programs, deadlines, and sub
 
 - [Node.js](https://nodejs.org/) 20.x or later
 - npm (included with Node.js)
+- Windows, macOS, or Linux
 
 ### Running Locally
 
@@ -99,10 +100,29 @@ npm run dev:desktop
 # Build desktop app for current platform
 npm run build:desktop
 
-# Output will be in the 'build' and 'release' directories
+# Stable desktop artifacts are written to the 'build' and 'release' directories
 ```
 
 The desktop runtime uses `electrobun`. Desktop packaging and release settings live in `electrobun.config.ts`. Legacy `npm run dev:electron` and `npm run build:electron` aliases remain for compatibility.
+
+## 🚀 Releases
+
+GitHub Actions is configured in two parts:
+
+- `CI` runs on pushes and pull requests to `main` and performs install, typecheck, tests, and a desktop package build on Windows, macOS, and Linux.
+- `Release` runs when a tag matching `v*` is pushed. It builds platform packages, uploads the artifacts, and creates a GitHub Release with generated notes plus the matching patch notes from `CHANGELOG.md`.
+
+To publish a release:
+
+```bash
+git add .
+git commit -m "Release 5.1.0"
+git tag v5.1.0
+git push origin main
+git push origin v5.1.0
+```
+
+Patch notes for releases are sourced from the matching version section in `CHANGELOG.md`, so update that file before pushing a new tag.
 
 ## 🤝 Contributing
 

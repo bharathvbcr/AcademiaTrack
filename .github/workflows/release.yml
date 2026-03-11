@@ -80,7 +80,9 @@ jobs:
         with:
           name: release-${{ matrix.os }}
           path: |
+            build/**
             release/**
+          if-no-files-found: error
           retention-days: 7
 
   release:
@@ -114,17 +116,17 @@ jobs:
           path: release
 
       - name: Generate Release Notes
-        id: release_notes
-        uses: mikepenz/release-changelog-builder-action@v4
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: node scripts/generate-release-notes.cjs
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
           files: |
+            build/**
             release/**
-          body: ${{ steps.release_notes.outputs.changelog }}
+          body_path: .github/release-notes.md
+          generate_release_notes: true
+          append_body: true
           draft: false
           prerelease: false
         env:

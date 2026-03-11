@@ -18,7 +18,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "dev:desktop": "concurrently \"npm run dev\" \"wait-on http://localhost:3000 && cross-env NODE_ENV=development electrobun dev\"",
-    "build:desktop": "cross-env NODE_ENV=production electrobun build stable",
+    "build:desktop": "cross-env NODE_ENV=production electrobun build --env=stable",
     "dev:electron": "npm run dev:desktop",
     "build:electron": "npm run build:desktop"
   },
