@@ -4,34 +4,34 @@ const TitleBar: React.FC = () => {
   const [isMaximized, setIsMaximized] = useState(false);
 
   useEffect(() => {
-    if (!window.electron?.windowControls) return;
+    if (!window.desktop?.windowControls) return;
 
     // Get initial maximized state
-    window.electron.windowControls.isMaximized().then(setIsMaximized);
+    window.desktop.windowControls.isMaximized().then(setIsMaximized);
 
     // Listen for maximize changes
-    const unsubscribe = window.electron.windowControls.onMaximizeChange(setIsMaximized);
+    const unsubscribe = window.desktop.windowControls.onMaximizeChange(setIsMaximized);
     return unsubscribe;
   }, []);
 
   const handleMinimize = () => {
-    window.electron?.windowControls?.minimize();
+    window.desktop?.windowControls?.minimize();
   };
 
   const handleMaximize = () => {
-    window.electron?.windowControls?.maximize();
+    window.desktop?.windowControls?.maximize();
   };
 
   const handleClose = () => {
-    window.electron?.windowControls?.close();
+    window.desktop?.windowControls?.close();
   };
 
   const handleDoubleClick = () => {
-    window.electron?.windowControls?.maximize();
+    window.desktop?.windowControls?.maximize();
   };
 
-  // Don't render if not in Electron
-  if (!window.electron?.windowControls) {
+  // Don't render if the desktop runtime window controls are unavailable.
+  if (!window.desktop?.windowControls) {
     return null;
   }
 

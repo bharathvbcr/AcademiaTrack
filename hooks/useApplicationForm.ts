@@ -180,18 +180,18 @@ export const useApplicationForm = (isOpen: boolean, applicationToEdit?: Applicat
 
     // Document file attachment handlers
     const handleAttachFile = useCallback(async (docKey: keyof Application['documents']) => {
-        if (!window.electron) {
-            console.warn('File attachment only available in Electron');
+        if (!window.desktop) {
+            console.warn('File attachment only available in the desktop app');
             return;
         }
 
         try {
-            const filePath = await window.electron.selectFile();
+            const filePath = await window.desktop.selectFile();
             if (filePath) {
                 // For new applications, we store the source path temporarily
                 // For existing applications, we copy to app storage
                 const appId = appData.id || `temp-${Date.now()}`;
-                const result = await window.electron.copyDocument(filePath, appId, docKey);
+                const result = await window.desktop.copyDocument(filePath, appId, docKey);
 
                 if (result.success && result.path) {
                     setAppData(prev => {
@@ -212,13 +212,13 @@ export const useApplicationForm = (isOpen: boolean, applicationToEdit?: Applicat
     }, [appData.id]);
 
     const handleOpenFile = useCallback(async (filePath: string) => {
-        if (!window.electron) {
-            console.warn('File opening only available in Electron');
+        if (!window.desktop) {
+            console.warn('File opening only available in the desktop app');
             return;
         }
 
         try {
-            await window.electron.openFile(filePath);
+            await window.desktop.openFile(filePath);
         } catch (error) {
             console.error('Error opening file:', error);
         }
@@ -227,9 +227,9 @@ export const useApplicationForm = (isOpen: boolean, applicationToEdit?: Applicat
     const handleRemoveFile = useCallback(async (docKey: keyof Application['documents']) => {
         const filePath = appData.documents[docKey].filePath;
 
-        if (filePath && window.electron) {
+        if (filePath && window.desktop) {
             try {
-                await window.electron.deleteDocument(filePath);
+                await window.desktop.deleteDocument(filePath);
             } catch (error) {
                 console.error('Error deleting file:', error);
             }
@@ -427,16 +427,16 @@ export const useApplicationForm = (isOpen: boolean, applicationToEdit?: Applicat
 
     // Essay Draft file attachment handlers
     const handleAttachEssayDraftFile = useCallback(async (essayId: string | number, draftId: string | number) => {
-        if (!window.electron) {
-            console.warn('File attachment only available in Electron');
+        if (!window.desktop) {
+            console.warn('File attachment only available in the desktop app');
             return;
         }
 
         try {
-            const filePath = await window.electron.selectFile();
+            const filePath = await window.desktop.selectFile();
             if (filePath) {
                 const appId = appData.id || `temp-${Date.now()}`;
-                const result = await window.electron.copyDocument(filePath, appId, `essay-${essayId}-draft-${draftId}`);
+                const result = await window.desktop.copyDocument(filePath, appId, `essay-${essayId}-draft-${draftId}`);
 
                 if (result.success && result.path) {
                     setAppData(prev => ({
@@ -461,22 +461,22 @@ export const useApplicationForm = (isOpen: boolean, applicationToEdit?: Applicat
     }, [appData.id]);
 
     const handleOpenEssayDraftFile = useCallback(async (filePath: string) => {
-        if (!window.electron) {
-            console.warn('File opening only available in Electron');
+        if (!window.desktop) {
+            console.warn('File opening only available in the desktop app');
             return;
         }
 
         try {
-            await window.electron.openFile(filePath);
+            await window.desktop.openFile(filePath);
         } catch (error) {
             console.error('Error opening essay draft file:', error);
         }
     }, []);
 
     const handleRemoveEssayDraftFile = useCallback(async (essayId: string | number, draftId: string | number, filePath: string) => {
-        if (filePath && window.electron) {
+        if (filePath && window.desktop) {
             try {
-                await window.electron.deleteDocument(filePath);
+                await window.desktop.deleteDocument(filePath);
             } catch (error) {
                 console.error('Error deleting essay draft file:', error);
             }

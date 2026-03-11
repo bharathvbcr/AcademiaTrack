@@ -39,10 +39,10 @@ class ErrorBoundary extends Component<Props, State> {
       this.props.onError(error, errorInfo);
     }
 
-    // Log to Electron if available
-    if (window.electron) {
+    // Show a system notification in the desktop runtime if available.
+    if (window.desktop) {
       try {
-        window.electron.showNotification(
+        window.desktop.showNotification(
           'Application Error',
           'An error occurred. Please check the console for details.'
         );

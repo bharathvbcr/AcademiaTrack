@@ -251,12 +251,29 @@ export interface WindowControls {
     onMaximizeChange: (callback: (isMaximized: boolean) => void) => () => void;
 }
 
-export interface ElectronAPI {
+export interface DesktopAPI {
     selectFile: () => Promise<string | null>;
     openFile: (path: string) => Promise<void>;
     loadData: () => Promise<unknown>;
     saveData: (data: unknown) => Promise<void>;
     showNotification: (title: string, body: string) => void;
+    getVersionInfo: () => Promise<{
+        version: string;
+        name: string;
+        bun: string;
+        platform: string;
+        arch: string;
+    }>;
+    checkForUpdates: () => Promise<{ available: boolean; version?: string; error?: string; reason?: string }>;
+    downloadUpdate: () => Promise<{ success: boolean; error?: string }>;
+    installUpdate: () => Promise<{ success: boolean; error?: string }>;
+    onUpdateStatus: (callback: (status: {
+        status: string;
+        version?: string;
+        releaseNotes?: string;
+        percent?: number;
+        message?: string;
+    }) => void) => () => void;
     // Document storage
     copyDocument: (sourcePath: string, appId: string, docType: string) => Promise<BackupResult>;
     deleteDocument: (path: string) => Promise<BackupResult>;
@@ -272,7 +289,8 @@ export interface ElectronAPI {
 
 declare global {
     interface Window {
-        electron: ElectronAPI;
+        desktop?: DesktopAPI;
+        electron?: DesktopAPI;
     }
 }
 

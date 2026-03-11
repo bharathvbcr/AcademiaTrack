@@ -4,12 +4,11 @@ import { useAppModals } from './hooks/useAppModals';
 import { useSortAndFilter } from './hooks/useSortAndFilter';
 import { useLocalStorage } from './hooks/useLocalStorage';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
-import { useEnhancedKeyboardShortcuts } from './hooks/useEnhancedKeyboardShortcuts';
 import { useConfirmation } from './hooks/useConfirmation';
 import { useBulkSelection } from './hooks/useBulkSelection';
 import { useCommandPalette } from './hooks/useCommandPalette';
 import { useAdvancedFilter } from './hooks/useAdvancedFilter';
-import { useTemplates } from './hooks/useTemplates';
+import { useAdvancedSearch } from './hooks/useAdvancedSearch';
 import { useDarkMode } from './hooks/useDarkMode';
 import { useLockBodyScroll } from './hooks/useLockBodyScroll';
 import { useAutomation } from './hooks/useAutomation';
@@ -19,6 +18,7 @@ import { ProgramType, Application, FacultyContact, ApplicationStatus } from './t
 import { DropResult } from '@hello-pangea/dnd';
 import { exportToCSV, parseCSV } from './utils';
 import { ApplicationSearchIndexWrapper } from './utils/searchIndexWrapper';
+import { CommandProvider } from './contexts/CommandContext';
 
 import Header from './components/Header';
 import TitleBar from './components/TitleBar';
@@ -39,6 +39,8 @@ const ExportConfigModal = lazy(() => import('./components/ExportConfigModal'));
 const KanbanConfigModal = lazy(() => import('./components/KanbanConfigModal'));
 const ViewPresetModal = lazy(() => import('./components/ViewPresetModal'));
 const AutomationRulesModal = lazy(() => import('./components/AutomationRulesModal'));
+
+import { useAppCommands } from './hooks/useAppCommands';
 
 const App: React.FC = () => {
   useDarkMode();
@@ -67,6 +69,17 @@ const App: React.FC = () => {
     closeFacultyModal,
   } = useAppModals();
 
+  const {
+    isSelectionMode,
+    selectedIds,
+    selectedCount,
+    toggleSelectionMode,
+    toggleSelection,
+    selectAll,
+    clearSelection,
+    getSelectedApplications,
+  } = useBulkSelection(applications);
+
   const [isComparisonOpen, setIsComparisonOpen] = React.useState(false);
   const [isHelpOpen, setIsHelpOpen] = React.useState(false);
   const [isBulkOperationsOpen, setIsBulkOperationsOpen] = React.useState(false);
@@ -79,6 +92,7 @@ const App: React.FC = () => {
   const [isKanbanConfigOpen, setIsKanbanConfigOpen] = React.useState(false);
   const [isViewPresetOpen, setIsViewPresetOpen] = React.useState(false);
   const [isAutomationRulesOpen, setIsAutomationRulesOpen] = React.useState(false);
+  const [settingsTab, setSettingsTab] = React.useState<'shortcuts' | 'views' | 'general' | 'fields' | 'kanban' | 'automation'>('shortcuts');
 
   // Lock scroll when advanced filter (inline modal) is open
   useLockBodyScroll(isAdvancedFilterOpen);
@@ -94,6 +108,8 @@ const App: React.FC = () => {
     deleteFilter,
     clearFilter,
   } = useAdvancedFilter(applications);
+
+  const { savedSearches, searchHistory, loadSearch } = useAdvancedSearch(applications);
 
   // Use advanced filter if active, otherwise use basic filter
   const applicationsToFilter = activeFilter ? advancedFilteredApplications : applications;
@@ -151,120 +167,8 @@ const App: React.FC = () => {
   // Command Palette
   const commandPalette = useCommandPalette();
 
-  // Templates
-  const { templates, useTemplate, createFromApplication } = useTemplates();
-
-  // Incremental index updates - only update changed applications (async with worker)
-  useEffect(() => {
-    // Use incremental update instead of full rebuild for better performance
-    searchIndexRef.current.updateApplications(applications).catch((error) => {
-      console.error('Index update error:', error);
-    });
-  }, [applications]);
-
-  // Cleanup worker on unmount
-  useEffect(() => {
-    return () => {
-      searchIndexRef.current.destroy();
-    };
-  }, []);
-
-  // Bulk selection
-  const {
-    selectedIds,
-    isSelectionMode,
-    selectedCount,
-    toggleSelectionMode,
-    toggleSelection,
-    selectAll,
-    clearSelection,
-    getSelectedApplications,
-  } = useBulkSelection(filteredAndSortedApplications);
-
-  const requestDelete = React.useCallback((id: string) => {
-    showConfirmation(
-      'Delete Application',
-      'Are you sure you want to delete this application? This action cannot be undone.',
-      () => deleteApplication(id),
-      true
-    );
-  }, [showConfirmation, deleteApplication]);
-
-  // Bulk action handlers
-  const handleBulkStatusChange = React.useCallback((status: ApplicationStatus) => {
-    const selectedApps = getSelectedApplications();
-    selectedApps.forEach(app => {
-      updateApplication({ ...app, status });
-    });
-    clearSelection();
-    toggleSelectionMode();
-  }, [getSelectedApplications, updateApplication, clearSelection, toggleSelectionMode]);
-
-  const handleBulkDelete = React.useCallback(() => {
-    showConfirmation(
-      'Delete Selected Applications',
-      `Are you sure you want to delete ${selectedCount} application(s)? This action cannot be undone.`,
-      () => {
-        const selectedApps = getSelectedApplications();
-        selectedApps.forEach(app => {
-          deleteApplication(app.id);
-        });
-        clearSelection();
-        toggleSelectionMode();
-      },
-      true
-    );
-  }, [showConfirmation, selectedCount, getSelectedApplications, deleteApplication, clearSelection, toggleSelectionMode]);
-
-  const handleBulkCompare = React.useCallback(() => {
-    if (selectedCount < 2) return;
-    setIsComparisonOpen(true);
-  }, [selectedCount]);
-
-  useKeyboardShortcuts({
-    'Ctrl+z': () => {
-      if (canUndo) {
-        undo();
-        showToast('info', 'Action undone', 'Undo');
-      }
-    },
-    'Ctrl+y': () => {
-      if (canRedo) {
-        redo();
-        showToast('info', 'Action redone', 'Redo');
-      }
-    },
-    'Ctrl+Shift+Z': () => {
-      if (canRedo) {
-        redo();
-        showToast('info', 'Action redone', 'Redo');
-      }
-    },
-    'Ctrl+n': () => openModal(null),
-    'Ctrl+1': () => setViewMode('list'),
-    'Ctrl+2': () => setViewMode('kanban'),
-    'Ctrl+3': () => setViewMode('calendar'),
-    'Ctrl+4': () => setViewMode('budget'),
-    'Ctrl+5': () => setViewMode('faculty'),
-    'Ctrl+6': () => setViewMode('recommenders'),
-    'Ctrl+7': () => setViewMode('timeline'),
-    'Escape': () => {
-      if (isSelectionMode) {
-        toggleSelectionMode();
-      }
-    },
-  });
-
-  // Enhanced shortcuts for new features
-  useEnhancedKeyboardShortcuts({
-    'quick-capture': () => setIsQuickCaptureOpen(true),
-    'toggle-theme': () => {
-      // Toggle theme logic if needed, but useDarkMode handles it? 
-      // useDarkMode currently forces dark.
-      // If we want a toggle, we'd need to update useDarkMode to expose a toggle function.
-      // For now, implementing quick capture.
-    }
-  });
+  // Keyboard Shortcuts
+  useKeyboardShortcuts();
 
   // Automation
   const { executeRules } = useAutomation();
@@ -354,6 +258,87 @@ const App: React.FC = () => {
     }
   };
 
+  // Initialize App Commands
+  useAppCommands({
+    openCommandPalette: commandPalette.open,
+    openModal,
+    setViewMode,
+    handleExport,
+    openSettings: () => {
+      setSettingsOpen(true);
+    },
+    setSettingsTab,
+    setIsBulkOperationsOpen,
+    setIsQuickCaptureOpen,
+    setIsHelpOpen,
+    setIsAdvancedFilterOpen,
+    setIsAutomationRulesOpen,
+    setIsKanbanConfigOpen,
+    setIsViewPresetOpen,
+    setIsComparisonOpen,
+    setSearchQuery,
+    clearActiveFilter: clearFilter,
+    setActiveFilter,
+    loadSavedFilter: loadFilter,
+    loadSavedSearch: loadSearch,
+    savedSearches,
+    searchHistory,
+    applications,
+    savedFilters,
+    undo,
+    redo,
+    canUndo,
+    canRedo,
+  });
+
+  const requestDelete = React.useCallback((id: string) => {
+    deleteApplication(id);
+    if (selectedIds.has(id)) {
+      clearSelection();
+    }
+  }, [deleteApplication, selectedIds, clearSelection]);
+
+  const handleBulkStatusChange = React.useCallback((status: ApplicationStatus) => {
+    const selected = getSelectedApplications();
+    if (!selected.length) {
+      return;
+    }
+
+    selected.forEach(app => {
+      const updatedApp = { ...app, status };
+      updateApplication(updatedApp);
+      const updates = executeRules(updatedApp, 'status_changed', { newStatus: status, oldStatus: app.status });
+      if (updates) {
+        updateApplication({ ...updatedApp, ...updates });
+      }
+    });
+
+    showToast('success', `Updated ${selected.length} application(s) to ${status}`);
+    clearSelection();
+  }, [clearSelection, executeRules, getSelectedApplications, showToast, updateApplication]);
+
+  const handleBulkDelete = React.useCallback(() => {
+    if (!selectedCount) {
+      return;
+    }
+
+    showConfirmation(
+      'Delete Selected Applications',
+      `Delete ${selectedCount} selected application(s)?`,
+      () => {
+        getSelectedApplications().forEach(app => deleteApplication(app.id));
+        clearSelection();
+      },
+      true
+    );
+  }, [clearSelection, deleteApplication, getSelectedApplications, selectedCount, showConfirmation]);
+
+  const handleBulkCompare = React.useCallback(() => {
+    if (selectedCount > 0) {
+      setIsComparisonOpen(true);
+    }
+  }, [selectedCount]);
+
   const handleBulkUpdate = React.useCallback((updates: Partial<Application> | ((app: Application) => Partial<Application>), ids: string[]) => {
     ids.forEach(id => {
       const app = applications.find(a => a.id === id);
@@ -378,50 +363,6 @@ const App: React.FC = () => {
     clearSelection();
     setIsBulkOperationsOpen(false);
   }, [applications, updateApplication, clearSelection]);
-
-  const handleCommandPaletteAction = React.useCallback((action: string, ...args: any[]) => {
-    switch (action) {
-      case 'new':
-        openModal(null);
-        break;
-      case 'import':
-        document.getElementById('file-input')?.click();
-        break;
-      case 'export-csv':
-        handleExport('csv');
-        break;
-      case 'export-json':
-        handleExport('json');
-        break;
-
-      case 'export-ics':
-        handleExport('ics');
-        break;
-      case 'settings':
-        setSettingsOpen(true);
-        break;
-      case 'bulk-status':
-        setIsBulkOperationsOpen(true);
-        break;
-      default:
-        if (action.startsWith('view-')) {
-          const view = action.replace('view-', '') as any;
-          setViewMode(view);
-        } else if (action.startsWith('filter-')) {
-          const filterQuery = action.replace('filter-', '');
-          if (filterQuery === 'due:week') {
-            // Apply week filter
-          } else if (filterQuery.startsWith('status:')) {
-            const status = filterQuery.replace('status:', '') as ApplicationStatus;
-            // Apply status filter
-          }
-        } else if (action.startsWith('app-')) {
-          const appId = action.replace('app-', '');
-          const app = applications.find(a => a.id === appId);
-          if (app) openModal(app);
-        }
-    }
-  }, [openModal, handleExport, setViewMode, applications]);
 
   const handleImport = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -551,13 +492,13 @@ const App: React.FC = () => {
     }
   }, [applications, updateApplication, executeRules]);
 
-  // Check if running in Electron (titlebar will be shown)
-  const isElectron = !!window.electron?.windowControls;
+  // Check if running in the desktop runtime so the custom titlebar has room.
+  const isDesktopRuntime = !!window.desktop?.windowControls;
 
   return (
-    <>
+    <CommandProvider>
       <TitleBar />
-      <div className={`min-h-screen text-[#F5D7DA] font-sans p-4 sm:p-6 lg:p-8 ${isElectron ? 'pt-16' : ''} relative z-10`}>
+      <div className={`min-h-screen text-[#F5D7DA] font-sans p-4 sm:p-6 lg:p-8 ${isDesktopRuntime ? 'pt-16' : ''} relative z-10`}>
         <div className="max-w-7xl mx-auto">
         <Header
           onAddNew={() => openModal(null)}
@@ -640,22 +581,6 @@ const App: React.FC = () => {
       <CommandPalette
         isOpen={commandPalette.isOpen}
         onClose={commandPalette.close}
-        applications={applications}
-        onNewApplication={() => openModal(null)}
-        onViewChange={setViewMode}
-        onOpenApplication={(id) => {
-          const app = applications.find(a => a.id === id);
-          if (app) openModal(app);
-        }}
-        onBulkAction={(action) => {
-          if (action === 'status') setIsBulkOperationsOpen(true);
-        }}
-        onFilter={(query) => {
-          setSearchQuery(query);
-        }}
-        onExport={handleExport}
-        onImport={() => document.getElementById('file-input')?.click()}
-        onSettings={() => setSettingsOpen(true)}
       />
 
       {/* Bulk Operations Modal */}
@@ -676,6 +601,7 @@ const App: React.FC = () => {
           onOpenKanbanConfig={() => setIsKanbanConfigOpen(true)}
           onOpenAutomationRules={() => setIsAutomationRulesOpen(true)}
           onOpenViewPresets={() => setIsViewPresetOpen(true)}
+          initialTab={settingsTab}
         />
       )}
 
@@ -709,7 +635,7 @@ const App: React.FC = () => {
           onExport={(format, selectedFields) => {
             // Map 'markdown' to 'md' format
             const mappedFormat = format === 'markdown' ? 'md' : format;
-            handleExport(mappedFormat as 'csv' | 'json' | 'ics' | 'md' | 'pdf', selectedFields);
+            handleExport(mappedFormat, selectedFields);
             setIsExportConfigOpen(false);
           }}
         />
@@ -791,10 +717,9 @@ const App: React.FC = () => {
         </div>
       )}
 
-      {/* Toast Notifications */}
       <ToastContainer toasts={toasts} onRemove={removeToast} />
       </div>
-    </>
+    </CommandProvider>
   );
 };
 

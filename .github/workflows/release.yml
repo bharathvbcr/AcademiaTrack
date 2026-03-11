@@ -1,7 +1,7 @@
 name: Release
 
 permissions:
-  contents: read
+  contents: write
 
 on:
   push:
@@ -22,14 +22,22 @@ jobs:
           node-version: 20
           cache: 'npm'
 
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
       - name: Install Dependencies
         run: npm ci
 
+      - name: Typecheck
+        run: npx tsc --noEmit
+
       - name: Run Tests
-        run: npm test
+        run: npm run test:run
 
   build:
-    name: Build Electron App
+    name: Build Electrobun App
     permissions:
       contents: read
     needs: test
@@ -48,6 +56,11 @@ jobs:
           node-version: 20
           cache: 'npm'
 
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
       - name: Install Dependencies
         run: npm ci
 
@@ -57,21 +70,18 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y libfuse2
 
-      - name: Build Electron App
+      - name: Build Electrobun App
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          CSC_IDENTITY_AUTO_DISCOVERY: false
-        run: npm run build:electron -- --publish never
+        run: npm run build:desktop
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
           name: release-${{ matrix.os }}
           path: |
-            release/*.exe
-            release/*.dmg
-            release/*.AppImage
-          retention-days: 1
+            release/**
+          retention-days: 7
 
   release:
     name: Create Release
@@ -113,9 +123,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            release/*.exe
-            release/*.dmg
-            release/*.AppImage
+            release/**
           body: ${{ steps.release_notes.outputs.changelog }}
           draft: false
           prerelease: false
