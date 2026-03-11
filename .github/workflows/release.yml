@@ -80,7 +80,6 @@ jobs:
         with:
           name: release-${{ matrix.os }}
           path: |
-            build/**
             release/**
           if-no-files-found: error
           retention-days: 7
@@ -122,7 +121,6 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            build/**
             release/**
           body_path: .github/release-notes.md
           generate_release_notes: true
