@@ -41,9 +41,15 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
-          node-version: 22
+          node-version-file: ".nvmrc"
           cache: "npm"
           cache-dependency-path: package-lock.json
+
+      - name: Verify Node Version
+        shell: bash
+        run: |
+          node --version
+          test "$(node --version)" = "v$(tr -d '\r\n' < .nvmrc)"
 
       - name: Install Bun (macOS/Linux)
         if: runner.os != 'Windows'
@@ -112,9 +118,15 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
-          node-version: 22
+          node-version-file: ".nvmrc"
           cache: "npm"
           cache-dependency-path: package-lock.json
+
+      - name: Verify Node Version
+        shell: bash
+        run: |
+          node --version
+          test "$(node --version)" = "v$(tr -d '\r\n' < .nvmrc)"
 
       - name: Install Bun (Windows)
         shell: pwsh

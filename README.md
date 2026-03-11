@@ -77,7 +77,7 @@ AcademiaTrack helps you keep track of universities, programs, deadlines, and sub
 - [Node.js](https://nodejs.org/) 22.x if you want npm as a fallback package manager
 - Windows, macOS, or Linux
 
-For desktop development and packaging, Bun should be installed and available on `PATH`. This repo treats Bun as the primary local toolchain even though `electrobun` is installed from npm. The Bun version is pinned in `.bun-version`, CI reads that file directly, and local development should match it alongside Node `22` when possible.
+For desktop development and packaging, Bun should be installed and available on `PATH`. This repo treats Bun as the primary local toolchain even though `electrobun` is installed from npm. The Bun version is pinned in `.bun-version`, the Node version is pinned in `.nvmrc`, CI reads both files directly, and local development should match them when possible.
 
 ### Running Locally
 
