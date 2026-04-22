@@ -188,7 +188,12 @@ jobs:
         with:
           name: release-${{ needs.resolve.outputs.tag }}-${{ matrix.os }}
           path: |
-            release/**
+            release/*.exe
+            release/*.dmg
+            release/*.AppImage
+            release/*.zip
+            release/*.blockmap
+            release/latest*.yml
           if-no-files-found: error
           retention-days: 7
 
@@ -264,7 +269,12 @@ jobs:
           tag_name: ${{ needs.resolve.outputs.tag }}
           name: ${{ needs.resolve.outputs.release_name }}
           files: |
-            release/**
+            release/*.exe
+            release/*.dmg
+            release/*.AppImage
+            release/*.zip
+            release/*.blockmap
+            release/latest*.yml
           body_path: .github/release-notes.md
           generate_release_notes: true
           append_body: true

@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [5.2.2] - 2026-04-22
+
+### Fixed
+- **Release Publishing:** Narrowed GitHub Actions release uploads to packaged installers and updater metadata so tagged builds no longer try to publish unpacked app directories and trip GitHub secondary rate limits.
+
 ## [5.2.1] - 2026-04-22
 
 ### Changed
