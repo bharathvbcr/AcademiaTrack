@@ -1,4 +1,5 @@
 import { Application } from './types';
+import { getFieldLabel, getFieldValue } from './utils/exportFields';
 
 // Helper function to escape CSV cell content
 const escapeCsvCell = (cell: string | number | boolean | null | undefined): string => {
@@ -10,9 +11,6 @@ const escapeCsvCell = (cell: string | number | boolean | null | undefined): stri
   }
   return cellStr;
 };
-
-// Import field getters from exportFormats
-import { getFieldValue, getFieldLabel } from './utils/exportFormats';
 
 export const exportToCSV = (applications: Application[], selectedFields?: string[]) => {
   // Use selected fields or default to all common fields

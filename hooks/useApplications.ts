@@ -3,6 +3,7 @@ import { Application, FacultyContact, ApplicationStatus, ApplicationFeeWaiverSta
 import { useDebounce } from './useDebounce';
 import { migrateData, wrapInSchema, createEmptyDataSchema } from '../utils/dataMigration';
 import { useUndoRedo } from './useUndoRedo';
+import { readJsonFromStorage, writeJsonToStorage } from '../utils/browserStorage';
 
 export const useApplications = () => {
   const { state: applications, setState: setApplications, undo, redo, canUndo, canRedo, reset } = useUndoRedo<Application[]>([]);
@@ -24,11 +25,10 @@ export const useApplications = () => {
             }
           } else {
             // Fallback for web-only dev
-            const saved = localStorage.getItem('phd-applications');
-            if (saved) {
-              const parsed = JSON.parse(saved);
+            const saved = readJsonFromStorage<unknown>('phd-applications');
+            if (saved !== null) {
               // Migrate data from any version to current version
-              const migratedData = migrateData(parsed);
+              const migratedData = migrateData(saved);
               reset(migratedData.applications);
             }
           }
@@ -62,7 +62,7 @@ export const useApplications = () => {
         if (window.desktop) {
           await window.desktop.saveData(dataToSave);
         } else {
-          localStorage.setItem('phd-applications', JSON.stringify(dataToSave));
+          writeJsonToStorage('phd-applications', dataToSave);
         }
       } catch (error) {
         console.error('Failed to save applications:', error);
@@ -75,7 +75,7 @@ export const useApplications = () => {
                 console.error('Retry save also failed:', e);
               });
             } else {
-              localStorage.setItem('phd-applications', JSON.stringify(dataToSave));
+              writeJsonToStorage('phd-applications', dataToSave);
             }
           } catch (retryError) {
             console.error('Retry save failed:', retryError);

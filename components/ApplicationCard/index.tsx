@@ -4,6 +4,7 @@ import confetti from 'canvas-confetti';
 import { Application, ApplicationStatus, ProgramType, FacultyContactStatus, DocumentStatus } from '../../types';
 import { FEE_WAIVER_STATUS_COLORS, TEST_STATUS_COLORS } from '../../constants';
 import { sanitizeURL } from '../../utils';
+import { getStorageItem, setStorageItem } from '../../utils/browserStorage';
 import { CardHeader, DocumentChecklist, FacultyOutreachList, CardFooter } from './subcomponents';
 
 interface ApplicationCardProps {
@@ -51,7 +52,7 @@ const ApplicationCard: React.FC<ApplicationCardProps> = React.memo(({ applicatio
     useEffect(() => {
         const fetchLogo = async () => {
             const cacheKey = `university_logo_${universityName}`;
-            const cached = localStorage.getItem(cacheKey);
+            const cached = getStorageItem(cacheKey);
             if (cached) {
                 setLogoUrl(cached);
                 return;
@@ -66,7 +67,7 @@ const ApplicationCard: React.FC<ApplicationCardProps> = React.memo(({ applicatio
                     const domain = data[0].domains[0];
                     const url = `https://logo.clearbit.com/${domain}`;
                     setLogoUrl(url);
-                    localStorage.setItem(cacheKey, url);
+                    setStorageItem(cacheKey, url);
                 }
             } catch (e) {
                 console.error("Failed to fetch logo", e);
