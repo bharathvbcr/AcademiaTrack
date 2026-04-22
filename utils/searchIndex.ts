@@ -1,4 +1,5 @@
 import { Application } from '../types';
+import { readJsonFromStorage, removeStorageItem, writeJsonToStorage } from './browserStorage';
 
 export interface SearchIndex {
   [key: string]: Set<string>; // term -> set of application IDs
@@ -262,28 +263,20 @@ export class ApplicationSearchIndex {
 
   // Persistence methods
   private saveToStorage() {
-    try {
-      // Only save index metadata, not full index (too large)
-      const metadata = {
-        indexedCount: this.applications.size,
-        indexTermsCount: Object.keys(this.index).length,
-        lastUpdated: Date.now(),
-      };
-      localStorage.setItem(this.STORAGE_KEY, JSON.stringify(metadata));
-    } catch (error) {
-      console.warn('Failed to save search index metadata:', error);
-    }
+    // Only save index metadata, not full index (too large)
+    const metadata = {
+      indexedCount: this.applications.size,
+      indexTermsCount: Object.keys(this.index).length,
+      lastUpdated: Date.now(),
+    };
+
+    writeJsonToStorage(this.STORAGE_KEY, metadata);
   }
 
   private loadFromStorage() {
-    try {
-      const stored = localStorage.getItem(this.STORAGE_KEY);
-      if (stored) {
-        const metadata = JSON.parse(stored);
-        this.lastRebuildTime = metadata.lastUpdated || Date.now();
-      }
-    } catch (error) {
-      console.warn('Failed to load search index metadata:', error);
+    const metadata = readJsonFromStorage<{ lastUpdated?: number }>(this.STORAGE_KEY);
+    if (metadata) {
+      this.lastRebuildTime = metadata.lastUpdated || Date.now();
     }
   }
 
@@ -291,6 +284,6 @@ export class ApplicationSearchIndex {
   clear() {
     this.index = {};
     this.applications.clear();
-    localStorage.removeItem(this.STORAGE_KEY);
+    removeStorageItem(this.STORAGE_KEY);
   }
 }

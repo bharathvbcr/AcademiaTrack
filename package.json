@@ -1,7 +1,7 @@
 {
   "name": "academia-track",
   "private": true,
-  "version": "5.2.0",
+  "version": "5.2.1",
   "description": "Academic Application Tracker - Track universities, programs, deadlines, and submissions",
   "author": "BHARATH CHANDRA VADDARAM <bharath.vbcr@gmail.com>",
   "homepage": "https://github.com/bharathvbcr/AcademiaTrack",
@@ -12,17 +12,18 @@
   "type": "module",
   "main": "dist-electron/main.js",
   "engines": {
-    "node": ">=20 <25"
+    "node": ">=20 <26"
   },
   "scripts": {
     "test": "vitest",
     "test:ui": "vitest --ui",
     "test:run": "vitest run",
+    "typecheck": "tsgo -p tsconfig.json --noEmit && tsgo -p electron/tsconfig.json --noEmit",
     "dev": "vite",
     "build": "vite build",
     "package": "npm run build:electron",
     "preview": "vite preview",
-    "build:main": "tsc -p electron/tsconfig.json",
+    "build:main": "tsgo -p electron/tsconfig.json",
     "dev:electron": "npm-run-all --parallel dev start:electron",
     "start:electron": "wait-on http://localhost:3000 && npm run build:main && electron .",
     "build:electron": "npm run build && npm run build:main && electron-builder"
@@ -70,6 +71,7 @@
     "remark-gfm": "^4.0.1"
   },
   "devDependencies": {
+    "@typescript/native-preview": "7.0.0-dev.20260421.2",
     "@playwright/test": "^1.57.0",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.1",
@@ -90,7 +92,7 @@
     "postcss": "^8.5.6",
     "tailwindcss": "^4.1.18",
     "tsx": "^4.21.0",
-    "typescript": "~5.8.2",
+    "typescript": "npm:@typescript/typescript6@^6.0.0",
     "vite": "^6.2.0",
     "vitest": "^4.0.16",
     "wait-on": "^9.0.1"

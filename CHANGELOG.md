@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [5.2.1] - 2026-04-22
+
+### Changed
+- **TypeScript Toolchain:** Switched project typechecking and Electron compilation to the native TypeScript 7 beta `tsgo` compiler while keeping the TypeScript 6 compatibility package installed for ecosystem tooling.
+- **CI/CD:** Updated GitHub verification and release workflows to run the repo's real `npm run typecheck` command instead of stale `tsc` invocations.
+
+### Fixed
+- **Browser Storage:** Hardened application persistence, search-index metadata caching, and logo caching so missing or malformed browser storage no longer throws noisy runtime or test errors.
+- **Build Output:** Removed the previous Vite circular chunk and mixed static/dynamic import warnings by simplifying chunking and isolating export field helpers into a shared module.
+
 ## [5.2.0] - 2026-03-11
 
 ### Changed
