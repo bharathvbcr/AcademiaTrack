@@ -8,6 +8,8 @@ env:
 
 on:
   push:
+    branches:
+      - main
     tags:
       - 'v*'
 
@@ -22,6 +24,8 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
 
       - name: Validate tag and derive release metadata
         id: release_meta
@@ -33,13 +37,23 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          TAG="${GITHUB_REF_NAME}"
-          if [[ -z "$TAG" || ! "$TAG" =~ ^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]]; then
-            echo "::error::Release tag must be strict semver: vMAJOR.MINOR.PATCH (e.g., v1.2.3)."
-            exit 1
+
+          if [[ "${GITHUB_REF_TYPE}" == "tag" ]]; then
+            TAG="${GITHUB_REF_NAME}"
+            if [[ -z "$TAG" || ! "$TAG" =~ ^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]]; then
+              echo "::error::Release tag must be strict semver: vMAJOR.MINOR.PATCH (e.g., v1.2.3)."
+              exit 1
+            fi
+            VERSION="${TAG#v}"
+          else
+            VERSION="$(node -p "require('./package.json').version")"
+            TAG="v${VERSION}"
+            if [[ -z "$VERSION" || ! "$TAG" =~ ^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]]; then
+              echo "::error::package.json version must be strict semver before auto release."
+              exit 1
+            fi
           fi
 
-          VERSION="${TAG#v}"
           export VERSION
           RELEASE_NAME="AcademiaTrack v${VERSION}"
 
@@ -86,14 +100,27 @@ jobs:
             fi
           fi
 
-          if ! git rev-parse -q --verify "refs/tags/${TAG}" >/dev/null; then
-            echo "::error::Tag ${TAG} is not a valid git tag reference."
-            exit 1
-          fi
+          if [[ "${GITHUB_REF_TYPE}" == "tag" ]]; then
+            if ! git rev-parse -q --verify "refs/tags/${TAG}" >/dev/null; then
+              echo "::error::Tag ${TAG} is not a valid git tag reference."
+              exit 1
+            fi
 
-          TAG_COMMIT="$(git rev-list -n 1 "refs/tags/${TAG}")"
-          if [ "${GITHUB_SHA}" != "${TAG_COMMIT}" ]; then
-            echo "::warning::Tag ${TAG} resolves to ${TAG_COMMIT}, workflow event SHA is ${GITHUB_SHA}."
+            TAG_COMMIT="$(git rev-list -n 1 "refs/tags/${TAG}")"
+            if [ "${GITHUB_SHA}" != "${TAG_COMMIT}" ]; then
+              echo "::warning::Tag ${TAG} resolves to ${TAG_COMMIT}, workflow event SHA is ${GITHUB_SHA}."
+            fi
+          else
+            if git rev-parse -q --verify "refs/tags/${TAG}" >/dev/null; then
+              echo "::error::Tag ${TAG} already exists. Bump package.json before merging to main."
+              exit 1
+            fi
+
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git tag -a "${TAG}" -m "Release ${TAG}" "${GITHUB_SHA}"
+            git push origin "refs/tags/${TAG}"
+            echo "Created release tag ${TAG} at ${GITHUB_SHA}"
           fi
 
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"

@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [5.2.3] - 2026-05-07
+
+### Added
+- **Auto Release:** Release workflow now publishes a non-draft GitHub release automatically when a versioned change lands on `main`.
+- **Repository Maps:** Added GitNexus map ownership artifacts and a map coverage verification script.
+
+### Fixed
+- **Mapped UI Wiring:** Wired advanced search zero-result handling, search index population, desktop backup/update controls, data validation, analytics, templates, column configuration, context menu actions, autocomplete, drag/drop status updates, and submission details.
+- **Runtime Stability:** Moved command context to the app root, hardened local storage saves, and replaced the dashboard chart path that crashed production preview smoke.
+
 ## [5.2.2] - 2026-04-22
 
 ### Fixed
