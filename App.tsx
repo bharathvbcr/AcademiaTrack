@@ -14,11 +14,12 @@ import { useLockBodyScroll } from './hooks/useLockBodyScroll';
 import { useAutomation } from './hooks/useAutomation';
 import { useViewState } from './hooks/useViewState';
 import { useToast } from './hooks/useToast';
+import { useEnhancedDragDrop } from './hooks/useEnhancedDragDrop';
+import { useThemeCustomization } from './hooks/useThemeCustomization';
 import { ProgramType, Application, FacultyContact, ApplicationStatus } from './types';
 import { DropResult } from '@hello-pangea/dnd';
 import { exportToCSV, parseCSV } from './utils';
 import { ApplicationSearchIndexWrapper } from './utils/searchIndexWrapper';
-import { CommandProvider } from './contexts/CommandContext';
 
 import Header from './components/Header';
 import TitleBar from './components/TitleBar';
@@ -37,6 +38,7 @@ const ComparisonModal = lazy(() => import('./components/ComparisonModal'));
 const QuickCaptureModal = lazy(() => import('./components/QuickCaptureModal'));
 const ExportConfigModal = lazy(() => import('./components/ExportConfigModal'));
 const KanbanConfigModal = lazy(() => import('./components/KanbanConfigModal'));
+const ColumnConfigModal = lazy(() => import('./components/ColumnConfigModal'));
 const ViewPresetModal = lazy(() => import('./components/ViewPresetModal'));
 const AutomationRulesModal = lazy(() => import('./components/AutomationRulesModal'));
 
@@ -87,9 +89,13 @@ const App: React.FC = () => {
   const [isQuickCaptureOpen, setIsQuickCaptureOpen] = React.useState(false);
   const [quickCaptureText, setQuickCaptureText] = React.useState<string>('');
   const [settingsOpen, setSettingsOpen] = React.useState(false);
-  const [advancedSearchResults, setAdvancedSearchResults] = React.useState<Application[]>([]);
+  const [advancedSearchState, setAdvancedSearchState] = React.useState<{
+    active: boolean;
+    results: Application[];
+  }>({ active: false, results: [] });
   const [isExportConfigOpen, setIsExportConfigOpen] = React.useState(false);
   const [isKanbanConfigOpen, setIsKanbanConfigOpen] = React.useState(false);
+  const [isColumnConfigOpen, setIsColumnConfigOpen] = React.useState(false);
   const [isViewPresetOpen, setIsViewPresetOpen] = React.useState(false);
   const [isAutomationRulesOpen, setIsAutomationRulesOpen] = React.useState(false);
   const [settingsTab, setSettingsTab] = React.useState<'shortcuts' | 'views' | 'general' | 'fields' | 'kanban' | 'automation'>('shortcuts');
@@ -115,8 +121,8 @@ const App: React.FC = () => {
   const applicationsToFilter = activeFilter ? advancedFilteredApplications : applications;
 
   // Use advanced search results if available, otherwise use all applications
-  const applicationsForFilter = advancedSearchResults.length > 0 && advancedSearchResults.length < applications.length
-    ? advancedSearchResults
+  const applicationsForFilter = advancedSearchState.active
+    ? advancedSearchState.results
     : applicationsToFilter;
 
   const {
@@ -128,15 +134,25 @@ const App: React.FC = () => {
   } = useSortAndFilter(applicationsForFilter);
 
   // Search Index (using Web Worker when available)
-  const searchIndexRef = useRef(new ApplicationSearchIndexWrapper());
+  const searchIndexRef = useRef<ApplicationSearchIndexWrapper | null>(null);
+  if (!searchIndexRef.current) {
+    searchIndexRef.current = new ApplicationSearchIndexWrapper();
+  }
+  const searchIndex = searchIndexRef.current;
   const [searchResults, setSearchResults] = React.useState<Application[]>([]);
   const [isSearching, setIsSearching] = React.useState(false);
 
   // Enhanced search with index (async with worker)
   useEffect(() => {
+    searchIndex.updateApplications(applications).catch((error) => {
+      console.error('Failed to update search index:', error);
+    });
+  }, [applications, searchIndex]);
+
+  useEffect(() => {
     if (searchQuery.trim() && searchQuery.length >= 2) {
       setIsSearching(true);
-      searchIndexRef.current.search(searchQuery).then((results) => {
+      searchIndex.search(searchQuery).then((results) => {
         setSearchResults(results);
         setIsSearching(false);
       }).catch((error) => {
@@ -148,7 +164,13 @@ const App: React.FC = () => {
       setSearchResults([]);
       setIsSearching(false);
     }
-  }, [searchQuery]);
+  }, [searchIndex, searchQuery]);
+
+  useEffect(() => {
+    return () => {
+      searchIndex.destroy();
+    };
+  }, [searchIndex]);
 
   const finalFilteredApplications = useMemo(() => {
     if (searchQuery.trim() && searchQuery.length >= 2 && searchResults.length > 0) {
@@ -178,6 +200,11 @@ const App: React.FC = () => {
 
   // Toast notifications
   const { toasts, showToast, removeToast } = useToast();
+  const { applyActiveTheme } = useThemeCustomization();
+
+  useEffect(() => {
+    applyActiveTheme();
+  }, [applyActiveTheme]);
 
   const handleSave = React.useCallback((app: Application) => {
     try {
@@ -473,30 +500,34 @@ const App: React.FC = () => {
     reader.readAsText(file);
   };
 
-  const handleDragEnd = React.useCallback((result: DropResult) => {
-    if (!result.destination) return;
-
-    const app = applications.find(a => a.id === result.draggableId);
+  const updateApplicationWithAutomation = React.useCallback((updatedApp: Application) => {
+    const app = applications.find(a => a.id === updatedApp.id);
     if (!app) return;
 
-    const newStatus = result.destination.droppableId as ApplicationStatus;
-    if (app.status === newStatus) return;
-
-    const updatedApp = { ...app, status: newStatus };
     updateApplication(updatedApp);
 
-    // Execute automation rules for status change
-    const updates = executeRules(updatedApp, 'status_changed', { newStatus, oldStatus: app.status });
-    if (updates) {
-      updateApplication({ ...updatedApp, ...updates });
+    if (app.status !== updatedApp.status) {
+      const updates = executeRules(updatedApp, 'status_changed', {
+        newStatus: updatedApp.status,
+        oldStatus: app.status,
+      });
+      if (updates) {
+        updateApplication({ ...updatedApp, ...updates });
+      }
     }
   }, [applications, updateApplication, executeRules]);
+
+  const enhancedDragDrop = useEnhancedDragDrop(applications, updateApplicationWithAutomation, handleBulkUpdate);
+
+  const handleDragEnd = React.useCallback((result: DropResult) => {
+    enhancedDragDrop.handleDragEnd(result);
+  }, [enhancedDragDrop]);
 
   // Check if running in the desktop runtime so the custom titlebar has room.
   const isDesktopRuntime = !!window.desktop?.windowControls;
 
   return (
-    <CommandProvider>
+    <>
       <TitleBar />
       <div className={`min-h-screen text-[#F5D7DA] font-sans p-4 sm:p-6 lg:p-8 ${isDesktopRuntime ? 'pt-16' : ''} relative z-10`}>
         <div className="max-w-7xl mx-auto">
@@ -512,7 +543,12 @@ const App: React.FC = () => {
           onShowHelp={() => setIsHelpOpen(true)}
           onQuickCapture={handleQuickCapture}
           applications={applications}
-          onSearch={setAdvancedSearchResults}
+          onSearch={(results, query) => {
+            setAdvancedSearchState({
+              active: query.trim().length > 0,
+              results,
+            });
+          }}
         />
 
         <MainContent
@@ -522,6 +558,7 @@ const App: React.FC = () => {
           sortConfig={sortConfig}
           requestSort={requestSort}
           searchQuery={searchQuery}
+          hasActiveAdvancedSearch={advancedSearchState.active}
           setSearchQuery={setSearchQuery}
           openModal={openModal}
           requestDelete={requestDelete}
@@ -559,6 +596,7 @@ const App: React.FC = () => {
           onClose={closeModal}
           onSave={handleSave}
           applicationToEdit={editingApplication || undefined}
+          applications={applications}
         />
         <FacultyContactModal
           isOpen={isFacultyModalOpen}
@@ -599,6 +637,7 @@ const App: React.FC = () => {
           isOpen={settingsOpen}
           onClose={() => setSettingsOpen(false)}
           onOpenKanbanConfig={() => setIsKanbanConfigOpen(true)}
+          onOpenColumnConfig={() => setIsColumnConfigOpen(true)}
           onOpenAutomationRules={() => setIsAutomationRulesOpen(true)}
           onOpenViewPresets={() => setIsViewPresetOpen(true)}
           initialTab={settingsTab}
@@ -646,6 +685,14 @@ const App: React.FC = () => {
         <KanbanConfigModal
           isOpen={isKanbanConfigOpen}
           onClose={() => setIsKanbanConfigOpen(false)}
+        />
+      )}
+
+      {isColumnConfigOpen && (
+        <ColumnConfigModal
+          isOpen={isColumnConfigOpen}
+          onClose={() => setIsColumnConfigOpen(false)}
+          viewMode={viewMode}
         />
       )}
 
@@ -719,7 +766,7 @@ const App: React.FC = () => {
 
       <ToastContainer toasts={toasts} onRemove={removeToast} />
       </div>
-    </CommandProvider>
+    </>
   );
 };
 

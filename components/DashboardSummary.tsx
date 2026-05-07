@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip } from 'recharts';
 import { Application, ApplicationStatus, FacultyContactStatus } from '../types';
 import { STATUS_OPTIONS, CHART_COLORS, FACULTY_CHART_COLORS, FACULTY_CONTACT_STATUS_OPTIONS } from '../constants';
 import { format, parseISO, isValid } from 'date-fns';
@@ -26,14 +25,7 @@ const DashboardSummary: React.FC<DashboardSummaryProps> = ({ applications, viewM
     return () => mediaQuery.removeEventListener('change', handleChange);
   }, []);
 
-  const tooltipStyle = {
-    backgroundColor: isDarkMode ? '#18181b' : '#ffffff',
-    backdropFilter: 'none',
-    border: `1px solid ${isDarkMode ? '#27272a' : '#e4e4e7'}`,
-    borderRadius: '0.75rem',
-    color: isDarkMode ? '#e2e8f0' : '#1e293b',
-    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
-  };
+  void isDarkMode;
 
   // --- Analytics Calculations ---
 
@@ -178,36 +170,13 @@ const DashboardSummary: React.FC<DashboardSummaryProps> = ({ applications, viewM
               <div className="liquid-glass-card p-6 rounded-3xl bg-[#18181b] border border-[#27272a]">
                 <h2 className="text-lg font-semibold text-[#f4f4f5] mb-4">Application Status</h2>
                 {applicationStatusData.length > 0 ? (
-                  <div className="h-64 w-full">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <PieChart>
-                        <Pie
-                          data={applicationStatusData}
-                          cx="50%"
-                          cy="50%"
-                          innerRadius={60}
-                          outerRadius={80}
-                          paddingAngle={5}
-                          dataKey="value"
-                          nameKey="name"
-                        >
-                          {applicationStatusData.map((entry) => (
-                            <Cell key={`cell-${entry.name}`} fill={CHART_COLORS[entry.name as ApplicationStatus]} stroke="none" />
-                          ))}
-                        </Pie>
-                        <Tooltip contentStyle={tooltipStyle} itemStyle={{ color: isDarkMode ? '#e2e8f0' : '#1e293b' }} />
-                        <Legend
-                          iconSize={10}
-                          wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }}
-                          formatter={(value, entry: any) => (
-                            <span className="text-slate-600 dark:text-slate-300">
-                              {value} <span className="font-semibold ml-1">({entry.payload.value})</span>
-                            </span>
-                          )}
-                        />
-                      </PieChart>
-                    </ResponsiveContainer>
-                  </div>
+                  <DistributionList
+                    data={applicationStatusData.map(item => ({
+                      name: item.name,
+                      value: item.value,
+                      color: CHART_COLORS[item.name as ApplicationStatus] || '#71717a',
+                    }))}
+                  />
                 ) : (
                   <div className="h-64 flex items-center justify-center text-[#a1a1aa]/50">No data available</div>
                 )}
@@ -216,36 +185,13 @@ const DashboardSummary: React.FC<DashboardSummaryProps> = ({ applications, viewM
               <div className="liquid-glass-card p-6 rounded-3xl bg-[#18181b] border border-[#27272a]">
                 <h2 className="text-lg font-semibold text-[#f4f4f5] mb-4">Faculty Outreach</h2>
                 {facultyContactSummary.length > 0 ? (
-                  <div className="h-64 w-full">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <PieChart>
-                        <Pie
-                          data={facultyContactSummary}
-                          cx="50%"
-                          cy="50%"
-                          innerRadius={60}
-                          outerRadius={80}
-                          paddingAngle={5}
-                          dataKey="count"
-                          nameKey="name"
-                        >
-                          {facultyContactSummary.map((entry) => (
-                            <Cell key={`cell-${entry.name}`} fill={FACULTY_CHART_COLORS[entry.name as FacultyContactStatus]} stroke="none" />
-                          ))}
-                        </Pie>
-                        <Tooltip contentStyle={tooltipStyle} itemStyle={{ color: isDarkMode ? '#e2e8f0' : '#1e293b' }} />
-                        <Legend
-                          iconSize={10}
-                          wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }}
-                          formatter={(value, entry: any) => (
-                            <span className="text-slate-600 dark:text-slate-300">
-                              {value} <span className="font-semibold ml-1">({entry.payload.count})</span>
-                            </span>
-                          )}
-                        />
-                      </PieChart>
-                    </ResponsiveContainer>
-                  </div>
+                  <DistributionList
+                    data={facultyContactSummary.map(item => ({
+                      name: item.name,
+                      value: item.count,
+                      color: FACULTY_CHART_COLORS[item.name as FacultyContactStatus] || '#71717a',
+                    }))}
+                  />
                 ) : (
                   <div className="h-64 flex items-center justify-center text-[#a1a1aa]/50">No faculty contacts logged</div>
                 )}
@@ -256,17 +202,7 @@ const DashboardSummary: React.FC<DashboardSummaryProps> = ({ applications, viewM
             {timelineData.length > 0 && (
               <div className="liquid-glass-card p-6 rounded-3xl bg-[#18181b] border border-[#27272a]">
                 <h2 className="text-lg font-semibold text-[#f4f4f5] mb-4">Application Deadlines Timeline</h2>
-                <div className="h-64 w-full">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={timelineData} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
-                      <CartesianGrid strokeDasharray="3 3" stroke={isDarkMode ? '#334155' : '#e2e8f0'} vertical={false} />
-                      <XAxis dataKey="name" stroke={isDarkMode ? '#94a3b8' : '#64748b'} tick={{ fontSize: 12 }} tickLine={false} axisLine={false} />
-                      <YAxis stroke={isDarkMode ? '#94a3b8' : '#64748b'} tick={{ fontSize: 12 }} tickLine={false} axisLine={false} allowDecimals={false} />
-                      <RechartsTooltip contentStyle={tooltipStyle} cursor={{ stroke: isDarkMode ? '#475569' : '#cbd5e1', strokeWidth: 2 }} />
-                      <Line type="monotone" dataKey="count" stroke="#ef4444" strokeWidth={3} dot={{ r: 4, fill: '#ef4444', strokeWidth: 2, stroke: isDarkMode ? '#1e293b' : '#fff' }} activeDot={{ r: 6 }} />
-                    </LineChart>
-                  </ResponsiveContainer>
-                </div>
+                <TimelineBars data={timelineData} />
               </div>
             )}
           </motion.div>
@@ -311,5 +247,52 @@ const SummaryCard: React.FC<{ title: string; value: number | string; icon: strin
     </div>
   </div>
 );
+
+const DistributionList: React.FC<{ data: Array<{ name: string; value: number; color: string }> }> = ({ data }) => {
+  const total = data.reduce((sum, item) => sum + item.value, 0);
+
+  return (
+    <div className="space-y-3">
+      {data.map(item => {
+        const percent = total > 0 ? Math.round((item.value / total) * 100) : 0;
+        return (
+          <div key={item.name}>
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-[#f4f4f5]">{item.name}</span>
+              <span className="text-[#a1a1aa]">{item.value}</span>
+            </div>
+            <div className="mt-1 h-2 overflow-hidden rounded-full bg-[#27272a]">
+              <div
+                className="h-full rounded-full"
+                style={{ width: `${Math.max(percent, 4)}%`, backgroundColor: item.color }}
+              />
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+};
+
+const TimelineBars: React.FC<{ data: Array<{ name: string; count: number }> }> = ({ data }) => {
+  const max = Math.max(...data.map(item => item.count), 1);
+
+  return (
+    <div className="flex h-56 items-end gap-3 overflow-x-auto pb-2">
+      {data.map(item => (
+        <div key={item.name} className="flex min-w-20 flex-1 flex-col items-center gap-2">
+          <div className="flex h-40 w-full items-end">
+            <div
+              className="w-full rounded-t-lg bg-[#dc2626]"
+              style={{ height: `${Math.max((item.count / max) * 100, 8)}%` }}
+              title={`${item.name}: ${item.count}`}
+            />
+          </div>
+          <div className="text-center text-xs text-[#a1a1aa]">{item.name}</div>
+        </div>
+      ))}
+    </div>
+  );
+};
 
 export default DashboardSummary;
