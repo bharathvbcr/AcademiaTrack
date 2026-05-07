@@ -5,12 +5,15 @@ import { useViewState } from '../hooks/useViewState';
 import { useLockBodyScroll } from '../hooks/useLockBodyScroll';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import { useCustomFields } from '../hooks/useCustomFields';
-import { CustomFieldDefinition } from '../types';
+import { useTemplates } from '../hooks/useTemplates';
+import { useThemeCustomization } from '../hooks/useThemeCustomization';
+import { BackupInfo, CustomFieldDefinition } from '../types';
 
 interface SettingsModalProps {
   isOpen: boolean;
   onClose: () => void;
   onOpenKanbanConfig?: () => void;
+  onOpenColumnConfig?: () => void;
   onOpenAutomationRules?: () => void;
   onOpenViewPresets?: () => void;
   initialTab?: 'shortcuts' | 'views' | 'general' | 'fields' | 'kanban' | 'automation';
@@ -24,16 +27,35 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
   isOpen,
   onClose,
   onOpenKanbanConfig,
+  onOpenColumnConfig,
   onOpenAutomationRules,
   onOpenViewPresets,
   initialTab,
 }) => {
   useLockBodyScroll(isOpen);
   const { shortcuts, updateShortcut, resetShortcuts, enabled, setEnabled } = useEnhancedKeyboardShortcuts({}, { listen: false });
-  const [viewDensity, setViewDensity] = useLocalStorage<'compact' | 'comfortable' | 'spacious'>('view-density', 'comfortable');
+  const {
+    customThemes,
+    activeThemeId,
+    fontSize,
+    fontFamily,
+    density: viewDensity,
+    setActiveThemeId,
+    setFontSize,
+    setFontFamily,
+    setDensity: setViewDensity,
+    applyActiveTheme,
+  } = useThemeCustomization();
+  const { templates, deleteTemplate } = useTemplates();
 
   const [editingShortcut, setEditingShortcut] = useState<string | null>(null);
-  const [fontSize, setFontSize] = useLocalStorage<'small' | 'medium' | 'large'>('font-size', 'medium');
+  const [autoSaveEnabled, setAutoSaveEnabled] = useLocalStorage<boolean>('auto-save-enabled', true);
+  const [deadlineNotificationsEnabled, setDeadlineNotificationsEnabled] = useLocalStorage<boolean>('deadline-notifications-enabled', true);
+  const [analyticsTrackingEnabled, setAnalyticsTrackingEnabled] = useLocalStorage<boolean>('analytics-tracking-enabled', false);
+  const [backups, setBackups] = useState<BackupInfo[]>([]);
+  const [backupStatus, setBackupStatus] = useState<string>('');
+  const [updateStatus, setUpdateStatus] = useState<string>('');
+  const [isMaintenanceBusy, setIsMaintenanceBusy] = useState(false);
 
   // Custom Fields
   const { customFields, addField, updateField, deleteField, reorderFields, toggleFieldVisibility } = useCustomFields();
@@ -46,6 +68,38 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
       setActiveTab(initialTab);
     }
   }, [initialTab]);
+
+  React.useEffect(() => {
+    applyActiveTheme();
+  }, [activeThemeId, fontSize, fontFamily, viewDensity, applyActiveTheme]);
+
+  const loadBackups = React.useCallback(async () => {
+    if (!window.desktop) {
+      setBackups([]);
+      return;
+    }
+
+    const availableBackups = await window.desktop.listBackups();
+    setBackups(availableBackups);
+  }, []);
+
+  React.useEffect(() => {
+    if (!isOpen || activeTab !== 'general') return;
+
+    loadBackups().catch(error => {
+      console.error('Failed to load backups:', error);
+      setBackupStatus('Could not load backups');
+    });
+
+    const unsubscribe = window.desktop?.onUpdateStatus?.((status) => {
+      const progress = typeof status.percent === 'number' ? ` (${Math.round(status.percent)}%)` : '';
+      setUpdateStatus(`${status.message || status.status}${progress}`);
+    });
+
+    return () => {
+      unsubscribe?.();
+    };
+  }, [activeTab, isOpen, loadBackups]);
 
   if (!isOpen) return null;
 
@@ -60,6 +114,73 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
     const keyString = parts.join('+');
     updateShortcut(shortcutId, keyString);
     setEditingShortcut(null);
+  };
+
+  const createBackup = async () => {
+    if (!window.desktop) {
+      setBackupStatus('Backups are only available in the desktop app');
+      return;
+    }
+
+    setIsMaintenanceBusy(true);
+    try {
+      const result = await window.desktop.createBackup();
+      setBackupStatus(result.success ? 'Backup created' : result.error || 'Backup failed');
+      await loadBackups();
+    } finally {
+      setIsMaintenanceBusy(false);
+    }
+  };
+
+  const restoreBackup = async (backup: BackupInfo) => {
+    if (!window.desktop) return;
+
+    setIsMaintenanceBusy(true);
+    try {
+      const result = await window.desktop.restoreBackup(backup.path);
+      if (result.success) {
+        setBackupStatus('Backup restored. Reloading data...');
+        window.location.reload();
+        return;
+      }
+      setBackupStatus(result.error || 'Restore failed');
+    } finally {
+      setIsMaintenanceBusy(false);
+    }
+  };
+
+  const deleteBackup = async (backup: BackupInfo) => {
+    if (!window.desktop) return;
+
+    setIsMaintenanceBusy(true);
+    try {
+      const result = await window.desktop.deleteBackup(backup.path);
+      setBackupStatus(result.success ? 'Backup deleted' : result.error || 'Delete failed');
+      await loadBackups();
+    } finally {
+      setIsMaintenanceBusy(false);
+    }
+  };
+
+  const checkForUpdates = async () => {
+    if (!window.desktop) {
+      setUpdateStatus('Updates are only available in the desktop app');
+      return;
+    }
+
+    setIsMaintenanceBusy(true);
+    try {
+      const result = await window.desktop.checkForUpdates();
+      if (result.error) {
+        setUpdateStatus(result.error);
+      } else if (result.available) {
+        setUpdateStatus(`Update available: ${result.version}`);
+      } else {
+        setUpdateStatus('No update available');
+      }
+    } finally {
+      setIsMaintenanceBusy(false);
+    }
   };
 
   return (
@@ -186,6 +307,20 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                 <h3 className="text-lg font-semibold text-[#f4f4f5] mb-4">View Preferences</h3>
                 <div className="space-y-4">
                   <div>
+                    <label className="block text-sm font-medium mb-2">Theme</label>
+                    <select
+                      value={activeThemeId}
+                      onChange={(e) => setActiveThemeId(e.target.value)}
+                      className="w-full px-3 py-2 border rounded-lg"
+                      aria-label="Theme"
+                      title="Theme"
+                    >
+                      {customThemes.map(theme => (
+                        <option key={theme.id} value={theme.id}>{theme.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
                     <label className="block text-sm font-medium mb-2">View Density</label>
                     <select
                       value={viewDensity}
@@ -214,6 +349,20 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                     </select>
                   </div>
                   <div>
+                    <label className="block text-sm font-medium mb-2">Font Family</label>
+                    <select
+                      value={fontFamily}
+                      onChange={(e) => setFontFamily(e.target.value)}
+                      className="w-full px-3 py-2 border rounded-lg"
+                      aria-label="Font Family"
+                      title="Font Family"
+                    >
+                      <option value="system">System</option>
+                      <option value="serif">Serif</option>
+                      <option value="mono">Monospace</option>
+                    </select>
+                  </div>
+                  <div>
                     <button
                       onClick={() => {
                         onClose();
@@ -222,6 +371,17 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                       className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
                     >
                       Manage View Presets
+                    </button>
+                  </div>
+                  <div>
+                    <button
+                      onClick={() => {
+                        onClose();
+                        onOpenColumnConfig?.();
+                      }}
+                      className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                    >
+                      Configure Columns
                     </button>
                   </div>
                 </div>
@@ -235,17 +395,118 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                 <h3 className="text-lg font-semibold mb-4">General Settings</h3>
                 <div className="space-y-4">
                   <label className="flex items-center gap-3">
-                    <input type="checkbox" className="w-4 h-4" />
+                    <input
+                      type="checkbox"
+                      checked={autoSaveEnabled}
+                      onChange={(e) => setAutoSaveEnabled(e.target.checked)}
+                      className="w-4 h-4"
+                    />
                     <span>Auto-save changes</span>
                   </label>
                   <label className="flex items-center gap-3">
-                    <input type="checkbox" className="w-4 h-4" />
+                    <input
+                      type="checkbox"
+                      checked={deadlineNotificationsEnabled}
+                      onChange={(e) => setDeadlineNotificationsEnabled(e.target.checked)}
+                      className="w-4 h-4"
+                    />
                     <span>Show notifications for deadlines</span>
                   </label>
                   <label className="flex items-center gap-3">
-                    <input type="checkbox" className="w-4 h-4" />
+                    <input
+                      type="checkbox"
+                      checked={analyticsTrackingEnabled}
+                      onChange={(e) => setAnalyticsTrackingEnabled(e.target.checked)}
+                      className="w-4 h-4"
+                    />
                     <span>Enable analytics tracking</span>
                   </label>
+                </div>
+              </div>
+              <div className="border-t border-[#27272a] pt-6">
+                <div className="flex items-center justify-between gap-4">
+                  <div>
+                    <h3 className="text-lg font-semibold">Backups</h3>
+                    <p className="text-sm text-[#a1a1aa]">Automatic backups run after desktop saves.</p>
+                  </div>
+                  <button
+                    onClick={createBackup}
+                    disabled={isMaintenanceBusy}
+                    className="px-3 py-1.5 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                  >
+                    Create Backup
+                  </button>
+                </div>
+                {backupStatus && <p className="mt-2 text-sm text-[#a1a1aa]">{backupStatus}</p>}
+                <div className="mt-4 space-y-2">
+                  {backups.length === 0 ? (
+                    <p className="text-sm text-[#a1a1aa]">No manual backups found.</p>
+                  ) : backups.map(backup => (
+                    <div key={backup.path} className="flex items-center justify-between gap-3 rounded-lg border border-[#27272a] bg-[#18181b] p-3">
+                      <div>
+                        <div className="text-sm font-medium">{backup.filename}</div>
+                        <div className="text-xs text-[#a1a1aa]">
+                          {new Date(backup.timestamp).toLocaleString()} · {Math.ceil(backup.size / 1024)} KB
+                        </div>
+                      </div>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => restoreBackup(backup)}
+                          disabled={isMaintenanceBusy}
+                          className="px-2 py-1 text-xs border border-[#27272a] rounded hover:bg-[#27272a] disabled:opacity-50"
+                        >
+                          Restore
+                        </button>
+                        <button
+                          onClick={() => deleteBackup(backup)}
+                          disabled={isMaintenanceBusy}
+                          className="px-2 py-1 text-xs border border-red-500/40 text-red-300 rounded hover:bg-red-500/10 disabled:opacity-50"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div className="border-t border-[#27272a] pt-6">
+                <div className="flex items-center justify-between gap-4">
+                  <div>
+                    <h3 className="text-lg font-semibold">Updates</h3>
+                    <p className="text-sm text-[#a1a1aa]">Check the desktop release channel for updates.</p>
+                  </div>
+                  <button
+                    onClick={checkForUpdates}
+                    disabled={isMaintenanceBusy}
+                    className="px-3 py-1.5 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                  >
+                    Check
+                  </button>
+                </div>
+                {updateStatus && <p className="mt-2 text-sm text-[#a1a1aa]">{updateStatus}</p>}
+              </div>
+              <div className="border-t border-[#27272a] pt-6">
+                <h3 className="text-lg font-semibold">Application Templates</h3>
+                <div className="mt-3 space-y-2">
+                  {templates.length === 0 ? (
+                    <p className="text-sm text-[#a1a1aa]">No templates available.</p>
+                  ) : templates.map(template => (
+                    <div key={template.id} className="flex items-center justify-between gap-3 rounded-lg border border-[#27272a] bg-[#18181b] p-3">
+                      <div>
+                        <div className="text-sm font-medium">{template.name}</div>
+                        <div className="text-xs text-[#a1a1aa]">
+                          {template.programType} · used {template.useCount} time{template.useCount === 1 ? '' : 's'}
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => deleteTemplate(template.id)}
+                        disabled={template.id === 'phd-cs' || template.id === 'masters-funded'}
+                        className="px-2 py-1 text-xs border border-red-500/40 text-red-300 rounded hover:bg-red-500/10 disabled:opacity-40"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>

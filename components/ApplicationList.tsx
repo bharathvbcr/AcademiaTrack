@@ -1,12 +1,14 @@
 import React, { useCallback, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Application, ApplicationStatus, TestStatus } from '../types';
-import { STATUS_COLORS, STATUS_LABELS, getDeadlineInfo, TAG_PRESETS } from '../constants';
+import { getDeadlineInfo, TAG_PRESETS } from '../constants';
 import { cardContainerVariants, cardVariants } from '../hooks/useAnimations';
 import Tooltip from './Tooltip';
 import VirtualizedList from './VirtualizedList';
 import { SkeletonCard } from './SkeletonLoader';
 import EmptyState from './EmptyState';
+import ContextMenu from './ContextMenu';
+import StatusBadge from './StatusBadge';
 
 interface ApplicationListProps {
   applications: Application[];
@@ -20,6 +22,7 @@ interface ApplicationListProps {
   selectedIds?: Set<string>;
   onToggleSelection?: (id: string) => void;
   onEnterSelectionMode?: () => void;
+  visibleColumns?: string[];
 }
 
 const MaterialIcon: React.FC<{ name: string; className?: string }> = ({ name, className }) => (
@@ -62,7 +65,14 @@ const ApplicationList: React.FC<ApplicationListProps> = React.memo(({
   selectedIds = new Set(),
   onToggleSelection,
   onEnterSelectionMode,
+  visibleColumns,
 }) => {
+  const [contextMenu, setContextMenu] = useState<{
+    x: number;
+    y: number;
+    application: Application;
+  } | null>(null);
+
   // Memoized click handlers
   const handleCardClick = useCallback((app: Application) => {
     if (isSelectionMode && onToggleSelection) {
@@ -80,6 +90,23 @@ const ApplicationList: React.FC<ApplicationListProps> = React.memo(({
       }
     }
   }, [isSelectionMode, onEnterSelectionMode, onToggleSelection]);
+
+  const handleContextMenu = useCallback((event: React.MouseEvent, app: Application) => {
+    event.preventDefault();
+    setContextMenu({
+      x: event.clientX,
+      y: event.clientY,
+      application: app,
+    });
+  }, []);
+
+  const handleStatusChange = useCallback((app: Application, status: ApplicationStatus) => {
+    onUpdate({ ...app, status });
+  }, [onUpdate]);
+
+  const isColumnVisible = useCallback((columnId: string) => {
+    return !visibleColumns || visibleColumns.includes(columnId);
+  }, [visibleColumns]);
 
   // Memoize progress calculations for all applications
   const progressMap = useMemo(() => {
@@ -145,10 +172,7 @@ const ApplicationList: React.FC<ApplicationListProps> = React.memo(({
                 key={app.id}
                 style={style}
                 onClick={() => handleCardClick(app)}
-                onContextMenu={(e) => {
-                  e.preventDefault();
-                  handleLongPress(app);
-                }}
+                onContextMenu={(e) => handleContextMenu(e, app)}
                 className={`group liquid-glass-card rounded-2xl p-5 border-2 shadow-sm cursor-pointer transition-shadow hover:shadow-md ${isSelected
                   ? 'border-[#dc2626] ring-2 ring-[#dc2626]/20'
                   : app.isPinned
@@ -186,17 +210,15 @@ const ApplicationList: React.FC<ApplicationListProps> = React.memo(({
                 <div className={`mb-4 ${isSelectionMode ? 'pl-8' : ''} ${app.isPinned && !isSelectionMode ? 'pl-8' : ''}`}>
                   <div className="flex items-start justify-between mb-2 gap-2">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${STATUS_COLORS[app.status]}`}>
-                        {STATUS_LABELS[app.status]}
-                      </span>
+                      {isColumnVisible('status') && <StatusBadge status={app.status} />}
                       {/* Tags display (simplified for virtual list performance) */}
-                      {app.tags && app.tags.length > 0 && (
+                      {isColumnVisible('tags') && app.tags && app.tags.length > 0 && (
                         <span className="text-xs text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700 rounded-full px-2 py-0.5">
                           {app.tags.length} tag{app.tags.length !== 1 ? 's' : ''}
                         </span>
                       )}
                     </div>
-                    {app.deadline && (() => {
+                    {isColumnVisible('deadline') && app.deadline && (() => {
                       const info = getDeadlineInfo(app.deadline);
                       return (
                         <span className={`text-xs font-medium flex items-center gap-1 px-2 py-1 rounded-md ${info.colorClass}`}>
@@ -206,32 +228,36 @@ const ApplicationList: React.FC<ApplicationListProps> = React.memo(({
                       );
                     })()}
                   </div>
-                  <h3 className="text-lg font-bold text-slate-900 dark:text-white leading-tight mb-1 line-clamp-1" title={app.universityName}>
-                    {app.universityName}
-                  </h3>
-                  <p className="text-sm text-slate-600 dark:text-slate-300 line-clamp-1" title={app.programName}>
-                    {app.programName}
-                  </p>
+                  {isColumnVisible('universityName') && (
+                    <h3 className="text-lg font-bold text-slate-900 dark:text-white leading-tight mb-1 line-clamp-1" title={app.universityName}>
+                      {app.universityName}
+                    </h3>
+                  )}
+                  {isColumnVisible('programName') && (
+                    <p className="text-sm text-slate-600 dark:text-slate-300 line-clamp-1" title={app.programName}>
+                      {app.programName}
+                    </p>
+                  )}
                 </div>
 
                 <div className="space-y-3 pt-4 border-t border-slate-100 dark:border-slate-700/50">
                   <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
-                    <span className="flex items-center gap-1.5">
+                    {isColumnVisible('programType') && <span className="flex items-center gap-1.5">
                       <MaterialIcon name="school" className="text-sm" />
                       {app.programType}
-                    </span>
-                    <span className="flex items-center gap-1.5">
+                    </span>}
+                    {isColumnVisible('progress') && <span className="flex items-center gap-1.5">
                       {Math.round(progress)}% Complete
-                    </span>
+                    </span>}
                   </div>
 
                   {/* Progress Bar */}
-                  <div className="w-full bg-slate-100 dark:bg-slate-700 rounded-full h-1.5 overflow-hidden">
+                  {isColumnVisible('progress') && <div className="w-full bg-slate-100 dark:bg-slate-700 rounded-full h-1.5 overflow-hidden">
                     <div
                       className="bg-slate-900 dark:bg-slate-100 h-1.5 rounded-full"
                       style={{ width: `${progress}%` }}
                     />
-                  </div>
+                  </div>}
                 </div>
               </div>
             );
@@ -251,7 +277,7 @@ const ApplicationList: React.FC<ApplicationListProps> = React.memo(({
           className="text-xs text-slate-500 dark:text-slate-400 text-center mb-2"
         >
           <span className="hidden sm:inline">
-            Tip: Long-press or right-click a card to enter selection mode
+            Tip: Long-press a card to enter selection mode, or right-click for actions
           </span>
         </motion.div>
       )}
@@ -273,10 +299,7 @@ const ApplicationList: React.FC<ApplicationListProps> = React.memo(({
               whileHover="hover"
               whileTap="tap"
               onClick={() => handleCardClick(app)}
-              onContextMenu={(e) => {
-                e.preventDefault();
-                handleLongPress(app);
-              }}
+              onContextMenu={(e) => handleContextMenu(e, app)}
               onKeyDown={(e) => {
                 if (e.key === 'Enter' || e.key === ' ') {
                   e.preventDefault();
@@ -372,9 +395,7 @@ const ApplicationList: React.FC<ApplicationListProps> = React.memo(({
               <div className={`mb-4 ${isSelectionMode ? 'pl-8' : ''} ${app.isPinned && !isSelectionMode ? 'pl-8' : ''}`}>
                 <div className="flex items-start justify-between mb-2 gap-2">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${STATUS_COLORS[app.status]}`}>
-                      {STATUS_LABELS[app.status]}
-                    </span>
+                    {isColumnVisible('status') && <StatusBadge status={app.status} />}
                     {/* Tags display */}
                     {app.tags && app.tags.length > 0 && app.tags.slice(0, 2).map(tag => {
                       const preset = TAG_PRESETS.find(p => p.name === tag);
@@ -389,7 +410,7 @@ const ApplicationList: React.FC<ApplicationListProps> = React.memo(({
                       <span className="text-xs text-slate-500 dark:text-slate-400">+{app.tags.length - 2}</span>
                     )}
                   </div>
-                  {app.deadline && (() => {
+                  {isColumnVisible('deadline') && app.deadline && (() => {
                     const info = getDeadlineInfo(app.deadline);
                     return (
                       <span className={`text-xs font-medium flex items-center gap-1 px-2 py-1 rounded-md ${info.colorClass}`}>
@@ -399,21 +420,25 @@ const ApplicationList: React.FC<ApplicationListProps> = React.memo(({
                     );
                   })()}
                 </div>
-                <h3 className="text-lg font-bold text-slate-900 dark:text-white leading-tight mb-1 line-clamp-1" title={app.universityName}>
-                  {app.universityName}
-                </h3>
-                <p className="text-sm text-slate-600 dark:text-slate-300 line-clamp-1" title={app.programName}>
-                  {app.programName}
-                </p>
+                {isColumnVisible('universityName') && (
+                  <h3 className="text-lg font-bold text-slate-900 dark:text-white leading-tight mb-1 line-clamp-1" title={app.universityName}>
+                    {app.universityName}
+                  </h3>
+                )}
+                {isColumnVisible('programName') && (
+                  <p className="text-sm text-slate-600 dark:text-slate-300 line-clamp-1" title={app.programName}>
+                    {app.programName}
+                  </p>
+                )}
               </div>
 
               <div className="space-y-3 pt-4 border-t border-[#27272a]">
                 <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
-                  <span className="flex items-center gap-1.5">
+                  {isColumnVisible('programType') && <span className="flex items-center gap-1.5">
                     <MaterialIcon name="school" className="text-sm" />
                     {app.programType}
-                  </span>
-                  {app.applicationFee > 0 && (
+                  </span>}
+                  {isColumnVisible('applicationFee') && app.applicationFee > 0 && (
                     <span className="flex items-center gap-1.5">
                       <MaterialIcon name="payments" className="text-sm" />
                       ${app.applicationFee}
@@ -422,19 +447,31 @@ const ApplicationList: React.FC<ApplicationListProps> = React.memo(({
                 </div>
 
                 {/* Progress Bar */}
-                <div className="w-full bg-[#27272a] rounded-full h-1.5 overflow-hidden">
+                {isColumnVisible('progress') && <div className="w-full bg-[#27272a] rounded-full h-1.5 overflow-hidden">
                   <motion.div
                     className="bg-[#dc2626] h-1.5 rounded-full"
                     initial={{ width: 0 }}
                     animate={{ width: `${progress}%` }}
                     transition={{ duration: 0.5, ease: 'easeOut' }}
                   />
-                </div>
+                </div>}
               </div>
             </motion.div>
           );
         })}
       </motion.div>
+      {contextMenu && (
+        <ContextMenu
+          x={contextMenu.x}
+          y={contextMenu.y}
+          application={contextMenu.application}
+          onClose={() => setContextMenu(null)}
+          onEdit={onEdit}
+          onDelete={onDelete}
+          onUpdate={onUpdate}
+          onStatusChange={handleStatusChange}
+        />
+      )}
     </div>
   );
 }, (prevProps, nextProps) => {

@@ -5,7 +5,7 @@ import Tooltip from './Tooltip';
 
 interface AdvancedSearchBarProps {
   applications: Application[];
-  onSearch: (results: Application[]) => void;
+  onSearch: (results: Application[], query: string) => void;
   placeholder?: string;
 }
 
@@ -30,9 +30,9 @@ const AdvancedSearchBar: React.FC<AdvancedSearchBarProps> = ({
   useEffect(() => {
     if (query.trim()) {
       const results = search(query);
-      onSearch(results);
+      onSearch(results, query);
     } else {
-      onSearch(applications);
+      onSearch(applications, query);
     }
   }, [query, applications, search, onSearch]);
 

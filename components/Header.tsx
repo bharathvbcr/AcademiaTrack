@@ -21,7 +21,7 @@ interface HeaderProps {
   onShowHelp?: () => void;
   onQuickCapture?: (text: string) => void;
   applications: Application[];
-  onSearch: (results: Application[]) => void;
+  onSearch: (results: Application[], query: string) => void;
 }
 
 const MaterialIcon: React.FC<{ name: string; className?: string }> = ({ name, className }) => (

@@ -20,6 +20,7 @@ export class ApplicationSearchIndexWrapper implements SearchIndexInterface {
   private worker: ApplicationSearchIndexWorker | null = null;
   private fallback: ApplicationSearchIndex;
   private useWorker: boolean = false;
+  private latestApplications: Application[] = [];
 
   constructor() {
     this.fallback = new ApplicationSearchIndex();
@@ -35,6 +36,9 @@ export class ApplicationSearchIndexWrapper implements SearchIndexInterface {
         // Test if worker works by getting stats
         try {
           await workerInstance.getStats();
+          if (this.latestApplications.length > 0) {
+            await workerInstance.rebuild(this.latestApplications);
+          }
           this.worker = workerInstance;
           this.useWorker = true;
           console.log('Search index using Web Worker for better performance');
@@ -49,6 +53,10 @@ export class ApplicationSearchIndexWrapper implements SearchIndexInterface {
   }
 
   async indexApplication(app: Application): Promise<void> {
+    this.latestApplications = [
+      ...this.latestApplications.filter(existing => existing.id !== app.id),
+      app,
+    ];
     if (this.useWorker && this.worker) {
       return this.worker.indexApplication(app);
     }
@@ -56,6 +64,9 @@ export class ApplicationSearchIndexWrapper implements SearchIndexInterface {
   }
 
   async indexApplicationsBatch(apps: Application[]): Promise<void> {
+    const nextById = new Map(this.latestApplications.map(app => [app.id, app]));
+    apps.forEach(app => nextById.set(app.id, app));
+    this.latestApplications = Array.from(nextById.values());
     if (this.useWorker && this.worker) {
       return this.worker.indexApplicationsBatch(apps);
     }
@@ -63,6 +74,7 @@ export class ApplicationSearchIndexWrapper implements SearchIndexInterface {
   }
 
   async removeApplication(id: string): Promise<void> {
+    this.latestApplications = this.latestApplications.filter(app => app.id !== id);
     if (this.useWorker && this.worker) {
       return this.worker.removeApplication(id);
     }
@@ -77,6 +89,7 @@ export class ApplicationSearchIndexWrapper implements SearchIndexInterface {
   }
 
   async rebuild(applications: Application[]): Promise<void> {
+    this.latestApplications = applications;
     if (this.useWorker && this.worker) {
       return this.worker.rebuild(applications);
     }
@@ -84,6 +97,7 @@ export class ApplicationSearchIndexWrapper implements SearchIndexInterface {
   }
 
   async updateApplications(applications: Application[]): Promise<void> {
+    this.latestApplications = applications;
     if (this.useWorker && this.worker) {
       return this.worker.updateApplications(applications);
     }
