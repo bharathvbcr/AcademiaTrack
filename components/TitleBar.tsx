@@ -37,18 +37,18 @@ const TitleBar: React.FC = () => {
 
   return (
     <div
-      className="titlebar fixed top-0 left-0 right-0 h-8 bg-slate-900 flex items-center justify-between select-none z-[9999]"
+      className="titlebar fixed top-0 left-0 right-0 h-9 bg-[#111113] border-b border-white/10 flex items-center justify-between select-none z-[9999] shadow-[0_1px_0_rgba(0,0,0,0.45)]"
       style={{ WebkitAppRegion: 'drag' } as React.CSSProperties}
       onDoubleClick={handleDoubleClick}
     >
       {/* App Logo and Title */}
-      <div className="flex items-center gap-2 pl-2">
+      <div className="flex items-center gap-2 pl-3 min-w-0">
         <img
           src="./AcademiaTrack.png"
           alt="AcademiaTrack"
-          className="w-5 h-5 object-contain"
+          className="w-5 h-5 object-contain shrink-0"
         />
-        <span className="text-white/90 text-sm font-medium tracking-tight">
+        <span className="text-white/90 text-sm font-medium truncate">
           AcademiaTrack
         </span>
       </div>
@@ -61,7 +61,7 @@ const TitleBar: React.FC = () => {
         {/* Minimize */}
         <button
           onClick={handleMinimize}
-          className="w-12 h-full flex items-center justify-center text-white/70 hover:bg-white/10 transition-colors"
+          className="w-12 h-full flex items-center justify-center text-white/75 hover:text-white hover:bg-white/10 transition-colors"
           aria-label="Minimize"
         >
           <svg width="10" height="1" viewBox="0 0 10 1" fill="currentColor">
@@ -72,7 +72,7 @@ const TitleBar: React.FC = () => {
         {/* Maximize/Restore */}
         <button
           onClick={handleMaximize}
-          className="w-12 h-full flex items-center justify-center text-white/70 hover:bg-white/10 transition-colors"
+          className="w-12 h-full flex items-center justify-center text-white/75 hover:text-white hover:bg-white/10 transition-colors"
           aria-label={isMaximized ? 'Restore' : 'Maximize'}
         >
           {isMaximized ? (
@@ -92,7 +92,7 @@ const TitleBar: React.FC = () => {
         {/* Close */}
         <button
           onClick={handleClose}
-          className="w-12 h-full flex items-center justify-center text-white/70 hover:bg-red-600 hover:text-white transition-colors"
+          className="w-12 h-full flex items-center justify-center text-white/75 hover:bg-red-600 hover:text-white transition-colors"
           aria-label="Close"
         >
           <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.2">

@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [5.2.4] - 2026-05-07
+
+### Fixed
+- **Desktop Window Chrome:** Restored the custom frameless Electron title bar with visible minimize, maximize/restore, and close controls.
+
 ## [5.2.3] - 2026-05-07
 
 ### Added
