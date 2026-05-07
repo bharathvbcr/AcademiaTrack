@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [5.2.6] - 2026-05-07
+
+### Fixed
+- **Desktop Window Controls:** Restored the preload bridge that wires minimize, maximize/restore, and close controls to Electron IPC in packaged builds.
+
 ## [5.2.5] - 2026-05-07
 
 ### Fixed

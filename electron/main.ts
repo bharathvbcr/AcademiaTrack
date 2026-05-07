@@ -27,6 +27,12 @@ if (!gotTheLock) {
     }
   });
 
+  app.on('window-all-closed', () => {
+    if (process.platform !== 'darwin') {
+      app.quit();
+    }
+  });
+
   function sendMaximizeState(force = false) {
     if (!mainWindow || mainWindow.isDestroyed()) return;
     const current = mainWindow.isMaximized();
@@ -83,7 +89,7 @@ if (!gotTheLock) {
       titleBarStyle: 'hidden',
       icon: path.join(__dirname, '../assets/icon.png'),
       webPreferences: {
-        preload: path.join(__dirname, 'preload.js'),
+        preload: path.join(__dirname, 'preload.cjs'),
         nodeIntegration: false,
         contextIsolation: true,
         sandbox: true,
