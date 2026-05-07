@@ -1,7 +1,7 @@
 {
   "name": "academia-track",
   "private": true,
-  "version": "5.2.5",
+  "version": "5.2.6",
   "description": "Academic Application Tracker - Track universities, programs, deadlines, and submissions",
   "author": "BHARATH CHANDRA VADDARAM <bharath.vbcr@gmail.com>",
   "homepage": "https://github.com/bharathvbcr/AcademiaTrack",
@@ -24,7 +24,7 @@
     "build": "vite build",
     "package": "npm run build:electron",
     "preview": "vite preview",
-    "build:main": "tsgo -p electron/tsconfig.json",
+    "build:main": "tsgo -p electron/tsconfig.json && node scripts/copy-electron-preload.cjs",
     "dev:electron": "npm-run-all --parallel dev start:electron",
     "start:electron": "wait-on http://localhost:3000 && npm run build:main && electron .",
     "build:electron": "npm run build && npm run build:main && electron-builder"
