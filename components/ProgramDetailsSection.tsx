@@ -4,6 +4,7 @@ import { PROGRAM_TYPE_OPTIONS, ADMISSION_TERM_OPTIONS } from '../constants';
 import { FieldSet, Input, Select } from './ApplicationFormUI';
 import DateInput from './DateInput';
 import UniversitySearchInput from './UniversitySearchInput';
+import AutoCompleteInput from './AutoCompleteInput';
 
 interface ProgramDetailsSectionProps {
     appData: Omit<Application, 'id'>;
@@ -18,6 +19,7 @@ interface ProgramDetailsSectionProps {
     locationSuggestions: LocationDetails[];
     showLocationSuggestions: boolean;
     setShowLocationSuggestions: (show: boolean) => void;
+    applications: Application[];
 }
 
 const ProgramDetailsSection: React.FC<ProgramDetailsSectionProps> = ({
@@ -33,7 +35,14 @@ const ProgramDetailsSection: React.FC<ProgramDetailsSectionProps> = ({
     locationSuggestions,
     showLocationSuggestions,
     setShowLocationSuggestions,
+    applications,
 }) => {
+    const handleAutoCompleteChange = (name: 'department' | 'programName') => (value: string) => {
+        handleChange({
+            target: { name, value },
+        } as React.ChangeEvent<HTMLInputElement>);
+    };
+
     return (
         <FieldSet legend="Program Details">
             <div className="relative">
@@ -46,8 +55,26 @@ const ProgramDetailsSection: React.FC<ProgramDetailsSectionProps> = ({
                     required
                 />
             </div>
-            <Input label="Department / School" name="department" value={appData.department} onChange={handleChange} />
-            <Input label="Program Name" name="programName" value={appData.programName} onChange={handleChange} required />
+            <div>
+                <label htmlFor="department" className="block text-sm font-medium text-[#a1a1aa] mb-1.5">Department / School</label>
+                <AutoCompleteInput
+                    type="department"
+                    value={appData.department}
+                    onChange={handleAutoCompleteChange('department')}
+                    applications={applications}
+                    placeholder="Department / School"
+                />
+            </div>
+            <div>
+                <label htmlFor="programName" className="block text-sm font-medium text-[#a1a1aa] mb-1.5">Program Name</label>
+                <AutoCompleteInput
+                    type="program"
+                    value={appData.programName}
+                    onChange={handleAutoCompleteChange('programName')}
+                    applications={applications}
+                    placeholder="Program Name"
+                />
+            </div>
             <Select label="Program Type" name="programType" value={appData.programType} onChange={handleChange}>
                 {PROGRAM_TYPE_OPTIONS.map(type => <option key={type} value={type}>{type}</option>)}
             </Select>

@@ -7,6 +7,14 @@ export function useLocalStorage<T,>(key: string, initialValue: T): [T, React.Dis
     return item ?? initialValue;
   });
 
+  const setValue: React.Dispatch<React.SetStateAction<T>> = React.useCallback((value) => {
+    setStoredValue(prev => {
+      const nextValue = value instanceof Function ? value(prev) : value;
+      writeJsonToStorage(key, nextValue);
+      return nextValue;
+    });
+  }, [key]);
+
   useEffect(() => {
     if (!getLocalStorage()) {
       return;
@@ -15,5 +23,5 @@ export function useLocalStorage<T,>(key: string, initialValue: T): [T, React.Dis
     writeJsonToStorage(key, storedValue);
   }, [key, storedValue]);
 
-  return [storedValue, setStoredValue];
+  return [storedValue, setValue];
 }

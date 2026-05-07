@@ -8,12 +8,14 @@ import {
 import { useUniversityData } from '../hooks/useUniversityData';
 import { useDebounce } from '../hooks/useDebounce';
 import { useApplicationForm } from '../hooks/useApplicationForm';
+import { useTemplates } from '../hooks/useTemplates';
 import { useLockBodyScroll } from '../hooks/useLockBodyScroll';
 import { useFocusManagement } from '../hooks/useFocusManagement';
 import { MaterialIcon } from './ApplicationFormUI';
 import Tooltip from './Tooltip';
 import ProgramDetailsSection from './ProgramDetailsSection';
 import RankingsStatusSection from './RankingsStatusSection';
+import SubmissionDetailsSection from './SubmissionDetailsSection';
 import RemindersSection from './RemindersSection';
 import GeneralNotesSection from './GeneralNotesSection';
 import RecommenderSection from './RecommenderSection';
@@ -29,9 +31,10 @@ interface ApplicationModalProps {
   onClose: () => void;
   applicationToEdit?: Application;
   onSave: (app: Application) => void;
+  applications: Application[];
 }
 
-const ApplicationModal: React.FC<ApplicationModalProps> = ({ isOpen, onClose, applicationToEdit, onSave }) => {
+const ApplicationModal: React.FC<ApplicationModalProps> = ({ isOpen, onClose, applicationToEdit, onSave, applications }) => {
   const {
     universitySuggestions,
     showSuggestions,
@@ -95,8 +98,16 @@ const ApplicationModal: React.FC<ApplicationModalProps> = ({ isOpen, onClose, ap
 
   const [locationSuggestions, setLocationSuggestions] = useState<LocationDetails[]>([]);
   const [showLocationSuggestions, setShowLocationSuggestions] = useState(false);
+  const { templates, useTemplate } = useTemplates();
+  const [selectedTemplateId, setSelectedTemplateId] = useState('');
 
   const debouncedLocation = useDebounce(appData.location, 500);
+
+  useEffect(() => {
+    if (isOpen) {
+      setSelectedTemplateId('');
+    }
+  }, [isOpen, applicationToEdit]);
 
   useEffect(() => {
     const search = async () => {
@@ -189,6 +200,28 @@ const ApplicationModal: React.FC<ApplicationModalProps> = ({ isOpen, onClose, ap
     searchUniversities(value);
   };
 
+  const handleTemplateSelect = (templateId: string) => {
+    setSelectedTemplateId(templateId);
+    const defaults = useTemplate(templateId);
+    if (!defaults) return;
+
+    setAppData(prev => ({
+      ...prev,
+      ...defaults,
+      id: prev.id,
+      universityName: prev.universityName,
+      programName: prev.programName,
+      department: defaults.department ?? prev.department,
+      location: prev.location,
+      locationDetails: prev.locationDetails,
+      facultyContacts: prev.facultyContacts,
+      recommenders: prev.recommenders,
+      reminders: prev.reminders,
+      notes: prev.notes,
+      customFields: prev.customFields,
+    }));
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const finalAppData = { ...appData };
@@ -279,6 +312,24 @@ const ApplicationModal: React.FC<ApplicationModalProps> = ({ isOpen, onClose, ap
                   return;
                 }
               }}>
+                {!applicationToEdit && templates.length > 0 && (
+                  <div className="liquid-glass rounded-xl border border-[#27272a] p-4">
+                    <label htmlFor="application-template" className="block text-sm font-medium text-[#a1a1aa] mb-1.5">
+                      Application Template
+                    </label>
+                    <select
+                      id="application-template"
+                      value={selectedTemplateId}
+                      onChange={(e) => handleTemplateSelect(e.target.value)}
+                      className="w-full px-3 py-2 liquid-glass-input border border-[#27272a] bg-[#18181b] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#dc2626] text-[#f4f4f5]"
+                    >
+                      <option value="">Start without template</option>
+                      {templates.map(template => (
+                        <option key={template.id} value={template.id}>{template.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
                 <ProgramDetailsSection
                   appData={appData}
                   handleChange={handleChange}
@@ -292,6 +343,7 @@ const ApplicationModal: React.FC<ApplicationModalProps> = ({ isOpen, onClose, ap
                   locationSuggestions={locationSuggestions}
                   showLocationSuggestions={showLocationSuggestions}
                   setShowLocationSuggestions={setShowLocationSuggestions}
+                  applications={applications}
                 />
                 <CustomFieldsSection
                   appData={appData}
@@ -301,6 +353,11 @@ const ApplicationModal: React.FC<ApplicationModalProps> = ({ isOpen, onClose, ap
                   appData={appData}
                   handleChange={handleChange}
                   handleCheckboxChange={handleCheckboxChange}
+                />
+                <SubmissionDetailsSection
+                  appData={appData}
+                  handleChange={handleChange}
+                  handleNumericChange={handleNumericChange}
                 />
                 <DocumentsSection
                   appData={appData}

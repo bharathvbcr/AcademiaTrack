@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client';
 import App from './App';
 import ErrorBoundary from './components/ErrorBoundary';
 import { installDesktopBridge } from './lib/desktopBridge';
+import { CommandProvider } from './contexts/CommandContext';
 
 installDesktopBridge();
 
@@ -20,7 +21,9 @@ root.render(
         console.error('Application error:', error, errorInfo);
       }}
     >
-      <App />
+      <CommandProvider>
+        <App />
+      </CommandProvider>
     </ErrorBoundary>
   </React.StrictMode>
 );
