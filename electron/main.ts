@@ -79,6 +79,7 @@ if (!gotTheLock) {
       minWidth: 800,
       minHeight: 600,
       show: false, // Show window when ready-to-show
+      frame: false,
       titleBarStyle: 'hidden',
       icon: path.join(__dirname, '../assets/icon.png'),
       webPreferences: {

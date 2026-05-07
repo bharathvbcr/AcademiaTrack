@@ -529,7 +529,7 @@ const App: React.FC = () => {
   return (
     <>
       <TitleBar />
-      <div className={`min-h-screen text-[#F5D7DA] font-sans p-4 sm:p-6 lg:p-8 ${isDesktopRuntime ? 'pt-16' : ''} relative z-10`}>
+      <div className={`min-h-screen text-[#F5D7DA] font-sans p-4 sm:p-6 lg:p-8 ${isDesktopRuntime ? 'pt-14 sm:pt-16 lg:pt-16' : ''} relative z-10`}>
         <div className="max-w-7xl mx-auto">
         <Header
           onAddNew={() => openModal(null)}
