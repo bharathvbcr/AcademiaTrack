@@ -9,6 +9,9 @@ import SortControls from './SortControls';
 import BulkActionsBar from './BulkActionsBar';
 import LoadingSpinner from './LoadingSpinner';
 import { SkeletonCard } from './SkeletonLoader';
+import DataValidationPanel from './DataValidationPanel';
+import AdvancedAnalyticsPanel from './AdvancedAnalyticsPanel';
+import { getStorageItem } from '../utils/browserStorage';
 
 const DashboardSummary = lazy(() => import('./DashboardSummary'));
 const KanbanBoard = lazy(() => import('./KanbanBoard'));
@@ -25,6 +28,7 @@ interface MainContentProps {
     sortConfig: SortConfig;
     requestSort: (key: SortKey) => void;
     searchQuery: string;
+    hasActiveAdvancedSearch: boolean;
     setSearchQuery: (query: string) => void;
     openModal: (app: Application | null) => void;
     requestDelete: (id: string) => void;
@@ -64,6 +68,7 @@ const MainContent: React.FC<MainContentProps> = ({
     sortConfig,
     requestSort,
     searchQuery,
+    hasActiveAdvancedSearch,
     setSearchQuery,
     openModal,
     requestDelete,
@@ -81,6 +86,18 @@ const MainContent: React.FC<MainContentProps> = ({
     onBulkDelete,
     onBulkCompare,
 }) => {
+    const visibleColumns = (() => {
+        const configured = getStorageItem('view-states');
+        if (!configured) return undefined;
+
+        try {
+            const parsed = JSON.parse(configured);
+            return parsed?.list?.visibleColumns as string[] | undefined;
+        } catch {
+            return undefined;
+        }
+    })();
+
     const renderViewContent = () => {
         switch (viewMode) {
             case 'list':
@@ -100,11 +117,12 @@ const MainContent: React.FC<MainContentProps> = ({
                             onDelete={requestDelete}
                             onUpdate={updateApplication}
                             onDuplicate={duplicateApplication}
-                            hasActiveFilter={searchQuery.length > 0}
+                            hasActiveFilter={searchQuery.length > 0 || hasActiveAdvancedSearch}
                             isSelectionMode={isSelectionMode}
                             selectedIds={selectedIds}
                             onToggleSelection={toggleSelection}
                             onEnterSelectionMode={toggleSelectionMode}
+                            visibleColumns={visibleColumns}
                         />
                     </>
                 );
@@ -198,6 +216,9 @@ const MainContent: React.FC<MainContentProps> = ({
             <Suspense fallback={<LoadingFallback />}>
                 <DashboardSummary applications={applications} viewMode={viewMode} />
             </Suspense>
+
+            <DataValidationPanel applications={applications} />
+            <AdvancedAnalyticsPanel applications={applications} />
 
             {/* Animated View Container */}
             <AnimatePresence mode="wait">

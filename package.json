@@ -1,7 +1,7 @@
 {
   "name": "academia-track",
   "private": true,
-  "version": "5.2.2",
+  "version": "5.2.3",
   "description": "Academic Application Tracker - Track universities, programs, deadlines, and submissions",
   "author": "BHARATH CHANDRA VADDARAM <bharath.vbcr@gmail.com>",
   "homepage": "https://github.com/bharathvbcr/AcademiaTrack",
@@ -15,6 +15,7 @@
     "node": ">=20 <26"
   },
   "scripts": {
+    "map:verify": "node scripts/verify-map-coverage.js",
     "test": "vitest",
     "test:ui": "vitest --ui",
     "test:run": "vitest run",

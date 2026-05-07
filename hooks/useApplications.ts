@@ -3,7 +3,7 @@ import { Application, FacultyContact, ApplicationStatus, ApplicationFeeWaiverSta
 import { useDebounce } from './useDebounce';
 import { migrateData, wrapInSchema, createEmptyDataSchema } from '../utils/dataMigration';
 import { useUndoRedo } from './useUndoRedo';
-import { readJsonFromStorage, writeJsonToStorage } from '../utils/browserStorage';
+import { getStorageItem, readJsonFromStorage, writeJsonToStorage } from '../utils/browserStorage';
 
 export const useApplications = () => {
   const { state: applications, setState: setApplications, undo, redo, canUndo, canRedo, reset } = useUndoRedo<Application[]>([]);
@@ -53,14 +53,22 @@ export const useApplications = () => {
   // Save data whenever debounced applications change
   useEffect(() => {
     if (!isLoaded) return;
+    if (debouncedApplications !== applications) return;
 
     const saveData = async () => {
       try {
+        if (getStorageItem('auto-save-enabled') === 'false') {
+          return;
+        }
+
         // Wrap applications in versioned schema before saving
         const dataToSave = wrapInSchema(debouncedApplications);
 
         if (window.desktop) {
           await window.desktop.saveData(dataToSave);
+          await window.desktop.autoBackup().catch(e => {
+            console.error('Automatic backup failed:', e);
+          });
         } else {
           writeJsonToStorage('phd-applications', dataToSave);
         }
@@ -71,9 +79,13 @@ export const useApplications = () => {
           try {
             const dataToSave = wrapInSchema(debouncedApplications);
             if (window.desktop) {
-              window.desktop.saveData(dataToSave).catch(e => {
-                console.error('Retry save also failed:', e);
-              });
+              window.desktop.saveData(dataToSave)
+                .then(() => window.desktop?.autoBackup().catch(e => {
+                  console.error('Retry automatic backup failed:', e);
+                }))
+                .catch(e => {
+                  console.error('Retry save also failed:', e);
+                });
             } else {
               writeJsonToStorage('phd-applications', dataToSave);
             }
@@ -85,7 +97,7 @@ export const useApplications = () => {
     };
 
     saveData();
-  }, [debouncedApplications, isLoaded]);
+  }, [applications, debouncedApplications, isLoaded]);
 
   // Periodic deadline check
   // Keep a ref to applications for the interval to access the latest state without resetting
@@ -111,6 +123,10 @@ export const useApplications = () => {
 
   const checkDeadlines = (apps: Application[]) => {
     const today = new Date();
+    if (getStorageItem('deadline-notifications-enabled') === 'false') {
+      return;
+    }
+
     apps.forEach(app => {
       if (app.deadline && app.status !== ApplicationStatus.Submitted) {
         const deadlineDate = new Date(app.deadline);
