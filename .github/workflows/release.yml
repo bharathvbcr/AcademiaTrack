@@ -21,6 +21,7 @@ jobs:
       tag: ${{ steps.release_meta.outputs.tag }}
       version: ${{ steps.release_meta.outputs.version }}
       release_name: ${{ steps.release_meta.outputs.release_name }}
+      should_release: ${{ steps.release_meta.outputs.should_release }}
     steps:
       - name: Checkout Code
         uses: actions/checkout@v5
@@ -93,8 +94,12 @@ jobs:
           if [ -n "${GITHUB_API_URL}" ] && [ -n "${GITHUB_REPOSITORY}" ] && [ -n "${GH_TOKEN}" ]; then
             STATUS_CODE="$(curl -sS -o /tmp/release_lookup.json -w "%{http_code}" -H "Authorization: Bearer ${GH_TOKEN}" "${GITHUB_API_URL}/repos/${GITHUB_REPOSITORY}/releases/tags/${TAG}")"
             if [[ "${STATUS_CODE}" == "200" ]]; then
-              echo "::error::Release ${TAG} already exists in GitHub Releases."
-              exit 1
+              echo "Release ${TAG} already exists in GitHub Releases; skipping release build."
+              echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+              echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+              echo "release_name=${RELEASE_NAME}" >> "$GITHUB_OUTPUT"
+              echo "should_release=false" >> "$GITHUB_OUTPUT"
+              exit 0
             elif [[ "${STATUS_CODE}" != "404" ]]; then
               echo "::warning::Could not confirm release uniqueness for ${TAG} (HTTP ${STATUS_CODE}). Continuing."
             fi
@@ -126,6 +131,7 @@ jobs:
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           echo "release_name=${RELEASE_NAME}" >> "$GITHUB_OUTPUT"
+          echo "should_release=true" >> "$GITHUB_OUTPUT"
           echo "Release metadata resolved for $TAG"
 
   test:
@@ -168,6 +174,7 @@ jobs:
     permissions:
       contents: write
     needs: [test, resolve]
+    if: needs.resolve.outputs.should_release == 'true'
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -227,6 +234,7 @@ jobs:
   collect:
     name: Collect Release Artifacts
     needs: [build, resolve]
+    if: needs.resolve.outputs.should_release == 'true'
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -259,6 +267,7 @@ jobs:
   release:
     name: Create Release
     needs: [collect, resolve]
+    if: needs.resolve.outputs.should_release == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: write
