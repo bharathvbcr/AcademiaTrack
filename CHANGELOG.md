@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [5.2.7] - 2026-05-07
+
+### Fixed
+- **View Navigation:** Made List, Kanban, Calendar, Timeline, Budget, Faculty, and Recommenders view tabs stable, directly clickable controls instead of hover-collapsed groups.
+
 ## [5.2.6] - 2026-05-07
 
 ### Fixed

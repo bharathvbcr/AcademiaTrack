@@ -105,38 +105,15 @@ const Header: React.FC<HeaderProps> = ({
     };
   }, [isAddNewHovered]);
 
-  // Track mouse hover for expanding toolbar
-  const [hoveredSection, setHoveredSection] = useState<'apps' | 'schedule' | 'resources' | null>(null);
-
-  // Track last used views
-  const [lastAppView, setLastAppView] = useState<ViewMode>('list');
-  const [lastScheduleView, setLastScheduleView] = useState<ViewMode>('timeline');
-  const [lastResourceView, setLastResourceView] = useState<ViewMode>('faculty');
-
-  useEffect(() => {
-    if (['list', 'kanban', 'budget'].includes(viewMode)) {
-      setLastAppView(viewMode);
-    } else if (['timeline', 'calendar'].includes(viewMode)) {
-      setLastScheduleView(viewMode);
-    } else if (['faculty', 'recommenders'].includes(viewMode)) {
-      setLastResourceView(viewMode);
-    }
-  }, [viewMode]);
-
-  const isAppView = ['list', 'kanban', 'budget'].includes(viewMode);
-  const isScheduleView = ['timeline', 'calendar'].includes(viewMode);
-  const isResourceView = ['faculty', 'recommenders'].includes(viewMode);
-
-  const showApps = isAppView || hoveredSection === 'apps';
-  const showSchedule = isScheduleView || hoveredSection === 'schedule';
-  const showResources = isResourceView || hoveredSection === 'resources';
-
   // Helper for Icon Buttons
   const ViewIconButton = ({ mode, icon, label }: { mode: ViewMode, icon: string, label: string }) => {
     const isActive = viewMode === mode;
     return (
       <Tooltip content={label}>
         <button
+          type="button"
+          aria-label={label}
+          aria-pressed={isActive}
           onClick={() => onViewChange(mode)}
           className={`relative p-2 rounded-lg transition-all duration-200 ${isActive
             ? 'text-[#f4f4f5] bg-[#27272a]'
@@ -174,77 +151,31 @@ const Header: React.FC<HeaderProps> = ({
 
         <div className="flex flex-wrap items-center gap-2 sm:gap-4">
 
-          {/* Expanding Toolbar */}
-          <div className="flex liquid-glass-nav p-1.5 rounded-xl items-center gap-1 transition-all duration-300 relative overflow-hidden">
-
-            {/* Applications Section */}
-            <div
-              className="flex items-center"
-              onMouseEnter={() => setHoveredSection('apps')}
-              onMouseLeave={() => setHoveredSection(null)}
-            >
-              {showApps ? (
-                <div className="flex items-center gap-1 animate-fadeIn px-1">
-                  <ViewIconButton mode="list" icon="list" label="List View" />
-                  <ViewIconButton mode="kanban" icon="view_kanban" label="Kanban Board" />
-                  <ViewIconButton mode="budget" icon="attach_money" label="Budget" />
-                </div>
-              ) : (
-                <button
-                  onClick={() => onViewChange(lastAppView)}
-                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium text-[#a1a1aa] hover:bg-[#27272a] hover:text-[#f4f4f5] transition-colors"
-                >
-                  <span>Applications</span>
-                </button>
-              )}
+          {/* View Toolbar */}
+          <nav
+            className="flex flex-wrap liquid-glass-nav p-1.5 rounded-xl items-center gap-1 transition-all duration-300 relative"
+            aria-label="View tabs"
+          >
+            <div className="flex items-center gap-1 px-1">
+              <ViewIconButton mode="list" icon="list" label="List View" />
+              <ViewIconButton mode="kanban" icon="view_kanban" label="Kanban Board" />
+              <ViewIconButton mode="budget" icon="attach_money" label="Budget" />
             </div>
 
             <div className="h-5 w-px bg-[#27272a] mx-1"></div>
 
-            {/* Schedule Section */}
-            <div
-              className="flex items-center"
-              onMouseEnter={() => setHoveredSection('schedule')}
-              onMouseLeave={() => setHoveredSection(null)}
-            >
-              {showSchedule ? (
-                <div className="flex items-center gap-1 animate-fadeIn px-1">
-                  <ViewIconButton mode="timeline" icon="timeline" label="Timeline" />
-                  <ViewIconButton mode="calendar" icon="calendar_month" label="Calendar" />
-                </div>
-              ) : (
-                <button
-                  onClick={() => onViewChange(lastScheduleView)}
-                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium text-[#a1a1aa] hover:bg-[#27272a] hover:text-[#f4f4f5] transition-colors"
-                >
-                  <span>Schedule</span>
-                </button>
-              )}
+            <div className="flex items-center gap-1 px-1">
+              <ViewIconButton mode="timeline" icon="timeline" label="Timeline" />
+              <ViewIconButton mode="calendar" icon="calendar_month" label="Calendar" />
             </div>
 
             <div className="h-5 w-px bg-[#27272a] mx-1"></div>
 
-            {/* Resources Section */}
-            <div
-              className="flex items-center"
-              onMouseEnter={() => setHoveredSection('resources')}
-              onMouseLeave={() => setHoveredSection(null)}
-            >
-              {showResources ? (
-                <div className="flex items-center gap-1 animate-fadeIn px-1">
-                  <ViewIconButton mode="faculty" icon="school" label="Faculty" />
-                  <ViewIconButton mode="recommenders" icon="assignment_ind" label="Recommenders" />
-                </div>
-              ) : (
-                <button
-                  onClick={() => onViewChange(lastResourceView)}
-                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium text-[#a1a1aa] hover:bg-[#27272a] hover:text-[#f4f4f5] transition-colors"
-                >
-                  <span>Resources</span>
-                </button>
-              )}
+            <div className="flex items-center gap-1 px-1">
+              <ViewIconButton mode="faculty" icon="school" label="Faculty" />
+              <ViewIconButton mode="recommenders" icon="assignment_ind" label="Recommenders" />
             </div>
-          </div>
+          </nav>
 
           <div className="h-8 w-px bg-[#27272a] mx-2 hidden sm:block"></div>
 
