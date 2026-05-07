@@ -3,7 +3,7 @@
 AcademiaTrack is a desktop-first academic application tracker for managing universities, programs, deadlines, documents, faculty contacts, recommenders, budgets, timelines, and application status. The app is built with React and Vite in the renderer, Electron for the desktop shell, and local filesystem persistence for desktop data.
 
 <p align="center">
-  <img src="./AcademiaTrack.png" alt="AcademiaTrack screenshot" width="480">
+  <img src="./AcademiaTrack.png" alt="AcademiaTrack screenshot" width="300">
 </p>
 
 ## What It Does
