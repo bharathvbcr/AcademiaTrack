@@ -524,7 +524,9 @@ const App: React.FC = () => {
   }, [enhancedDragDrop]);
 
   // Check if running in the desktop runtime so the custom titlebar has room.
-  const isDesktopRuntime = !!window.desktop?.windowControls;
+  const isDesktopRuntime =
+    !!window.desktop?.windowControls ||
+    (typeof navigator !== 'undefined' && navigator.userAgent.toLowerCase().includes('electron'));
 
   return (
     <>

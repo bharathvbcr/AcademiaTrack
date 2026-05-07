@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [5.2.5] - 2026-05-07
+
+### Fixed
+- **Desktop Window Chrome:** Made the custom title bar render in Electron even when the preload bridge is unavailable during the first renderer pass.
+
 ## [5.2.4] - 2026-05-07
 
 ### Fixed

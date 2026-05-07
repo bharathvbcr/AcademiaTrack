@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from 'react';
 
+const isElectronShell = () =>
+  typeof navigator !== 'undefined' && navigator.userAgent.toLowerCase().includes('electron');
+
 const TitleBar: React.FC = () => {
   const [isMaximized, setIsMaximized] = useState(false);
 
@@ -30,8 +33,10 @@ const TitleBar: React.FC = () => {
     window.desktop?.windowControls?.maximize();
   };
 
-  // Don't render if the desktop runtime window controls are unavailable.
-  if (!window.desktop?.windowControls) {
+  const windowControls = window.desktop?.windowControls;
+
+  // Keep the chrome visible in Electron even if the preload bridge is not ready.
+  if (!windowControls && !isElectronShell()) {
     return null;
   }
 
@@ -61,6 +66,7 @@ const TitleBar: React.FC = () => {
         {/* Minimize */}
         <button
           onClick={handleMinimize}
+          disabled={!windowControls}
           className="w-12 h-full flex items-center justify-center text-white/75 hover:text-white hover:bg-white/10 transition-colors"
           aria-label="Minimize"
         >
@@ -72,6 +78,7 @@ const TitleBar: React.FC = () => {
         {/* Maximize/Restore */}
         <button
           onClick={handleMaximize}
+          disabled={!windowControls}
           className="w-12 h-full flex items-center justify-center text-white/75 hover:text-white hover:bg-white/10 transition-colors"
           aria-label={isMaximized ? 'Restore' : 'Maximize'}
         >
@@ -92,6 +99,7 @@ const TitleBar: React.FC = () => {
         {/* Close */}
         <button
           onClick={handleClose}
+          disabled={!windowControls}
           className="w-12 h-full flex items-center justify-center text-white/75 hover:bg-red-600 hover:text-white transition-colors"
           aria-label="Close"
         >
