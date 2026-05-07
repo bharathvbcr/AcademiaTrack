@@ -26,3 +26,7 @@ test-results/
 coverage/
 .gemini/
 gha-creds-*.json
+
+# Local/generated Markdown reports
+/*_REPORT.md
+/*-report.md
