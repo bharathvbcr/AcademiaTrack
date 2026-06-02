@@ -8,6 +8,12 @@ env:
 
 on:
   workflow_dispatch:
+    inputs:
+      force_release:
+        description: Force release even if the package version tag already exists
+        required: false
+        default: false
+        type: boolean
   push:
     branches:
       - main
@@ -36,6 +42,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_API_URL: ${{ github.api_url }}
           GITHUB_REPOSITORY: ${{ github.repository }}
+          FORCE_RELEASE: ${{ github.event.inputs.force_release || 'false' }}
         shell: bash
         run: |
           set -euo pipefail
@@ -115,7 +122,7 @@ jobs:
               echo "::warning::Tag ${TAG} resolves to ${TAG_COMMIT}, workflow event SHA is ${GITHUB_SHA}."
             fi
           else
-            if git rev-parse -q --verify "refs/tags/${TAG}" >/dev/null; then
+            if git rev-parse -q --verify "refs/tags/${TAG}" >/dev/null && [[ "${FORCE_RELEASE}" != "true" ]]; then
               echo "Tag ${TAG} already exists. Skipping auto-release for current main branch version."
               echo "tag=$TAG" >> "$GITHUB_OUTPUT"
               echo "version=$VERSION" >> "$GITHUB_OUTPUT"
