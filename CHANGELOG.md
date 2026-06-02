@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [5.2.10] - 2026-06-02
+
+### Fixed
+- **Release Automation:** Prepared the next auto-released patch and kept workflow behavior stable for versioned publish paths.
+
 ## [5.2.9] - 2026-06-02
 
 ### Changed
