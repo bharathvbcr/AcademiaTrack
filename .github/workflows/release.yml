@@ -322,6 +322,24 @@ jobs:
           GITHUB_REF_NAME: ${{ needs.resolve.outputs.tag }}
         run: node scripts/generate-release-notes.cjs
 
+      - name: Remove existing release assets for forced rebuild
+        if: github.event_name == 'workflow_dispatch' && github.event.inputs.force_release == 'true'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_TAG: ${{ needs.resolve.outputs.tag }}
+        run: |
+          set -euo pipefail
+          if ! gh release view "${RELEASE_TAG}" >/dev/null 2>&1; then
+            exit 0
+          fi
+
+          gh release view "${RELEASE_TAG}" --json assets --jq '.assets[].name' | while IFS= read -r asset; do
+            if [ -n "${asset}" ]; then
+              gh release delete-asset "${RELEASE_TAG}" "${asset}" --yes
+            fi
+          done
+
       - name: Create Release
         uses: softprops/action-gh-release@v2
         env:
