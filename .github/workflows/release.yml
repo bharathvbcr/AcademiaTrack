@@ -177,7 +177,7 @@ jobs:
     name: Build Desktop App
     permissions:
       contents: write
-    needs: [test, resolve]
+    needs: [resolve]
     if: needs.resolve.outputs.should_release == 'true'
     runs-on: ${{ matrix.os }}
     strategy:
