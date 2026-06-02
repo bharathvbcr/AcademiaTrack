@@ -122,20 +122,23 @@ jobs:
               echo "::warning::Tag ${TAG} resolves to ${TAG_COMMIT}, workflow event SHA is ${GITHUB_SHA}."
             fi
           else
-            if git rev-parse -q --verify "refs/tags/${TAG}" >/dev/null && [[ "${FORCE_RELEASE}" != "true" ]]; then
-              echo "Tag ${TAG} already exists. Skipping auto-release for current main branch version."
-              echo "tag=$TAG" >> "$GITHUB_OUTPUT"
-              echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-              echo "release_name=${RELEASE_NAME}" >> "$GITHUB_OUTPUT"
-              echo "should_release=false" >> "$GITHUB_OUTPUT"
-              exit 0
+            if git rev-parse -q --verify "refs/tags/${TAG}" >/dev/null; then
+              if [[ "${FORCE_RELEASE}" != "true" ]]; then
+                echo "Tag ${TAG} already exists. Skipping auto-release for current main branch version."
+                echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+                echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+                echo "release_name=${RELEASE_NAME}" >> "$GITHUB_OUTPUT"
+                echo "should_release=false" >> "$GITHUB_OUTPUT"
+                exit 0
+              fi
+              echo "Tag ${TAG} already exists. Proceeding with release for existing tag due force_release=true."
+            else
+              git config user.name "github-actions[bot]"
+              git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+              git tag -a "${TAG}" -m "Release ${TAG}" "${GITHUB_SHA}"
+              git push origin "refs/tags/${TAG}"
+              echo "Created release tag ${TAG} at ${GITHUB_SHA}"
             fi
-
-            git config user.name "github-actions[bot]"
-            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git tag -a "${TAG}" -m "Release ${TAG}" "${GITHUB_SHA}"
-            git push origin "refs/tags/${TAG}"
-            echo "Created release tag ${TAG} at ${GITHUB_SHA}"
           fi
 
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
