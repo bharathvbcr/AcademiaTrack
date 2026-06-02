@@ -246,7 +246,7 @@ jobs:
     needs: [build, resolve]
     if: needs.resolve.outputs.should_release == 'true'
     runs-on: ubuntu-latest
-  strategy:
+    strategy:
       matrix:
         os: [windows-latest]
       fail-fast: false
