@@ -1,7 +1,7 @@
 {
   "name": "academia-track",
   "private": true,
-  "version": "5.2.7",
+  "version": "5.2.8",
   "description": "Academic Application Tracker - Track universities, programs, deadlines, and submissions",
   "author": "BHARATH CHANDRA VADDARAM <bharath.vbcr@gmail.com>",
   "homepage": "https://github.com/bharathvbcr/AcademiaTrack",
@@ -16,18 +16,28 @@
   },
   "scripts": {
     "map:verify": "node scripts/verify-map-coverage.js",
+    "map:status": "npm run gitnexus:status && npm run map:verify",
+    "map:refresh": "npm run gitnexus:analyze && npm run graphify:hook-status && npm run map:verify",
+    "graphify:hook-status": "graphify hook status",
+    "gitnexus:status": "npx gitnexus status",
+    "gitnexus:analyze": "npx gitnexus analyze",
+    "gitnexus:wiki": "npx gitnexus wiki",
     "test": "vitest",
     "test:ui": "vitest --ui",
     "test:run": "vitest run",
     "typecheck": "tsgo -p tsconfig.json --noEmit && tsgo -p electron/tsconfig.json --noEmit",
     "dev": "vite",
     "build": "vite build",
-    "package": "npm run build:electron",
+    "package": "npm run build:tauri",
     "preview": "vite preview",
     "build:main": "tsgo -p electron/tsconfig.json && node scripts/copy-electron-preload.cjs",
     "dev:electron": "npm-run-all --parallel dev start:electron",
     "start:electron": "wait-on http://localhost:3000 && npm run build:main && electron .",
-    "build:electron": "npm run build && npm run build:main && electron-builder"
+    "build:electron": "npm run build && npm run build:main && electron-builder",
+    "package:electron": "npm run build:electron",
+    "tauri": "tauri",
+    "dev:tauri": "tauri dev",
+    "build:tauri": "tauri build"
   },
   "build": {
     "appId": "com.bharathvbcr.academiatrack",
@@ -61,6 +71,7 @@
   },
   "dependencies": {
     "@hello-pangea/dnd": "^18.0.1",
+    "@tauri-apps/api": "^2.11.0",
     "canvas-confetti": "^1.9.3",
     "date-fns": "^4.1.0",
     "electron-updater": "^6.8.3",
@@ -72,8 +83,8 @@
     "remark-gfm": "^4.0.1"
   },
   "devDependencies": {
-    "@typescript/native-preview": "7.0.0-dev.20260421.2",
     "@playwright/test": "^1.57.0",
+    "@tauri-apps/cli": "^2.11.1",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.1",
     "@testing-library/user-event": "^14.6.1",
@@ -81,6 +92,7 @@
     "@types/node": "^22.14.0",
     "@types/react": "^19.2.2",
     "@types/react-dom": "^19.2.2",
+    "@typescript/native-preview": "7.0.0-dev.20260421.2",
     "@vitejs/plugin-react": "^5.0.0",
     "autoprefixer": "^10.4.23",
     "concurrently": "^9.2.1",
