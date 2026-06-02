@@ -182,7 +182,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [windows-latest, macos-latest, ubuntu-latest]
+        os: [windows-latest]
 
     steps:
       - name: Checkout Code
@@ -246,9 +246,9 @@ jobs:
     needs: [build, resolve]
     if: needs.resolve.outputs.should_release == 'true'
     runs-on: ubuntu-latest
-    strategy:
+  strategy:
       matrix:
-        os: [windows-latest, macos-latest, ubuntu-latest]
+        os: [windows-latest]
       fail-fast: false
     permissions:
       contents: read
