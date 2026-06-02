@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [5.2.8] - 2026-06-02
+
+### Security
+- **Dependency Hardening:** Patched vulnerable dependencies reported by npm audit (`brace-expansion`, `tmp`, `vitest`, `ws`) and prepared release `v5.2.8` with auto-release flow.
+
 ## [5.2.7] - 2026-05-07
 
 ### Fixed

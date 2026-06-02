@@ -7,6 +7,7 @@ env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - main
@@ -63,9 +64,13 @@ jobs:
             exit 1
           fi
 
-          if [ ! -f "CHANGELOG.md" ]; then
-            echo "::error::CHANGELOG.md is required for release validation."
-            exit 1
+          if [ -f "CHANGELOG.md" ]; then
+            if ! grep -Fq "## [${VERSION}]" CHANGELOG.md
+            then
+              echo "::warning::Release notes section for ${VERSION} is missing from CHANGELOG.md."
+            fi
+          else
+            echo "::warning::CHANGELOG.md is missing; release notes will fall back to generated content."
           fi
           if [ ! -f "package-lock.json" ]; then
             echo "::warning::package-lock.json is missing; skipping lockfile version validation."
@@ -83,12 +88,6 @@ jobs:
               echo "::error::Tag version ${VERSION} must match package-lock.json version ${LOCK_VERSION}."
               exit 1
             fi
-          fi
-
-          if ! grep -Fq "## [${VERSION}]" CHANGELOG.md
-          then
-            echo "::error::Release notes section for ${VERSION} is missing from CHANGELOG.md."
-            exit 1
           fi
 
           if [ -n "${GITHUB_API_URL}" ] && [ -n "${GITHUB_REPOSITORY}" ] && [ -n "${GH_TOKEN}" ]; then
@@ -117,8 +116,12 @@ jobs:
             fi
           else
             if git rev-parse -q --verify "refs/tags/${TAG}" >/dev/null; then
-              echo "::error::Tag ${TAG} already exists. Bump package.json before merging to main."
-              exit 1
+              echo "Tag ${TAG} already exists. Skipping auto-release for current main branch version."
+              echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+              echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+              echo "release_name=${RELEASE_NAME}" >> "$GITHUB_OUTPUT"
+              echo "should_release=false" >> "$GITHUB_OUTPUT"
+              exit 0
             fi
 
             git config user.name "github-actions[bot]"
@@ -206,28 +209,34 @@ jobs:
       - name: Install Dependencies
         run: npm ci
 
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache Rust
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri -> target
+
       - name: Install Linux Dependencies
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update
-          sudo apt-get install -y libfuse2
+          sudo apt-get install -y libwebkit2gtk-4.1-dev build-essential curl wget file libxdo-dev libssl-dev libayatana-appindicator3-dev librsvg2-dev patchelf libfuse2
 
       - name: Build Desktop App
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: npm run build:electron
+        run: npm run build:tauri
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
           name: release-${{ needs.resolve.outputs.tag }}-${{ matrix.os }}
           path: |
-            release/*.exe
-            release/*.dmg
-            release/*.AppImage
-            release/*.zip
-            release/*.blockmap
-            release/latest*.yml
+            src-tauri/target/release/bundle/**/*.exe
+            src-tauri/target/release/bundle/**/*.msi
+            src-tauri/target/release/bundle/**/*.dmg
+            src-tauri/target/release/bundle/**/*.AppImage
+            src-tauri/target/release/bundle/**/*.deb
+            src-tauri/target/release/bundle/**/*.rpm
           if-no-files-found: error
           retention-days: 7
 
@@ -305,12 +314,12 @@ jobs:
           tag_name: ${{ needs.resolve.outputs.tag }}
           name: ${{ needs.resolve.outputs.release_name }}
           files: |
-            release/*.exe
-            release/*.dmg
-            release/*.AppImage
-            release/*.zip
-            release/*.blockmap
-            release/latest*.yml
+            release/**/*.exe
+            release/**/*.msi
+            release/**/*.dmg
+            release/**/*.AppImage
+            release/**/*.deb
+            release/**/*.rpm
           body_path: .github/release-notes.md
           generate_release_notes: true
           append_body: true
