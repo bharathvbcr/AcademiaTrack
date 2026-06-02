@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [5.2.9] - 2026-06-02
+
+### Changed
+- **Release Automation:** Refined automated release behavior and prepared version `5.2.9` for publish-on-tag/main workflow execution.
+
 ## [5.2.8] - 2026-06-02
 
 ### Security
