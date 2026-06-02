@@ -140,6 +140,7 @@ jobs:
   test:
     name: Run Tests
     runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref_type == 'branch'
     steps:
       - name: Checkout Code
         uses: actions/checkout@v5
