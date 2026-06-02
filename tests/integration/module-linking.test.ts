@@ -16,6 +16,7 @@ describe('Module Linking & Dependency Integrity', () => {
         const criticalDeps = [
             'react',
             'react-dom',
+            '@tauri-apps/api',
             'date-fns'
         ];
 
@@ -23,11 +24,15 @@ describe('Module Linking & Dependency Integrity', () => {
             expect(packageJson.dependencies[dep]).toBeDefined();
         });
 
+        expect(packageJson.devDependencies['@tauri-apps/cli']).toBeDefined();
         expect(packageJson.devDependencies.electron).toBeDefined();
     });
 
-    it('should have electron desktop scripts configured', () => {
-        expect(packageJson.scripts['package']).toBe('npm run build:electron');
+    it('should have tauri desktop scripts configured with electron fallback', () => {
+        expect(packageJson.scripts['package']).toBe('npm run build:tauri');
+        expect(packageJson.scripts['dev:tauri']).toBe('tauri dev');
+        expect(packageJson.scripts['build:tauri']).toBe('tauri build');
+        expect(packageJson.scripts['package:electron']).toBe('npm run build:electron');
         expect(packageJson.scripts['dev:electron']).toContain('npm-run-all --parallel dev start:electron');
         expect(packageJson.scripts['build:electron']).toContain('npm run build && npm run build:main && electron-builder');
     });
@@ -50,11 +55,15 @@ describe('Module Linking & Dependency Integrity', () => {
         }
     });
 
-    it('should verify vite and electron config existence', () => {
+    it('should verify vite, tauri, and electron config existence', () => {
         const viteConfig = path.join(__dirname, '../../vite.config.ts');
+        const tauriConfig = path.join(__dirname, '../../src-tauri/tauri.conf.json');
+        const tauriMain = path.join(__dirname, '../../src-tauri/src/lib.rs');
         const electronMain = path.join(__dirname, '../../electron/main.ts');
         const electronPreload = path.join(__dirname, '../../electron/preload.ts');
         expect(fs.existsSync(viteConfig)).toBe(true);
+        expect(fs.existsSync(tauriConfig)).toBe(true);
+        expect(fs.existsSync(tauriMain)).toBe(true);
         expect(fs.existsSync(electronMain)).toBe(true);
         expect(fs.existsSync(electronPreload)).toBe(true);
     });
