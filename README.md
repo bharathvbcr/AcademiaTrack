@@ -1,6 +1,6 @@
 # AcademiaTrack
 
-AcademiaTrack is a desktop-first academic application tracker for managing universities, programs, deadlines, documents, faculty contacts, recommenders, budgets, timelines, and application status. The app is built with React and Vite in the renderer, Electron for the desktop shell, and local filesystem persistence for desktop data.
+AcademiaTrack is a desktop-first academic application tracker for managing universities, programs, deadlines, documents, faculty contacts, recommenders, budgets, timelines, and application status. The app is built with React and Vite in the renderer, Tauri as the primary desktop shell, and local filesystem persistence for desktop data.
 
 <p align="center">
   <img src="./AcademiaTrack.png" alt="AcademiaTrack screenshot" width="300">
@@ -9,7 +9,7 @@ AcademiaTrack is a desktop-first academic application tracker for managing unive
 ## What It Does
 
 - Tracks applications across list, kanban, calendar, budget, faculty, recommender, comparison, and timeline views.
-- Persists application data locally through Electron IPC, with browser `localStorage` fallback for web-only development.
+- Persists application data locally through Tauri commands, with browser `localStorage` fallback for web-only development.
 - Supports document attachment, local file opening, automatic backups, deadline notifications, imports, exports, custom fields, saved filters, saved searches, automation rules, templates, and keyboard-driven commands.
 - Uses a worker-backed search index when available, with synchronous search fallback.
 
@@ -58,9 +58,9 @@ AcademiaTrack is a desktop-first academic application tracker for managing unive
 
 ### Desktop Capabilities
 
-- Electron shell with custom title bar, native window controls, secure preload bridge, desktop dialogs, notifications, shell file opening, and update APIs.
-- Local document management through `selectFile`, `copyDocument`, `openFile`, and `deleteDocument` IPC calls.
-- Atomic desktop saves through temp-file write and rename in `electron/main.ts`.
+- Tauri shell with custom title bar, native window controls, secure command bridge, desktop dialogs, notifications, shell file opening, and local backup APIs.
+- Local document management through `selectFile`, `copyDocument`, `openFile`, and `deleteDocument` desktop commands.
+- Atomic desktop saves through temp-file write and rename in `src-tauri/src/lib.rs`.
 - Backup APIs for create, list, restore, delete, and automatic backup.
 - Renderer-only development remains usable through browser storage fallbacks where desktop APIs are unavailable.
 
@@ -73,9 +73,9 @@ flowchart TB
   Renderer --> Hooks["State hooks<br/>applications, filters, search, commands, automation, settings"]
   Hooks --> Domain["Domain model<br/>types/* + constants.ts"]
   Hooks --> Search["Search runtime<br/>utils/searchIndex* worker/fallback"]
-  Hooks --> Storage["Persistence adapters<br/>Electron desktop API or browserStorage"]
-  Renderer --> Bridge["window.desktop<br/>electron/preload.ts"]
-  Bridge --> Main["Electron main process<br/>electron/main.ts"]
+  Hooks --> Storage["Persistence adapters<br/>Tauri desktop API or browserStorage"]
+  Renderer --> Bridge["window.desktop<br/>lib/desktopBridge.ts"]
+  Bridge --> Main["Tauri command handlers<br/>src-tauri/src/lib.rs"]
   Main --> Files["Local userData<br/>data.json, documents/, .backup/"]
   Main --> OS["OS services<br/>notifications, dialogs, shell, updates"]
   Storage --> Bridge
@@ -90,8 +90,8 @@ sequenceDiagram
   participant R as React UI
   participant H as useApplications
   participant M as dataMigration
-  participant P as preload window.desktop
-  participant E as Electron main
+  participant P as desktopBridge window.desktop
+  participant E as Tauri commands
   participant F as userData filesystem
 
   U->>R: Create, edit, import, drag, bulk update
@@ -100,10 +100,10 @@ sequenceDiagram
   H->>M: wrapInSchema(applications)
   alt Desktop runtime
     H->>P: saveData(data)
-    P->>E: ipcRenderer.invoke("saveData")
+    P->>E: invoke("save_data")
     E->>F: write data.json.tmp, rename to data.json
     H->>P: autoBackup()
-    P->>E: ipcRenderer.invoke("autoBackup")
+    P->>E: invoke("auto_backup")
   else Web-only dev runtime
     H->>F: write localStorage key phd-applications
   end
@@ -118,7 +118,8 @@ sequenceDiagram
 |-- components/                # feature views, modals, cards, shell UI
 |-- hooks/                     # state, persistence, filtering, commands, automation
 |-- contexts/                  # command registry context
-|-- electron/                  # Electron main/preload process and desktop IPC
+|-- electron/                  # Deprecated legacy Electron main/preload process and desktop IPC
+|-- src-tauri/                 # Tauri app shell, Rust commands, capabilities, and bundling config
 |-- lib/desktopBridge.ts       # desktop API compatibility aliasing
 |-- types/                     # application, automation, command, enum types
 |-- utils/                     # migration, search, storage, export, format helpers
@@ -137,7 +138,7 @@ sequenceDiagram
 | App shell | `App.tsx`, `index.tsx`, `components/MainContent.tsx`, `components/Header.tsx`, `components/TitleBar.tsx` | Owns top-level composition, selected view, modal orchestration, and desktop chrome. |
 | Feature UI | `components/*View.tsx`, `components/ApplicationModal.tsx`, `components/ApplicationCard/*` | Renders application workflows and domain-specific panels. |
 | State hooks | `hooks/useApplications.ts`, `hooks/useAppModals.ts`, `hooks/useAutomation.ts`, `hooks/useViewState.ts` | Owns app data state, automation, view preferences, and UI state. |
-| Persistence | `hooks/useApplications.ts`, `utils/dataMigration.ts`, `utils/browserStorage.ts`, `electron/main.ts`, `electron/preload.ts` | Loads, migrates, saves, backs up, imports, and exports local data. |
+| Persistence | `hooks/useApplications.ts`, `utils/dataMigration.ts`, `utils/browserStorage.ts`, `src-tauri/src/lib.rs`, `lib/desktopBridge.ts` | Loads, migrates, saves, backs up, imports, and exports local data. |
 | Search and filtering | `hooks/useSortAndFilter.ts`, `hooks/useAdvancedSearch.ts`, `hooks/useAdvancedFilter.ts`, `utils/searchIndex*` | Provides baseline filters, saved searches, advanced filters, and indexed search. |
 | Commanding | `contexts/CommandContext.tsx`, `hooks/useAppCommands.ts`, `components/CommandPalette.tsx`, `hooks/useEnhancedKeyboardShortcuts.ts` | Registers actions, keyboard shortcuts, and command palette entries. |
 | Power tools | `components/BulkOperationsModal.tsx`, `components/ExportConfigModal.tsx`, `hooks/useTemplates.ts`, `hooks/useCustomFields.ts`, `hooks/useViewState.ts` | Owns bulk edits, selected-field exports, templates, custom fields, and persisted view layouts. |
@@ -148,11 +149,11 @@ sequenceDiagram
 
 ## Data and Persistence Details
 
-Desktop data is stored under Electron's `app.getPath("userData")`:
+Desktop data is stored under Tauri's app data directory:
 
 - `data.json` stores the versioned application schema.
 - `documents/<applicationId>/` stores copied document attachments.
-- `.backup/` stores backups created by the Electron backup APIs.
+- `.backup/` stores backups created by the Tauri backup APIs.
 
 The main data path is:
 
@@ -162,8 +163,8 @@ flowchart LR
   Hook --> Debounce["1s debounce"]
   Debounce --> Schema["wrapInSchema / migrateData"]
   Schema --> Desktop{"window.desktop available?"}
-  Desktop -- yes --> IPC["preload.ts IPC bridge"]
-  IPC --> Main["electron/main.ts saveData"]
+  Desktop -- yes --> IPC["window.desktop command bridge"]
+  IPC --> Main["src-tauri/src/lib.rs save_data"]
   Main --> Disk["userData/data.json"]
   Main --> Backup["userData/.backup"]
   Desktop -- no --> Browser["utils/browserStorage"]
@@ -178,9 +179,10 @@ Additional persisted UI/runtime keys include `active-theme-id`, `font-size`, `fo
 
 - Node.js `>=20 <26`
 - npm v10 or newer
-- A desktop environment capable of running Electron
+- Rust stable and the platform prerequisites required by Tauri
+- A desktop environment capable of running Tauri
 
-This repo uses the native TypeScript 7 beta compiler through `tsgo` for typechecking and Electron compilation. It also keeps the TypeScript 6 compatibility package installed for tools that still expect the JavaScript `typescript` API.
+This repo uses the native TypeScript 7 beta compiler through `tsgo` for typechecking. It also keeps the TypeScript 6 compatibility package installed for tools that still expect the JavaScript `typescript` API.
 
 ## Install
 
@@ -190,13 +192,13 @@ npm install
 
 ## Run In Development
 
-Desktop development:
+Tauri desktop development:
 
 ```bash
-npm run dev:electron
+npm run dev:tauri
 ```
 
-This starts Vite on `http://localhost:3000`, waits for that server, compiles `electron/main.ts` into `dist-electron/`, and launches Electron.
+This starts Vite on `http://localhost:3000` through the Tauri CLI and launches the Tauri desktop shell.
 
 Renderer-only development:
 
@@ -204,7 +206,7 @@ Renderer-only development:
 npm run dev
 ```
 
-Use renderer-only mode when you only need the web UI. Desktop-only APIs fall back where supported, but file attachment, native dialogs, backups, notifications, updates, and window controls require Electron.
+Use renderer-only mode when you only need the web UI. Desktop-only APIs fall back where supported, but file attachment, native dialogs, backups, notifications, updates, and window controls require Tauri.
 
 ## Build And Package
 
@@ -214,26 +216,38 @@ Build the Vite renderer:
 npm run build
 ```
 
-Compile Electron and package the desktop app:
+Package the Tauri desktop app:
 
 ```bash
-npm run build:electron
+npm run build:tauri
 ```
 
-`electron-builder` writes packaged artifacts to `release/`. The configured targets are NSIS on Windows, DMG on macOS, and AppImage on Linux.
+Tauri writes packaged artifacts under `src-tauri/target/release/bundle/`. Legacy Electron scripts remain available under `legacy:electron:*` and deprecated `*:electron` aliases, but they are not the mainstream build path.
 
 ## Verification
 
-Typecheck both renderer and Electron projects:
+Typecheck the primary Tauri renderer path:
 
 ```bash
 npm run typecheck
+```
+
+Run the deprecated Electron compatibility typecheck only when changing legacy Electron files:
+
+```bash
+npm run typecheck:electron
 ```
 
 Run unit and integration tests:
 
 ```bash
 npm run test:run
+```
+
+After a Tauri package build, run the packaged launch smoke:
+
+```bash
+npx playwright test tests/e2e/app-launch.spec.ts
 ```
 
 Run Vitest in watch mode:
@@ -294,8 +308,8 @@ npm run map:verify
 ## Important Implementation Notes
 
 - `vite.config.ts` serves development builds on port `3000` and uses `@/*` as an alias to the repo root.
-- Electron runs with `contextIsolation: true`, `nodeIntegration: false`, and `sandbox: true`; renderer code should use `window.desktop` instead of Node APIs.
-- `electron/preload.ts` exposes both `window.desktop` and `window.electron` for compatibility.
+- Tauri runs desktop capabilities through explicit Rust commands; renderer code should use `window.desktop` instead of Node APIs.
+- `lib/desktopBridge.ts` exposes Tauri as `window.desktop` and keeps `window.electron` only as a legacy compatibility alias.
 - `utils/dataMigration.ts` is the migration boundary for durable application schema changes.
 - `hooks/useApplications.ts` owns load/save, migration, deadline notifications, undo/redo integration, auto-backup calls, import, export, duplicate, and merge behavior.
 - Search lives in `utils/searchIndex.ts`, `utils/searchIndex.worker.ts`, `utils/searchIndexWorker.ts`, and `utils/searchIndexWrapper.ts`.
@@ -303,7 +317,8 @@ npm run map:verify
 ## Core Technologies
 
 - React 19
-- Electron 41
+- Tauri 2
+- Electron 41 deprecated legacy package path
 - Vite 6
 - TypeScript native preview / `tsgo`
 - Tailwind CSS 4

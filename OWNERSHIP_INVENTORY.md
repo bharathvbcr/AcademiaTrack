@@ -9,7 +9,7 @@ Purpose: deterministic ownership mapping for every tracked file in this reposito
 - **Renderer-Commands**: command palette, command dispatch, keyboard shortcuts.
 - **State/Hook**: state orchestration and mutation hooks.
 - **Persistence**: schema, migration, and durable read/write adapters.
-- **Desktop Runtime**: Electron main/preload process and local FS bridge.
+- **Desktop Runtime**: Tauri shell, legacy Electron main/preload process, and local FS bridge.
 - **Data/Model**: domain types, constants, and transformation logic.
 - **Search/Index**: search indexing/query execution.
 - **Testing**: unit/e2e/integration test surfaces.
@@ -18,11 +18,11 @@ Purpose: deterministic ownership mapping for every tracked file in this reposito
 
 ## Root Files
 
-- `.claude/settings.local.json` — Map/Maps
-- `.env.local` — Shell & App Compose
 - `.github/release-notes.md` — Build/Operations
 - `.github/workflows/build.yml` — Build/Operations
 - `.github/workflows/release.yml` — Build/Operations
+- `.claude/settings.local.json` — Build/Operations
+- `.env.local` — Build/Operations
 - `.gitignore` — Build/Operations
 - `.nvmrc` — Build/Operations
 - `AGENTS.md` — Map/Maps
@@ -33,8 +33,8 @@ Purpose: deterministic ownership mapping for every tracked file in this reposito
 - `COMMUNITY_MAP_SUBSYSTEM.md` — Map/Maps
 - `IMPLEMENTATION_STATUS.md` — Build/Operations
 - `LICENSE` — Build/Operations
+- `lib/__tests__/desktopBridge.test.ts` — Testing
 - `OWNERSHIP_INVENTORY.md` — Map/Maps
-- `POWER_USER_AUDIT_REPORT.md` — Build/Operations
 - `README.md` — Shell & App Compose
 - `SECURITY.md` — Build/Operations
 - `assets/MicrosoftEdgeWebview2Setup.exe` — Build/Operations
@@ -42,12 +42,11 @@ Purpose: deterministic ownership mapping for every tracked file in this reposito
 - `assets/icon.icns` — Map/Maps
 - `assets/icon.ico.ico` — Map/Maps
 - `assets/icon.png` — Map/Maps
-- `build-profile.json` — Build/Operations
-- `build-timings.json` — Build/Operations
 - `constants.ts` — Data/Model
 - `index.html` — Shell & App Compose
 - `index.tsx` — Shell & App Compose
-- `log-analysis-report.md` — Build/Operations
+- `build-profile.json` — Build/Operations
+- `build-timings.json` — Build/Operations
 - `metadata.json` — Data/Model
 - `package-lock.json` — Build/Operations
 - `package.json` — Build/Operations
@@ -55,6 +54,7 @@ Purpose: deterministic ownership mapping for every tracked file in this reposito
 - `public/AcademiaTrack.png` — Map/Maps
 - `public/favicon.ico` — Map/Maps
 - `scripts/build-profiler.cjs` — Build/Operations
+- `scripts/copy-electron-preload.cjs` — Build/Operations + Desktop Runtime
 - `scripts/generate-release-notes.cjs` — Build/Operations
 - `scripts/log-analyzer.cjs` — Build/Operations
 - `scripts/measure-build.cjs` — Build/Operations
@@ -74,7 +74,6 @@ Purpose: deterministic ownership mapping for every tracked file in this reposito
 
 ## Components
 
-- `components/.FullName` — Renderer-UI (artifact)
 - `components/AdvancedFilterBuilder.tsx` — Renderer-UI
 - `components/AdvancedAnalyticsPanel.tsx` — Renderer-UI + State/Hook
 - `components/AdvancedSearchBar.tsx` — Renderer-UI + Search/Index
@@ -139,10 +138,12 @@ Purpose: deterministic ownership mapping for every tracked file in this reposito
 - `components/UniversitySearchInput.tsx` — Renderer-UI + Search/Index
 - `components/ViewPresetModal.tsx` — Renderer-UI
 - `components/VirtualizedList.tsx` — Renderer-UI
+- `components/.FullName` — Renderer-UI
 - `components/__tests__/CommandPalette.test.tsx` — Testing
 - `components/__tests__/AdvancedSearchBar.test.tsx` — Testing
 - `components/__tests__/ApplicationList.wiring.test.tsx` — Testing
 - `components/__tests__/FacultyContactModal.test.tsx` — Testing
+- `components/__tests__/Header.view-switching.test.tsx` — Testing
 - `components/__tests__/QuickCaptureModal.test.tsx` — Testing
 - `components/__tests__/SettingsWiring.test.tsx` — Testing
 
@@ -155,8 +156,35 @@ Purpose: deterministic ownership mapping for every tracked file in this reposito
 
 - `electron/main.ts` — Desktop Runtime
 - `electron/preload.ts` — Desktop Runtime
+- `electron/preload.cjs` — Desktop Runtime
 - `electron/tsconfig.json` — Desktop Runtime
 - `lib/desktopBridge.ts` — Desktop Runtime
+- `src-tauri/.gitignore` — Build/Operations
+- `src-tauri/Cargo.lock` — Build/Operations
+- `src-tauri/Cargo.toml` — Build/Operations
+- `src-tauri/build.rs` — Desktop Runtime
+- `src-tauri/capabilities/default.json` — Desktop Runtime
+- `src-tauri/icons/128x128.png` — Map/Maps
+- `src-tauri/icons/128x128@2x.png` — Map/Maps
+- `src-tauri/icons/32x32.png` — Map/Maps
+- `src-tauri/icons/Square107x107Logo.png` — Map/Maps
+- `src-tauri/icons/Square142x142Logo.png` — Map/Maps
+- `src-tauri/icons/Square150x150Logo.png` — Map/Maps
+- `src-tauri/icons/Square284x284Logo.png` — Map/Maps
+- `src-tauri/icons/Square30x30Logo.png` — Map/Maps
+- `src-tauri/icons/Square310x310Logo.png` — Map/Maps
+- `src-tauri/icons/Square44x44Logo.png` — Map/Maps
+- `src-tauri/icons/Square71x71Logo.png` — Map/Maps
+- `src-tauri/icons/Square89x89Logo.png` — Map/Maps
+- `src-tauri/icons/StoreLogo.png` — Map/Maps
+- `src-tauri/icons/installer-header.bmp` — Map/Maps
+- `src-tauri/icons/installer-sidebar.bmp` — Map/Maps
+- `src-tauri/icons/icon.icns` — Map/Maps
+- `src-tauri/icons/icon.ico` — Map/Maps
+- `src-tauri/icons/icon.png` — Map/Maps
+- `src-tauri/src/lib.rs` — Desktop Runtime
+- `src-tauri/src/main.rs` — Desktop Runtime
+- `src-tauri/tauri.conf.json` — Desktop Runtime
 
 ## Hooks
 
@@ -219,6 +247,6 @@ Purpose: deterministic ownership mapping for every tracked file in this reposito
 
 ## Ownership Routing
 
-- UI-triggered persistence flow ownership: `components/*` → `hooks/*` → `utils/dataMigration.ts` + `utils/browserStorage.ts` (web) or `electron/main.ts` + `electron/preload.ts` (desktop).
+- UI-triggered persistence flow ownership: `components/*` → `hooks/*` → `utils/dataMigration.ts` + `utils/browserStorage.ts` (web) or `lib/desktopBridge.ts` + Tauri Rust commands (Tauri desktop), with `electron/main.ts` + `electron/preload.ts` retained for legacy Electron.
 - Command flow ownership: `components/CommandPalette.tsx` → `hooks/useAppCommands.ts` / `hooks/useCommandPalette.ts` → `contexts/CommandContext.tsx` → component handlers.
-- Desktop file APIs: `hooks/useApplicationForm.ts` + `hooks/useApplications.ts` → `lib/desktopBridge.ts` → `electron/main.ts`.
+- Desktop file APIs: `hooks/useApplicationForm.ts` + `hooks/useApplications.ts` → `lib/desktopBridge.ts` → Tauri Rust commands or legacy `electron/main.ts`.

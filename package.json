@@ -1,7 +1,7 @@
 {
   "name": "academia-track",
   "private": true,
-  "version": "5.2.10",
+  "version": "5.3.0",
   "description": "Academic Application Tracker - Track universities, programs, deadlines, and submissions",
   "author": "BHARATH CHANDRA VADDARAM <bharath.vbcr@gmail.com>",
   "homepage": "https://github.com/bharathvbcr/AcademiaTrack",
@@ -25,19 +25,28 @@
     "test": "vitest",
     "test:ui": "vitest --ui",
     "test:run": "vitest run",
-    "typecheck": "tsgo -p tsconfig.json --noEmit && tsgo -p electron/tsconfig.json --noEmit",
+    "typecheck": "tsgo -p tsconfig.json --noEmit",
+    "typecheck:electron": "tsgo -p electron/tsconfig.json --noEmit",
+    "typecheck:all": "npm run typecheck && npm run typecheck:electron",
     "dev": "vite",
     "build": "vite build",
     "package": "npm run build:tauri",
     "preview": "vite preview",
-    "build:main": "tsgo -p electron/tsconfig.json && node scripts/copy-electron-preload.cjs",
-    "dev:electron": "npm-run-all --parallel dev start:electron",
-    "start:electron": "wait-on http://localhost:3000 && npm run build:main && electron .",
-    "build:electron": "npm run build && npm run build:main && electron-builder",
-    "package:electron": "npm run build:electron",
+    "dev:desktop": "npm run dev:tauri",
+    "build:desktop": "npm run build:tauri",
     "tauri": "tauri",
     "dev:tauri": "tauri dev",
-    "build:tauri": "tauri build"
+    "build:tauri": "tauri build",
+    "legacy:electron:build-main": "tsgo -p electron/tsconfig.json && node scripts/copy-electron-preload.cjs",
+    "legacy:electron:dev": "npm-run-all --parallel dev legacy:electron:start",
+    "legacy:electron:start": "wait-on http://localhost:3000 && npm run legacy:electron:build-main && electron .",
+    "legacy:electron:build": "npm run build && npm run legacy:electron:build-main && electron-builder",
+    "legacy:electron:package": "npm run legacy:electron:build",
+    "build:main": "node -e \"console.warn('DEPRECATED: use npm run legacy:electron:build-main for the old Electron main build; Tauri is the primary desktop runtime.')\" && npm run legacy:electron:build-main",
+    "dev:electron": "node -e \"console.warn('DEPRECATED: use npm run dev:tauri or npm run dev:desktop. Electron is legacy-only.')\" && npm run legacy:electron:dev",
+    "start:electron": "node -e \"console.warn('DEPRECATED: use npm run dev:tauri or npm run dev:desktop. Electron is legacy-only.')\" && npm run legacy:electron:start",
+    "build:electron": "node -e \"console.warn('DEPRECATED: use npm run build:tauri or npm run build:desktop. Electron is legacy-only.')\" && npm run legacy:electron:build",
+    "package:electron": "node -e \"console.warn('DEPRECATED: use npm run package. Electron is legacy-only.')\" && npm run legacy:electron:package"
   },
   "build": {
     "appId": "com.bharathvbcr.academiatrack",
@@ -66,7 +75,10 @@
       "allowToChangeInstallationDirectory": false,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
-      "shortcutName": "AcademiaTrack"
+      "shortcutName": "AcademiaTrack",
+      "installerIcon": "assets/icon.ico.ico",
+      "uninstallerIcon": "assets/icon.ico.ico",
+      "installerHeaderIcon": "assets/icon.ico.ico"
     }
   },
   "dependencies": {

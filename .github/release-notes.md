@@ -1,5 +1,15 @@
 ## Patch Notes
 
+## [5.3.0] - 2026-06-03
+
+### Changed
+- **Desktop Runtime:** Tauri is now the mainstream desktop build path through `npm run dev:desktop`, `npm run build:desktop`, and `npm run package`.
+- **Legacy Electron:** Electron commands are retained only under `legacy:electron:*` and deprecated compatibility aliases.
+
+### Fixed
+- **Tauri Branding:** Regenerated the Tauri app, installer, and tile icons from the AcademiaTrack logo.
+- **Window Chrome:** Hardened the custom title bar so Tauri minimize, maximize/restore, and close controls appear when the desktop bridge is ready.
+
 ## [5.1.0] - 2026-03-10
 
 ### Changed
