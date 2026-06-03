@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## [5.3.0] - 2026-06-03
+
+### Changed
+- **Desktop Runtime:** Promoted Tauri as the mainstream desktop build path with `dev:desktop`/`build:desktop` aliases and moved Electron commands behind deprecated legacy aliases.
+
+### Fixed
+- **Tauri Branding:** Regenerated the Tauri app, installer, Windows tile, and NSIS wizard image set from the AcademiaTrack logo.
+- **Tauri Window Chrome:** Hardened the custom title bar so minimize, maximize/restore, and close controls refresh when the desktop bridge becomes available.
+
 ## [5.2.10] - 2026-06-02
 
 ### Fixed

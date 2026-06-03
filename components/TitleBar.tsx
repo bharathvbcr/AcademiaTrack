@@ -1,59 +1,91 @@
 import React, { useState, useEffect } from 'react';
+import type { WindowControls } from '../types/interfaces';
+import { DESKTOP_BRIDGE_READY_EVENT, isDesktopRuntime } from '../lib/desktopBridge';
 
-const isElectronShell = () =>
-  typeof navigator !== 'undefined' && navigator.userAgent.toLowerCase().includes('electron');
+const getWindowControls = (): WindowControls | null =>
+  typeof window === 'undefined' ? null : window.desktop?.windowControls ?? null;
 
 const TitleBar: React.FC = () => {
   const [isMaximized, setIsMaximized] = useState(false);
+  const [controls, setControls] = useState<WindowControls | null>(() => getWindowControls());
 
   useEffect(() => {
-    if (!window.desktop?.windowControls) return;
+    const refreshControls = () => {
+      setControls(getWindowControls());
+    };
 
-    // Get initial maximized state
-    window.desktop.windowControls.isMaximized().then(setIsMaximized);
+    refreshControls();
+    window.addEventListener(DESKTOP_BRIDGE_READY_EVENT, refreshControls);
 
-    // Listen for maximize changes
-    const unsubscribe = window.desktop.windowControls.onMaximizeChange(setIsMaximized);
-    return unsubscribe;
+    const interval = setInterval(() => {
+      const nextControls = getWindowControls();
+      if (nextControls) {
+        setControls(nextControls);
+        clearInterval(interval);
+      }
+    }, 50);
+
+    return () => {
+      window.removeEventListener(DESKTOP_BRIDGE_READY_EVENT, refreshControls);
+      clearInterval(interval);
+    };
   }, []);
 
+  useEffect(() => {
+    if (!controls) return;
+
+    let cancelled = false;
+    controls.isMaximized()
+      .then(value => {
+        if (!cancelled) setIsMaximized(value);
+      })
+      .catch(() => {
+        if (!cancelled) setIsMaximized(false);
+      });
+
+    const unsubscribe = controls.onMaximizeChange(setIsMaximized);
+    return () => {
+      cancelled = true;
+      unsubscribe();
+    };
+  }, [controls]);
+
   const handleMinimize = () => {
-    window.desktop?.windowControls?.minimize();
+    void controls?.minimize();
   };
 
   const handleMaximize = () => {
-    window.desktop?.windowControls?.maximize();
+    void controls?.maximize();
   };
 
   const handleClose = () => {
-    window.desktop?.windowControls?.close();
+    void controls?.close();
   };
 
   const handleDoubleClick = () => {
-    window.desktop?.windowControls?.maximize();
+    void controls?.maximize();
   };
 
-  const windowControls = window.desktop?.windowControls;
-
-  // Keep the chrome visible in Electron even if the preload bridge is not ready.
-  if (!windowControls && !isElectronShell()) {
+  if (!controls && !isDesktopRuntime()) {
     return null;
   }
 
   return (
     <div
+      data-tauri-drag-region
       className="titlebar fixed top-0 left-0 right-0 h-9 bg-[#111113] border-b border-white/10 flex items-center justify-between select-none z-[9999] shadow-[0_1px_0_rgba(0,0,0,0.45)]"
       style={{ WebkitAppRegion: 'drag' } as React.CSSProperties}
       onDoubleClick={handleDoubleClick}
     >
       {/* App Logo and Title */}
-      <div className="flex items-center gap-2 pl-3 min-w-0">
+      <div data-tauri-drag-region className="flex items-center gap-2 pl-3 min-w-0">
         <img
+          data-tauri-drag-region
           src="./AcademiaTrack.png"
           alt="AcademiaTrack"
           className="w-5 h-5 object-contain shrink-0"
         />
-        <span className="text-white/90 text-sm font-medium truncate">
+        <span data-tauri-drag-region className="text-white/90 text-sm font-medium truncate">
           AcademiaTrack
         </span>
       </div>
@@ -66,7 +98,7 @@ const TitleBar: React.FC = () => {
         {/* Minimize */}
         <button
           onClick={handleMinimize}
-          disabled={!windowControls}
+          disabled={!controls}
           className="w-12 h-full flex items-center justify-center text-white/75 hover:text-white hover:bg-white/10 transition-colors"
           aria-label="Minimize"
         >
@@ -78,7 +110,7 @@ const TitleBar: React.FC = () => {
         {/* Maximize/Restore */}
         <button
           onClick={handleMaximize}
-          disabled={!windowControls}
+          disabled={!controls}
           className="w-12 h-full flex items-center justify-center text-white/75 hover:text-white hover:bg-white/10 transition-colors"
           aria-label={isMaximized ? 'Restore' : 'Maximize'}
         >
@@ -99,7 +131,7 @@ const TitleBar: React.FC = () => {
         {/* Close */}
         <button
           onClick={handleClose}
-          disabled={!windowControls}
+          disabled={!controls}
           className="w-12 h-full flex items-center justify-center text-white/75 hover:bg-red-600 hover:text-white transition-colors"
           aria-label="Close"
         >
