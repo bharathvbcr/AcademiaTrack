@@ -1,5 +1,6 @@
 import { ApplicationStatus, ApplicationFeeWaiverStatus, TestStatus, FacultyContactStatus, ProgramType, DocumentStatus, RecommenderStatus } from './types';
 import { Application } from './types';
+import { getDaysUntil } from './utils/dateUtils';
 
 export const PROGRAM_TYPE_OPTIONS: ProgramType[] = [
   ProgramType.PhD,
@@ -239,15 +240,8 @@ export function getDeadlineInfo(deadline: string | null): {
   colorClass: string;
   urgency: 'past' | 'urgent' | 'soon' | 'normal' | 'none';
 } {
-  if (!deadline) return { daysLeft: null, label: '', colorClass: '', urgency: 'none' };
-
-  const deadlineDate = new Date(deadline);
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  deadlineDate.setHours(0, 0, 0, 0);
-
-  const diffMs = deadlineDate.getTime() - today.getTime();
-  const daysLeft = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+  const daysLeft = getDaysUntil(deadline);
+  if (daysLeft === null) return { daysLeft: null, label: '', colorClass: '', urgency: 'none' };
 
   if (daysLeft < 0) {
     return { daysLeft, label: 'Past', colorClass: 'bg-slate-200 text-slate-600 dark:bg-slate-700 dark:text-slate-400', urgency: 'past' };

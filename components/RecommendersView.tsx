@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { Application, Recommender, RecommenderStatus } from '../types';
 import { RECOMMENDER_STATUS_OPTIONS, RECOMMENDER_STATUS_COLORS } from '../constants';
+import { formatLocalDate } from '../utils/dateUtils';
 
 interface RecommendersViewProps {
     applications: Application[];
@@ -294,9 +295,7 @@ const RecommendersView: React.FC<RecommendersViewProps> = ({ applications, updat
                                             </select>
                                         </td>
                                         <td className="px-4 py-3 text-sm text-slate-600 dark:text-slate-300">
-                                            {recommender.deadline
-                                                ? new Date(recommender.deadline).toLocaleDateString()
-                                                : '-'}
+                                            {formatLocalDate(recommender.deadline)}
                                         </td>
                                         <td className="px-4 py-3 text-right">
                                             <button

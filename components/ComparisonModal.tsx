@@ -2,6 +2,7 @@ import React from 'react';
 import { Application, ApplicationStatus } from '../types';
 import { useLockBodyScroll } from '../hooks/useLockBodyScroll';
 import { formatCurrency } from '../utils/formatters';
+import { formatLocalDate } from '../utils/dateUtils';
 
 interface ComparisonModalProps {
     isOpen: boolean;
@@ -88,7 +89,7 @@ const ComparisonModal: React.FC<ComparisonModalProps> = ({ isOpen, onClose, appl
                                     </td>
                                     {applications.map(app => (
                                         <td key={app.id} className="px-6 py-4 text-sm text-slate-600 dark:text-slate-300">
-                                            {app.deadline ? new Date(app.deadline).toLocaleDateString() : '-'}
+                                            {formatLocalDate(app.deadline)}
                                         </td>
                                     ))}
                                 </tr>

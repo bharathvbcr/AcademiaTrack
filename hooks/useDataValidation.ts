@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { Application, ApplicationStatus, DocumentStatus } from '../types';
+import { getDaysUntil } from '../utils/dateUtils';
 
 export interface ValidationRule {
   id: string;
@@ -43,10 +44,8 @@ export const useDataValidation = (applications: Application[]) => {
       message: 'Deadline is in the past for non-submitted application',
       validator: (app) => {
         if (!app.deadline || app.status === ApplicationStatus.Submitted) return true;
-        const deadline = new Date(app.deadline);
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        return deadline >= today;
+        const diffDays = getDaysUntil(app.deadline);
+        return diffDays === null || diffDays >= 0;
       },
       severity: 'warning',
     },

@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## [Unreleased]
+
+### Fixed
+- **Deadline Date Accuracy:** Deadlines are now interpreted on the user's local calendar instead of UTC, fixing an off-by-one error that could make "days until deadline" counts, the dashboard "Deadlines (14 days)" tile, deadline filters (overdue/week/month), urgency badges, the past-deadline validation warning, and the days-until calculated custom field wrong by a day for users not on UTC. Day counts are now DST-safe.
+- **Duplicate Deadline Notifications:** The hourly deadline check no longer re-fires the same 7/3/1-day reminder repeatedly throughout a day; each reminder now notifies once.
+
+### Added
+- **Shared Date Utilities:** Added `utils/dateUtils.ts` (`parseLocalDate`, `getDaysUntil`, `startOfToday`, `formatLocalDate`) with unit tests, and routed deadline math/display through it to remove duplicated, inconsistent date handling.
+
 ## [5.3.0] - 2026-06-03
 
 ### Changed
