@@ -226,9 +226,12 @@ Purpose: deterministic ownership mapping for every tracked file in this reposito
 ## Utils
 
 - `utils/__tests__/browserStorage.test.ts` — Testing
+- `utils/__tests__/dateUtils.test.ts` — Testing
+- `utils/__tests__/getDeadlineInfo.test.ts` — Testing
 - `utils/browserStorage.ts` — Persistence
 - `utils/calendarExport.ts` — Data/Model
 - `utils/dataMigration.ts` — Persistence
+- `utils/dateUtils.ts` — Data/Model
 - `utils/exportFields.ts` — Data/Model
 - `utils/exportFormats.ts` — Data/Model
 - `utils/formatters.ts` — Data/Model

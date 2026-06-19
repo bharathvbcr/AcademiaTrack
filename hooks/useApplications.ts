@@ -4,6 +4,7 @@ import { useDebounce } from './useDebounce';
 import { migrateData, wrapInSchema, createEmptyDataSchema } from '../utils/dataMigration';
 import { useUndoRedo } from './useUndoRedo';
 import { getStorageItem, readJsonFromStorage, writeJsonToStorage } from '../utils/browserStorage';
+import { getDaysUntil } from '../utils/dateUtils';
 
 export const useApplications = () => {
   const { state: applications, setState: setApplications, undo, redo, canUndo, canRedo, reset } = useUndoRedo<Application[]>([]);
@@ -121,19 +122,26 @@ export const useApplications = () => {
     return () => clearInterval(interval);
   }, [isLoaded]);
 
+  // Remember which (application, deadline, threshold) reminders have already
+  // fired so the hourly check doesn't re-notify for the whole day.
+  const notifiedDeadlinesRef = React.useRef<Set<string>>(new Set());
+
   const checkDeadlines = (apps: Application[]) => {
-    const today = new Date();
     if (getStorageItem('deadline-notifications-enabled') === 'false') {
       return;
     }
 
     apps.forEach(app => {
       if (app.deadline && app.status !== ApplicationStatus.Submitted) {
-        const deadlineDate = new Date(app.deadline);
-        const diffTime = deadlineDate.getTime() - today.getTime();
-        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        const diffDays = getDaysUntil(app.deadline);
 
         if (diffDays === 7 || diffDays === 3 || diffDays === 1) {
+          const key = `${app.id}|${app.deadline}|${diffDays}`;
+          if (notifiedDeadlinesRef.current.has(key)) {
+            return;
+          }
+          notifiedDeadlinesRef.current.add(key);
+
           const timeString = diffDays === 7 ? '1 week' : `${diffDays} ${diffDays === 1 ? 'day' : 'days'}`;
           window.desktop?.showNotification(
             'Upcoming Deadline',
