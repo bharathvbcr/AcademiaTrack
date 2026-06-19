@@ -188,6 +188,7 @@ Purpose: deterministic ownership mapping for every tracked file in this reposito
 
 ## Hooks
 
+- `hooks/__tests__/useEscapeKey.test.tsx` — Testing
 - `hooks/__tests__/useKeyboardShortcuts.test.tsx` — Testing
 - `hooks/__tests__/useLocalStorage.test.tsx` — Testing
 - `hooks/useAdvancedAnalytics.ts` — State/Hook
@@ -210,6 +211,7 @@ Purpose: deterministic ownership mapping for every tracked file in this reposito
 - `hooks/useDebounce.ts` — State/Hook
 - `hooks/useEnhancedDragDrop.ts` — State/Hook
 - `hooks/useEnhancedKeyboardShortcuts.ts` — Renderer-Commands + Persistence
+- `hooks/useEscapeKey.ts` — State/Hook
 - `hooks/useFocusManagement.ts` — State/Hook
 - `hooks/useKanbanConfig.ts` — State/Hook + Persistence
 - `hooks/useKeyboardShortcuts.ts` — Renderer-Commands + State/Hook

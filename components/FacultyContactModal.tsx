@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useLockBodyScroll } from '../hooks/useLockBodyScroll';
+import { useEscapeKey } from '../hooks/useEscapeKey';
 import { Application, FacultyContact, FacultyContactStatus, UniversityResult } from '../types';
 import { FACULTY_CONTACT_STATUS_OPTIONS } from '../constants';
 import { Input, Select, TextArea } from './ApplicationFormUI';
@@ -14,6 +15,7 @@ interface FacultyContactModalProps {
 
 const FacultyContactModal: React.FC<FacultyContactModalProps> = ({ isOpen, onClose, onSave, applications }) => {
   useLockBodyScroll(isOpen);
+  useEscapeKey(isOpen, onClose);
   const [name, setName] = useState('');
   const [website, setWebsite] = useState('');
   const [email, setEmail] = useState('');

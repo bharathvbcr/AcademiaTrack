@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { backdropVariants, modalVariants } from '../hooks/useAnimations';
 import { useLockBodyScroll } from '../hooks/useLockBodyScroll';
+import { useEscapeKey } from '../hooks/useEscapeKey';
 import { useViewState, ViewPreset, ViewMode } from '../hooks/useViewState';
 
 interface ViewPresetModalProps {
@@ -17,6 +18,7 @@ const MaterialIcon: React.FC<{ name: string; className?: string }> = ({ name, cl
 
 const ViewPresetModal: React.FC<ViewPresetModalProps> = ({ isOpen, onClose, viewMode, currentState }) => {
   useLockBodyScroll(isOpen);
+  useEscapeKey(isOpen, onClose);
   const { savePreset, loadPreset, deletePreset, updatePreset, getPresetsForView } = useViewState(viewMode);
   const [presetName, setPresetName] = useState('');
   const [isSaving, setIsSaving] = useState(false);
@@ -138,6 +140,8 @@ const ViewPresetModal: React.FC<ViewPresetModalProps> = ({ isOpen, onClose, view
                             onKeyDown={(e) => {
                               if (e.key === 'Enter') handleSaveEdit(preset.id);
                               if (e.key === 'Escape') {
+                                // Cancel inline rename instead of closing the modal.
+                                e.stopPropagation();
                                 setEditingId(null);
                                 setEditingName('');
                               }

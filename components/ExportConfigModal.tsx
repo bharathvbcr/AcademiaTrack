@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { backdropVariants, modalVariants } from '../hooks/useAnimations';
 import { useLockBodyScroll } from '../hooks/useLockBodyScroll';
+import { useEscapeKey } from '../hooks/useEscapeKey';
 import { Application } from '../types';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 
@@ -55,6 +56,7 @@ const EXPORT_FIELDS = [
 
 const ExportConfigModal: React.FC<ExportConfigModalProps> = ({ isOpen, onClose, applications, onExport }) => {
   useLockBodyScroll(isOpen);
+  useEscapeKey(isOpen, onClose);
   const [selectedFields, setSelectedFields] = useState<string[]>(
     EXPORT_FIELDS.filter(f => f.defaultSelected).map(f => f.id)
   );

@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { backdropVariants, modalVariants } from '../hooks/useAnimations';
 import { useLockBodyScroll } from '../hooks/useLockBodyScroll';
+import { useEscapeKey } from '../hooks/useEscapeKey';
 import { useViewState, ViewMode } from '../hooks/useViewState';
 
 interface ColumnConfigModalProps {
@@ -33,6 +34,7 @@ const AVAILABLE_COLUMNS = [
 
 const ColumnConfigModal: React.FC<ColumnConfigModalProps> = ({ isOpen, onClose, viewMode }) => {
   useLockBodyScroll(isOpen);
+  useEscapeKey(isOpen, onClose);
   const { getViewState, saveViewState } = useViewState(viewMode);
   const viewState = getViewState();
   
