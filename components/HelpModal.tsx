@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLockBodyScroll } from '../hooks/useLockBodyScroll';
+import { useEscapeKey } from '../hooks/useEscapeKey';
 
 interface HelpModalProps {
     isOpen: boolean;
@@ -11,6 +12,7 @@ type TabId = 'getting-started' | 'features' | 'shortcuts' | 'faq';
 
 const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
     useLockBodyScroll(isOpen);
+    useEscapeKey(isOpen, onClose);
     const [activeTab, setActiveTab] = useState<TabId>('getting-started');
 
     const tabs: { id: TabId; label: string; icon: string }[] = [

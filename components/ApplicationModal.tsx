@@ -10,6 +10,7 @@ import { useDebounce } from '../hooks/useDebounce';
 import { useApplicationForm } from '../hooks/useApplicationForm';
 import { useTemplates } from '../hooks/useTemplates';
 import { useLockBodyScroll } from '../hooks/useLockBodyScroll';
+import { useEscapeKey } from '../hooks/useEscapeKey';
 import { useFocusManagement } from '../hooks/useFocusManagement';
 import { MaterialIcon } from './ApplicationFormUI';
 import Tooltip from './Tooltip';
@@ -43,6 +44,7 @@ const ApplicationModal: React.FC<ApplicationModalProps> = ({ isOpen, onClose, ap
   } = useUniversityData();
 
   useLockBodyScroll(isOpen);
+  useEscapeKey(isOpen, onClose);
   const modalRef = React.useRef<HTMLDivElement>(null);
   useFocusManagement(isOpen, modalRef as React.RefObject<HTMLElement>);
 

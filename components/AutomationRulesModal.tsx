@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { backdropVariants, modalVariants } from '../hooks/useAnimations';
 import { useLockBodyScroll } from '../hooks/useLockBodyScroll';
+import { useEscapeKey } from '../hooks/useEscapeKey';
 import { useAutomation } from '../hooks/useAutomation';
 import { AutomationRule, TriggerType, ActionType } from '../types/automation';
 import { ApplicationStatus } from '../types';
@@ -19,6 +20,7 @@ const MaterialIcon: React.FC<{ name: string; className?: string }> = ({ name, cl
 
 const AutomationRulesModal: React.FC<AutomationRulesModalProps> = ({ isOpen, onClose }) => {
   useLockBodyScroll(isOpen);
+  useEscapeKey(isOpen, onClose);
   const { rules, toggleRule, deleteRule, executionLogs, clearLogs } = useAutomation();
   const [isCreating, setIsCreating] = useState(false);
   const [editingRule, setEditingRule] = useState<AutomationRule | null>(null);

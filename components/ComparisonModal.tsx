@@ -1,6 +1,7 @@
 import React from 'react';
 import { Application, ApplicationStatus } from '../types';
 import { useLockBodyScroll } from '../hooks/useLockBodyScroll';
+import { useEscapeKey } from '../hooks/useEscapeKey';
 import { formatCurrency } from '../utils/formatters';
 import { formatLocalDate } from '../utils/dateUtils';
 
@@ -12,6 +13,7 @@ interface ComparisonModalProps {
 
 const ComparisonModal: React.FC<ComparisonModalProps> = ({ isOpen, onClose, applications }) => {
     useLockBodyScroll(isOpen);
+    useEscapeKey(isOpen, onClose);
     if (!isOpen) return null;
 
     return (

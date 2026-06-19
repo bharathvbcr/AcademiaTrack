@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { backdropVariants, modalVariants } from '../hooks/useAnimations';
 import { useLockBodyScroll } from '../hooks/useLockBodyScroll';
+import { useEscapeKey } from '../hooks/useEscapeKey';
 import { useKanbanConfig, KanbanStatusConfig } from '../hooks/useKanbanConfig';
 import { ApplicationStatus } from '../types';
 import { STATUS_COLORS, STATUS_LABELS } from '../constants';
@@ -28,6 +29,7 @@ const COLOR_PRESETS = [
 
 const KanbanConfigModal: React.FC<KanbanConfigModalProps> = ({ isOpen, onClose }) => {
   useLockBodyScroll(isOpen);
+  useEscapeKey(isOpen, onClose);
   const { statusConfig, addCustomStatus, updateStatus, deleteStatus, reorderStatuses } = useKanbanConfig();
   const [isAddingStatus, setIsAddingStatus] = useState(false);
   const [newStatusName, setNewStatusName] = useState('');

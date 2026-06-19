@@ -11,6 +11,7 @@ import { useAdvancedFilter } from './hooks/useAdvancedFilter';
 import { useAdvancedSearch } from './hooks/useAdvancedSearch';
 import { useDarkMode } from './hooks/useDarkMode';
 import { useLockBodyScroll } from './hooks/useLockBodyScroll';
+import { useEscapeKey } from './hooks/useEscapeKey';
 import { useAutomation } from './hooks/useAutomation';
 import { useViewState } from './hooks/useViewState';
 import { useToast } from './hooks/useToast';
@@ -102,6 +103,7 @@ const App: React.FC = () => {
 
   // Lock scroll when advanced filter (inline modal) is open
   useLockBodyScroll(isAdvancedFilterOpen);
+  useEscapeKey(isAdvancedFilterOpen, () => setIsAdvancedFilterOpen(false));
 
   // Advanced Filtering
   const {
