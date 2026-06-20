@@ -76,14 +76,18 @@ const KanbanColumn: React.FC<KanbanColumnProps> = React.memo(({ status, applicat
         </div>
     );
 }, (prevProps, nextProps) => {
-    // Custom comparison - only re-render if applications array changes
     return (
         prevProps.status === nextProps.status &&
         prevProps.applications.length === nextProps.applications.length &&
-        prevProps.applications.every((app, idx) => 
-            nextProps.applications[idx]?.id === app.id &&
-            nextProps.applications[idx]?.status === app.status
-        ) &&
+        prevProps.applications.every((app, idx) => {
+            const next = nextProps.applications[idx];
+            return (
+                next?.id === app.id &&
+                next?.status === app.status &&
+                next?.deadline === app.deadline &&
+                next?.isPinned === app.isPinned
+            );
+        }) &&
         prevProps.statusConfig?.id === nextProps.statusConfig?.id
     );
 });

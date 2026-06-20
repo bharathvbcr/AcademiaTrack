@@ -170,7 +170,22 @@ if (!gotTheLock) {
     });
 
     ipcMain.handle('openFile', async (_event, filePath) => {
-      await shell.openPath(filePath);
+      try {
+        const resolved = path.resolve(filePath);
+        const allowedDir = path.resolve(documentsDir);
+        if (!resolved.startsWith(allowedDir + path.sep)) {
+          return { success: false, error: 'Access denied' };
+        }
+        if (!fs.existsSync(resolved)) {
+          return { success: false, error: 'File not found' };
+        }
+        const errMsg = await shell.openPath(resolved);
+        if (errMsg) return { success: false, error: errMsg };
+        return { success: true };
+      } catch (error) {
+        const message = error instanceof Error ? error.message : 'Unknown error';
+        return { success: false, error: message };
+      }
     });
 
     ipcMain.handle('copyDocument', async (_event, { sourcePath, appId, docType }) => {
@@ -195,7 +210,21 @@ if (!gotTheLock) {
           throw new Error('Path traversal detected');
         }
 
-        await copyFile(sourcePath, destPath);
+        const resolvedSource = path.resolve(sourcePath);
+        const userData = path.resolve(app.getPath('userData'));
+        if (resolvedSource.startsWith(userData + path.sep)) {
+          throw new Error('Cannot copy from app data directory');
+        }
+        const srcStat = await stat(resolvedSource).catch(() => null);
+        if (!srcStat || !srcStat.isFile()) {
+          throw new Error('Source must be a regular file');
+        }
+        const allowedExts = new Set(['.pdf', '.doc', '.docx', '.txt']);
+        if (!allowedExts.has(path.extname(resolvedSource).toLowerCase())) {
+          throw new Error('File type not permitted');
+        }
+
+        await copyFile(resolvedSource, destPath);
         return { success: true, path: destPath };
       } catch (error) {
         const message = error instanceof Error ? error.message : 'Unknown error';
@@ -304,15 +333,10 @@ if (!gotTheLock) {
       }
     });
 
-    ipcMain.handle('getVersionInfo', () => {
-      return {
-        version: app.getVersion(),
-        name: app.getName(),
-        node: process.versions.node,
-        platform: process.platform,
-        arch: process.arch,
-      };
-    });
+    ipcMain.handle('getVersionInfo', () => ({
+      version: app.getVersion(),
+      name: app.getName(),
+    }));
 
     ipcMain.handle('checkForUpdates', async () => {
       try {

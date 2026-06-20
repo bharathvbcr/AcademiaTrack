@@ -103,13 +103,13 @@ export const useEnhancedKeyboardShortcuts = (
       .filter(shortcut => shortcut.keys.length > 0);
   }, [commands, customShortcuts, getCommandShortcuts]);
 
-  const allShortcuts = useCallback(() => {
+  const allShortcuts = useMemo(() => {
     if (!commands.length) return [] as CommandShortcut[];
     return commandShortcuts;
   }, [commandShortcuts, commands]);
 
   const shortcutsForSettings: KeyboardShortcut[] = useMemo(() => (
-    allShortcuts().map(shortcut => ({
+    allShortcuts.map(shortcut => ({
       id: shortcut.id,
       commandId: shortcut.commandId,
       keys: shortcut.keys,
@@ -161,7 +161,7 @@ export const useEnhancedKeyboardShortcuts = (
         return;
       }
 
-      const shortcuts = allShortcuts();
+      const shortcuts = allShortcuts;
       const activeShortcut = shortcuts.find(shortcut => isShortcutMatch(event, shortcut.keys));
       if (!activeShortcut) {
         return;

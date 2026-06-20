@@ -243,6 +243,11 @@ export const useAdvancedSearch = (applications: Application[]) => {
     setSavedSearches(prev => prev.filter(s => s.id !== id));
   }, [setSavedSearches]);
 
+  const clearSavedSearches = useCallback(() => {
+    setSavedSearches([]);
+    localStorage.removeItem('saved-searches');
+  }, [setSavedSearches]);
+
   return {
     search,
     parseQuery,
@@ -251,5 +256,6 @@ export const useAdvancedSearch = (applications: Application[]) => {
     saveSearch,
     loadSearch,
     deleteSearch,
+    clearSavedSearches,
   };
 };

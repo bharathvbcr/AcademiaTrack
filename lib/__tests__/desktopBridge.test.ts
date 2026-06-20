@@ -27,7 +27,6 @@ describe('installDesktopBridge', () => {
     appWindow.isMaximized.mockResolvedValue(false);
 
     delete window.desktop;
-    delete window.electron;
     delete (window as Window & { __TAURI_INTERNALS__?: unknown }).__TAURI_INTERNALS__;
   });
 
@@ -37,7 +36,6 @@ describe('installDesktopBridge', () => {
     installDesktopBridge();
 
     expect(window.desktop).toBeUndefined();
-    expect(window.electron).toBeUndefined();
   });
 
   it('installs a Tauri-backed desktop API using the existing window.desktop contract', async () => {
@@ -49,7 +47,6 @@ describe('installDesktopBridge', () => {
     installDesktopBridge();
 
     expect(window.desktop).toBeDefined();
-    expect(window.electron).toBe(window.desktop);
     expect(bridgeReady).toHaveBeenCalledTimes(1);
     window.removeEventListener(DESKTOP_BRIDGE_READY_EVENT, bridgeReady);
 

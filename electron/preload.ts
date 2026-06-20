@@ -55,4 +55,3 @@ const desktopApi = {
 };
 
 contextBridge.exposeInMainWorld('desktop', desktopApi);
-contextBridge.exposeInMainWorld('electron', desktopApi);

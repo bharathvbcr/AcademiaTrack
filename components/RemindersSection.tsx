@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Application } from '../types';
 import { FieldSet, MaterialIcon } from './ApplicationFormUI';
 
@@ -7,7 +7,7 @@ interface RemindersSectionProps {
     toggleReminder: (id: string) => void;
     updateReminderDate: (id: string, date: string) => void;
     deleteReminder: (id: string) => void;
-    addReminder: () => void;
+    addReminder: (text: string) => void;
 }
 
 const RemindersSection: React.FC<RemindersSectionProps> = ({
@@ -17,6 +17,13 @@ const RemindersSection: React.FC<RemindersSectionProps> = ({
     deleteReminder,
     addReminder,
 }) => {
+    const [newReminderText, setNewReminderText] = useState('');
+
+    const handleAdd = () => {
+        addReminder(newReminderText);
+        setNewReminderText('');
+    };
+
     return (
         <FieldSet legend="Reminders">
             <div className="md:col-span-2 space-y-3">
@@ -42,10 +49,20 @@ const RemindersSection: React.FC<RemindersSectionProps> = ({
                         </button>
                     </div>
                 ))}
-                <button type="button" onClick={addReminder} className="flex items-center gap-2 text-sm font-medium text-red-600 hover:text-red-700 transition-colors">
-                    <MaterialIcon name="add_alert" className="text-lg" />
-                    Add Reminder
-                </button>
+                <div className="flex items-center gap-2">
+                    <input
+                        type="text"
+                        value={newReminderText}
+                        onChange={(e) => setNewReminderText(e.target.value)}
+                        onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAdd(); } }}
+                        placeholder="New reminder..."
+                        className="flex-grow text-sm border border-slate-300 dark:border-slate-600 rounded-md px-2 py-1 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-red-500"
+                    />
+                    <button type="button" onClick={handleAdd} className="flex items-center gap-2 text-sm font-medium text-red-600 hover:text-red-700 transition-colors">
+                        <MaterialIcon name="add_alert" className="text-lg" />
+                        Add Reminder
+                    </button>
+                </div>
             </div>
         </FieldSet>
     );

@@ -153,14 +153,15 @@ export const useAutomation = () => {
         actionsExecuted: rule.actions.map(a => a.type),
       };
       setExecutionLogs(prev => [...prev.slice(-99), log]); // Keep last 100 logs
-      updateRule(rule.id, { 
-        executionCount: rule.executionCount + 1,
-        lastExecuted: Date.now(),
-      });
+      setRules(prev => prev.map(r =>
+        r.id === rule.id
+          ? { ...r, executionCount: r.executionCount + 1, lastExecuted: Date.now(), updatedAt: Date.now() }
+          : r
+      ));
     });
 
     return updates;
-  }, [enabledRules, checkConditions, executeActions, setExecutionLogs, updateRule]);
+  }, [enabledRules, checkConditions, executeActions, setExecutionLogs, setRules]);
 
   const clearLogs = useCallback(() => {
     setExecutionLogs([]);

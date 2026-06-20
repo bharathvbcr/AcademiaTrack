@@ -8,6 +8,8 @@ import { AutomationRule, TriggerType, ActionType } from '../types/automation';
 import { ApplicationStatus } from '../types';
 import { STATUS_OPTIONS } from '../constants';
 import AutomationRuleBuilder from './AutomationRuleBuilder';
+import { useConfirmation } from '../hooks/useConfirmation';
+import ConfirmationModal from './ConfirmationModal';
 
 interface AutomationRulesModalProps {
   isOpen: boolean;
@@ -22,6 +24,7 @@ const AutomationRulesModal: React.FC<AutomationRulesModalProps> = ({ isOpen, onC
   useLockBodyScroll(isOpen);
   useEscapeKey(isOpen, onClose);
   const { rules, toggleRule, deleteRule, executionLogs, clearLogs } = useAutomation();
+  const { confirmation, showConfirmation, closeConfirmation } = useConfirmation();
   const [isCreating, setIsCreating] = useState(false);
   const [editingRule, setEditingRule] = useState<AutomationRule | null>(null);
   const [showLogs, setShowLogs] = useState(false);
@@ -29,6 +32,15 @@ const AutomationRulesModal: React.FC<AutomationRulesModalProps> = ({ isOpen, onC
   if (!isOpen) return null;
 
   return (
+    <>
+    <ConfirmationModal
+      isOpen={confirmation.isOpen}
+      onClose={closeConfirmation}
+      onConfirm={confirmation.onConfirm}
+      title={confirmation.title}
+      message={confirmation.message}
+      isDanger={confirmation.isDanger}
+    />
     <AnimatePresence>
       <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
         <motion.div
@@ -174,9 +186,7 @@ const AutomationRulesModal: React.FC<AutomationRulesModalProps> = ({ isOpen, onC
                         </button>
                         <button
                           onClick={() => {
-                            if (window.confirm(`Delete rule "${rule.name}"?`)) {
-                              deleteRule(rule.id);
-                            }
+                            showConfirmation(`Delete Rule`, `Delete rule "${rule.name}"?`, () => deleteRule(rule.id), true);
                           }}
                           className="p-2 text-[#E03030] hover:bg-[rgba(224,48,48,0.25)] rounded"
                           aria-label={`Delete rule "${rule.name}"`}
@@ -200,6 +210,7 @@ const AutomationRulesModal: React.FC<AutomationRulesModalProps> = ({ isOpen, onC
         </motion.div>
       </div>
     </AnimatePresence>
+    </>
   );
 };
 

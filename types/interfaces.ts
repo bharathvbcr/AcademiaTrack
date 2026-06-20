@@ -260,9 +260,6 @@ export interface DesktopAPI {
     getVersionInfo: () => Promise<{
         version: string;
         name: string;
-        node: string;
-        platform: string;
-        arch: string;
     }>;
     checkForUpdates: () => Promise<{ available: boolean; version?: string; error?: string; reason?: string }>;
     downloadUpdate: () => Promise<{ success: boolean; error?: string }>;
@@ -290,7 +287,6 @@ export interface DesktopAPI {
 declare global {
     interface Window {
         desktop?: DesktopAPI;
-        electron?: DesktopAPI;
     }
 }
 

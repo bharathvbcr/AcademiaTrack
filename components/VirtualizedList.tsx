@@ -38,12 +38,18 @@ const VirtualizedList: React.FC<VirtualizedListProps> = ({
 
     resizeObserver.observe(container);
 
+    let rafId: number | null = null;
     const handleScroll = () => {
-      setScrollTop(container.scrollTop);
+      if (rafId !== null) return;
+      rafId = requestAnimationFrame(() => {
+        setScrollTop(container.scrollTop);
+        rafId = null;
+      });
     };
-    container.addEventListener('scroll', handleScroll);
+    container.addEventListener('scroll', handleScroll, { passive: true });
 
     return () => {
+      if (rafId !== null) cancelAnimationFrame(rafId);
       resizeObserver.disconnect();
       container.removeEventListener('scroll', handleScroll);
     };

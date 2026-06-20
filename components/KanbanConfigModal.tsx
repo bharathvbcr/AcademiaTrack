@@ -6,6 +6,8 @@ import { useEscapeKey } from '../hooks/useEscapeKey';
 import { useKanbanConfig, KanbanStatusConfig } from '../hooks/useKanbanConfig';
 import { ApplicationStatus } from '../types';
 import { STATUS_COLORS, STATUS_LABELS } from '../constants';
+import { useConfirmation } from '../hooks/useConfirmation';
+import ConfirmationModal from './ConfirmationModal';
 
 interface KanbanConfigModalProps {
   isOpen: boolean;
@@ -31,6 +33,7 @@ const KanbanConfigModal: React.FC<KanbanConfigModalProps> = ({ isOpen, onClose }
   useLockBodyScroll(isOpen);
   useEscapeKey(isOpen, onClose);
   const { statusConfig, addCustomStatus, updateStatus, deleteStatus, reorderStatuses } = useKanbanConfig();
+  const { confirmation, showConfirmation, closeConfirmation } = useConfirmation();
   const [isAddingStatus, setIsAddingStatus] = useState(false);
   const [newStatusName, setNewStatusName] = useState('');
   const [newStatusColor, setNewStatusColor] = useState(COLOR_PRESETS[0].value);
@@ -80,6 +83,15 @@ const KanbanConfigModal: React.FC<KanbanConfigModalProps> = ({ isOpen, onClose }
   const sortedStatuses = [...statusConfig].sort((a, b) => a.order - b.order);
 
   return (
+    <>
+    <ConfirmationModal
+      isOpen={confirmation.isOpen}
+      onClose={closeConfirmation}
+      onConfirm={confirmation.onConfirm}
+      title={confirmation.title}
+      message={confirmation.message}
+      isDanger={confirmation.isDanger}
+    />
     <AnimatePresence>
       <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
         <motion.div
@@ -263,9 +275,7 @@ const KanbanConfigModal: React.FC<KanbanConfigModalProps> = ({ isOpen, onClose }
                           </button>
                           <button
                             onClick={() => {
-                              if (window.confirm(`Delete status "${status.name}"? Applications with this status will need to be reassigned.`)) {
-                                deleteStatus(status.id);
-                              }
+                              showConfirmation('Delete Status', `Delete status "${status.name}"? Applications with this status will need to be reassigned.`, () => deleteStatus(status.id), true);
                             }}
                             className="p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded"
                             title="Delete"
@@ -292,6 +302,7 @@ const KanbanConfigModal: React.FC<KanbanConfigModalProps> = ({ isOpen, onClose }
         </motion.div>
       </div>
     </AnimatePresence>
+    </>
   );
 };
 

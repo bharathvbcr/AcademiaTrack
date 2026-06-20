@@ -474,22 +474,6 @@ const ApplicationList: React.FC<ApplicationListProps> = React.memo(({
       )}
     </div>
   );
-}, (prevProps, nextProps) => {
-  // Custom comparison for better memoization
-  if (prevProps.applications.length !== nextProps.applications.length) return false;
-  if (prevProps.hasActiveFilter !== nextProps.hasActiveFilter) return false;
-  if (prevProps.isSelectionMode !== nextProps.isSelectionMode) return false;
-  if (prevProps.selectedIds?.size !== nextProps.selectedIds?.size) return false;
-  // Check if any application IDs changed
-  const prevIds = new Set(prevProps.applications.map(a => a.id));
-  const nextIds = new Set(nextProps.applications.map(a => a.id));
-  if (prevIds.size !== nextIds.size) return false;
-  for (const id of prevIds) {
-    if (!nextIds.has(id)) return false;
-  }
-  return true;
 });
-
-ApplicationList.displayName = 'ApplicationList';
 
 export default ApplicationList;

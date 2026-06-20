@@ -287,7 +287,8 @@ const App: React.FC = () => {
       const { exportToPDF } = await import('./utils/exportFormats');
       exportToPDF(appsToExport, selectedFields);
     } else {
-      const dataStr = JSON.stringify(appsToExport, null, 2);
+      const { exportToJSON } = await import('./utils/exportFormats');
+      const dataStr = exportToJSON(appsToExport, selectedFields);
       const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
       const exportFileDefaultName = `applications-${new Date().toISOString().split('T')[0]}.json`;
 
