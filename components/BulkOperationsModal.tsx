@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useLockBodyScroll } from '../hooks/useLockBodyScroll';
+import { useEscapeKey } from '../hooks/useEscapeKey';
 import { Application, ApplicationStatus, DocumentStatus, ApplicationFeeWaiverStatus, ProgramType, FinancialOffer } from '../types';
 import { STATUS_OPTIONS, DOCUMENT_STATUS_OPTIONS, FEE_WAIVER_STATUS_OPTIONS, TAG_PRESETS, PROGRAM_TYPE_OPTIONS, ADMISSION_TERM_OPTIONS } from '../constants';
 import { useCustomFields } from '../hooks/useCustomFields';
@@ -39,6 +40,7 @@ const BulkOperationsModal: React.FC<BulkOperationsModalProps> = ({
   onUpdate,
 }) => {
   useLockBodyScroll(isOpen);
+  useEscapeKey(isOpen, onClose);
   const [activeTab, setActiveTab] = useState<'status' | 'fields' | 'documents' | 'tags' | 'dates' | 'recommenders' | 'ranking' | 'location' | 'program' | 'custom' | 'reminders' | 'faculty' | 'financial'>('status');
   const [updates, setUpdates] = useState<Omit<Partial<Application>, 'documents'> & { documents?: Partial<Application['documents']> }>({});
 

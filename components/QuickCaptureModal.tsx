@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { backdropVariants, modalVariants } from '../hooks/useAnimations';
 import { useLockBodyScroll } from '../hooks/useLockBodyScroll';
+import { useEscapeKey } from '../hooks/useEscapeKey';
 import { Application, ProgramType, ApplicationStatus } from '../types';
 import { emptyApplication } from '../hooks/useApplicationForm';
 import { searchLocation } from '../utils/locationService';
@@ -15,6 +16,7 @@ interface QuickCaptureModalProps {
 
 const QuickCaptureModal: React.FC<QuickCaptureModalProps> = ({ isOpen, onClose, onSave, initialText }) => {
     useLockBodyScroll(isOpen);
+    useEscapeKey(isOpen, onClose);
     const [input, setInput] = useState('');
     const [isProcessing, setIsProcessing] = useState(false);
     const inputRef = useRef<HTMLInputElement>(null);
@@ -169,10 +171,7 @@ const QuickCaptureModal: React.FC<QuickCaptureModalProps> = ({ isOpen, onClose, 
             e.preventDefault();
             parseAndSubmit();
         }
-        if (e.key === 'Escape') {
-            e.preventDefault();
-            onClose();
-        }
+        // Escape is handled globally by useEscapeKey.
     };
 
     return (

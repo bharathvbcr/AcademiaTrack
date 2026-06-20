@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import { Application, CustomFieldDefinition } from '../types';
 import { useCustomFields } from '../hooks/useCustomFields';
+import { getDaysUntil } from '../utils/dateUtils';
 
 interface CustomFieldsSectionProps {
     appData: Application;
@@ -20,16 +21,7 @@ const calculateFieldValue = (field: CustomFieldDefinition, app: Application): st
 
         // Days until deadline
         if (formula.includes('deadline') && formula.includes('days')) {
-            if (app.deadline) {
-                const deadline = new Date(app.deadline);
-                const today = new Date();
-                today.setHours(0, 0, 0, 0);
-                deadline.setHours(0, 0, 0, 0);
-                const diffTime = deadline.getTime() - today.getTime();
-                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                return diffDays;
-            }
-            return 0;
+            return getDaysUntil(app.deadline) ?? 0;
         }
 
         // Days since submitted

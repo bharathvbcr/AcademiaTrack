@@ -1,5 +1,6 @@
 import React from 'react';
 import { useLockBodyScroll } from '../hooks/useLockBodyScroll';
+import { useEscapeKey } from '../hooks/useEscapeKey';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface ConfirmationModalProps {
@@ -24,6 +25,7 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
   isDanger = false,
 }) => {
   useLockBodyScroll(isOpen);
+  useEscapeKey(isOpen, onClose);
   if (!isOpen) return null;
 
   return (
