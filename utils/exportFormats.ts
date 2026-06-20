@@ -27,17 +27,23 @@ export const exportToMarkdown = (applications: Application[], selectedFields?: s
 export const downloadMarkdown = (applications: Application[], selectedFields?: string[], filename?: string) => {
   const markdown = exportToMarkdown(applications, selectedFields);
   const blob = new Blob([markdown], { type: 'text/markdown;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
-  link.href = URL.createObjectURL(blob);
+  link.href = url;
   link.setAttribute('download', filename || `applications-${new Date().toISOString().split('T')[0]}.md`);
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
+  URL.revokeObjectURL(url);
 };
 
-export const exportToPDF = async (applications: Application[], selectedFields?: string[], filename?: string) => {
+// TODO: accept filename when a real PDF library such as jsPDF is integrated
+export const exportToPDF = async (applications: Application[], selectedFields?: string[]) => {
+  const esc = (s: unknown): string =>
+    String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+
   const fields = selectedFields || ['universityName', 'programName', 'status', 'deadline', 'applicationFee'];
-  
+
   // This would require a PDF library like jsPDF or pdfkit
   // For now, we'll create a simple HTML-based PDF using browser print
   const html = `
@@ -59,13 +65,13 @@ export const exportToPDF = async (applications: Application[], selectedFields?: 
       <table>
         <thead>
           <tr>
-            ${fields.map(fieldId => `<th>${getFieldLabel(fieldId)}</th>`).join('')}
+            ${fields.map(fieldId => `<th>${esc(getFieldLabel(fieldId))}</th>`).join('')}
           </tr>
         </thead>
         <tbody>
           ${applications.map(app => `
             <tr>
-              ${fields.map(fieldId => `<td>${getFieldValue(app, fieldId) || 'N/A'}</td>`).join('')}
+              ${fields.map(fieldId => `<td>${esc(getFieldValue(app, fieldId) ?? '') || 'N/A'}</td>`).join('')}
             </tr>
           `).join('')}
         </tbody>
@@ -79,6 +85,11 @@ export const exportToPDF = async (applications: Application[], selectedFields?: 
     printWindow.document.write(html);
     printWindow.document.close();
     printWindow.print();
+    printWindow.addEventListener('afterprint', () => printWindow.close());
+    const fallback = setTimeout(() => {
+      if (!printWindow.closed) printWindow.close();
+    }, 30000);
+    printWindow.addEventListener('afterprint', () => clearTimeout(fallback));
   }
 };
 
@@ -88,7 +99,7 @@ export const exportToJSON = (applications: Application[], selectedFields?: strin
   const fields = selectedFields || defaultFields;
   
   const data = applications.map(app => {
-    const obj: Record<string, any> = {};
+    const obj: Record<string, string | number | null> = {};
     fields.forEach(fieldId => {
       obj[getFieldLabel(fieldId)] = getFieldValue(app, fieldId);
     });

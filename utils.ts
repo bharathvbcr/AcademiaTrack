@@ -54,10 +54,9 @@ export const chunk = <T>(arr: T[], size: number): T[][] =>
   );
 
 export const sanitizeURL = (url: string): string => {
-  if (!url) {
-    return '';
-  }
+  if (!url) return '';
   const trimmedUrl = url.trim();
+  if (/^javascript:/i.test(trimmedUrl) || /^data:/i.test(trimmedUrl)) return '';
   if (trimmedUrl.startsWith('http://') || trimmedUrl.startsWith('https://') || trimmedUrl.startsWith('mailto:')) {
     return trimmedUrl;
   }

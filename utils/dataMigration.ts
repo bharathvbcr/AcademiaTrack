@@ -83,11 +83,15 @@ export function migrateData(data: unknown): DataSchema {
     while (currentVersion < CURRENT_DATA_VERSION) {
         const migration = migrations[currentVersion];
         if (!migration) {
-            console.warn(`No migration found for version ${currentVersion}`);
+            if (process.env.NODE_ENV !== 'production') {
+                console.warn(`No migration found for version ${currentVersion}`);
+            }
             break;
         }
 
-        console.log(`Migrating data from version ${currentVersion} to ${currentVersion + 1}`);
+        if (process.env.NODE_ENV !== 'production') {
+            console.log(`Migrating data from version ${currentVersion} to ${currentVersion + 1}`);
+        }
         currentData = migration(currentData);
         currentVersion++;
     }

@@ -1,4 +1,4 @@
-import React, { lazy, Suspense, useMemo, useEffect, useRef } from 'react';
+import React, { lazy, Suspense, useMemo, useEffect, useRef, useCallback } from 'react';
 import { useApplications } from './hooks/useApplications';
 import { useAppModals } from './hooks/useAppModals';
 import { useSortAndFilter } from './hooks/useSortAndFilter';
@@ -13,7 +13,7 @@ import { useDarkMode } from './hooks/useDarkMode';
 import { useLockBodyScroll } from './hooks/useLockBodyScroll';
 import { useEscapeKey } from './hooks/useEscapeKey';
 import { useAutomation } from './hooks/useAutomation';
-import { useViewState } from './hooks/useViewState';
+import { useViewState, ViewMode } from './hooks/useViewState';
 import { useToast } from './hooks/useToast';
 import { useEnhancedDragDrop } from './hooks/useEnhancedDragDrop';
 import { useThemeCustomization } from './hooks/useThemeCustomization';
@@ -22,6 +22,7 @@ import { DropResult } from '@hello-pangea/dnd';
 import { exportToCSV, parseCSV } from './utils';
 import { ApplicationSearchIndexWrapper } from './utils/searchIndexWrapper';
 import { DESKTOP_BRIDGE_READY_EVENT, isDesktopRuntime } from './lib/desktopBridge';
+import { TAG_REMOVE_PREFIX } from './constants';
 
 import Header from './components/Header';
 import TitleBar from './components/TitleBar';
@@ -143,7 +144,6 @@ const App: React.FC = () => {
   }
   const searchIndex = searchIndexRef.current;
   const [searchResults, setSearchResults] = React.useState<Application[]>([]);
-  const [isSearching, setIsSearching] = React.useState(false);
 
   // Enhanced search with index (async with worker)
   useEffect(() => {
@@ -153,20 +153,24 @@ const App: React.FC = () => {
   }, [applications, searchIndex]);
 
   useEffect(() => {
-    if (searchQuery.trim() && searchQuery.length >= 2) {
-      setIsSearching(true);
-      searchIndex.search(searchQuery).then((results) => {
-        setSearchResults(results);
-        setIsSearching(false);
-      }).catch((error) => {
-        console.error('Search error:', error);
-        setIsSearching(false);
-        setSearchResults([]);
-      });
-    } else {
+    if (!searchQuery.trim() || searchQuery.length < 2) {
       setSearchResults([]);
-      setIsSearching(false);
+      return;
     }
+    let cancelled = false;
+    searchIndex.search(searchQuery)
+      .then(results => {
+        if (!cancelled) {
+          setSearchResults(results);
+        }
+      })
+      .catch(error => {
+        if (!cancelled) {
+          console.error('Search error:', error);
+          setSearchResults([]);
+        }
+      });
+    return () => { cancelled = true; };
   }, [searchIndex, searchQuery]);
 
   useEffect(() => {
@@ -185,7 +189,7 @@ const App: React.FC = () => {
   }, [filteredAndSortedApplications, searchQuery, searchResults]);
 
   const [defaultProgramType, setDefaultProgramType] = useLocalStorage<ProgramType>('default-program-type', ProgramType.PhD);
-  const [viewMode, setViewMode] = useLocalStorage<'list' | 'kanban' | 'calendar' | 'budget' | 'faculty' | 'recommenders' | 'timeline'>('view-mode', 'list');
+  const [viewMode, setViewMode] = useLocalStorage<ViewMode>('view-mode', 'list');
 
   const { confirmation, showConfirmation, closeConfirmation } = useConfirmation();
 
@@ -211,25 +215,16 @@ const App: React.FC = () => {
 
   const handleSave = React.useCallback((app: Application) => {
     try {
-      const wasNew = !editingApplication;
-      let updatedApp = app;
-      
       if (editingApplication) {
         updateApplication(app);
-        updatedApp = app;
-        // Execute automation rules for field updates
-        const updates = executeRules(updatedApp, 'field_updated', { field: 'any' });
+        const updates = executeRules(app, 'field_updated', { field: 'any' });
         if (updates) {
-          updateApplication({ ...updatedApp, ...updates });
+          updateApplication({ ...app, ...updates });
         }
       } else {
-        addApplication(app);
-        updatedApp = app;
-        // Execute automation rules for new applications
-        const updates = executeRules(updatedApp, 'application_created');
-        if (updates) {
-          updateApplication({ ...updatedApp, ...updates });
-        }
+        const updates = executeRules(app, 'application_created');
+        const finalApp = updates ? { ...app, ...updates } : app;
+        addApplication(finalApp);
       }
       closeModal();
       showToast('success', 'Application saved successfully');
@@ -237,18 +232,21 @@ const App: React.FC = () => {
       console.error('Failed to save application:', error);
       showToast('error', 'Failed to save application. Please try again.', 'Error');
     }
-  }, [editingApplication, updateApplication, addApplication, closeModal, executeRules]);
+  }, [editingApplication, updateApplication, addApplication, closeModal, executeRules, showToast]);
 
-  const handleSaveFacultyContact = (contact: FacultyContact, universityName: string, isNewUniversity: boolean) => {
-    try {
-      addFacultyContact(contact, universityName, isNewUniversity, defaultProgramType);
-      closeFacultyModal();
-      showToast('success', 'Faculty contact saved successfully');
-    } catch (error) {
-      console.error('Failed to save faculty contact:', error);
-      showToast('error', 'Failed to save faculty contact. Please try again.', 'Error');
-    }
-  };
+  const handleSaveFacultyContact = React.useCallback(
+    (contact: FacultyContact, universityName: string, isNewUniversity: boolean) => {
+      try {
+        addFacultyContact(contact, universityName, isNewUniversity, defaultProgramType);
+        closeFacultyModal();
+        showToast('success', 'Faculty contact saved successfully');
+      } catch (error) {
+        console.error('Failed to save faculty contact:', error);
+        showToast('error', 'Failed to save faculty contact. Please try again.', 'Error');
+      }
+    },
+    [addFacultyContact, closeFacultyModal, defaultProgramType, showToast]
+  );
 
   const handleExportWithConfig = React.useCallback(() => {
     setIsExportConfigOpen(true);
@@ -387,14 +385,14 @@ const App: React.FC = () => {
     ids.forEach(id => {
       const app = applications.find(a => a.id === id);
       if (app) {
-        const appUpdates = typeof updates === 'function' ? updates(app) : updates;
+        const appUpdates = { ...(typeof updates === 'function' ? updates(app) : updates) };
 
         // Handle tag removal
         if (appUpdates.tags) {
-          const removeTags = appUpdates.tags.filter(t => t.startsWith('__remove__'));
-          const addTags = appUpdates.tags.filter(t => !t.startsWith('__remove__'));
+          const removeTags = appUpdates.tags.filter(t => t.startsWith(TAG_REMOVE_PREFIX));
+          const addTags = appUpdates.tags.filter(t => !t.startsWith(TAG_REMOVE_PREFIX));
           const currentTags = app.tags || [];
-          const tagsToRemove = removeTags.map(t => t.replace('__remove__', ''));
+          const tagsToRemove = removeTags.map(t => t.slice(TAG_REMOVE_PREFIX.length));
           const newTags = [
             ...currentTags.filter(t => !tagsToRemove.includes(t)),
             ...addTags.filter(t => !currentTags.includes(t)),
@@ -408,7 +406,7 @@ const App: React.FC = () => {
     setIsBulkOperationsOpen(false);
   }, [applications, updateApplication, clearSelection]);
 
-  const handleImport = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImport = React.useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -428,7 +426,7 @@ const App: React.FC = () => {
           throw new Error('File is empty');
         }
 
-        let json: any;
+        let json: unknown;
 
         if (file.name.toLowerCase().endsWith('.csv')) {
           json = parseCSV(result);
@@ -447,7 +445,7 @@ const App: React.FC = () => {
 
         // Validate each application
         const validationErrors: string[] = [];
-        const validApplications = json.filter((item: any, index: number) => {
+        const validApplications = (json as unknown[]).filter((item: unknown, index: number) => {
           if (!item || typeof item !== 'object') {
             validationErrors.push(`Item ${index + 1}: Not a valid object`);
             return false;
@@ -515,7 +513,7 @@ const App: React.FC = () => {
     };
 
     reader.readAsText(file);
-  };
+  }, [showToast, showConfirmation, mergeApplications, importApplications]);
 
   const updateApplicationWithAutomation = React.useCallback((updatedApp: Application) => {
     const app = applications.find(a => a.id === updatedApp.id);
@@ -547,12 +545,49 @@ const App: React.FC = () => {
       setDesktopRuntime(isDesktopRuntime());
     };
 
-    refreshDesktopRuntime();
     window.addEventListener(DESKTOP_BRIDGE_READY_EVENT, refreshDesktopRuntime);
     return () => {
       window.removeEventListener(DESKTOP_BRIDGE_READY_EVENT, refreshDesktopRuntime);
     };
   }, []);
+
+  const currentViewState = viewState.getViewState();
+  const viewPresetCurrentState = useMemo(() => ({
+    sortConfig,
+    filters: {},
+    searchQuery,
+    columnWidths: currentViewState?.columnWidths,
+    visibleColumns: currentViewState?.visibleColumns,
+    columnOrder: currentViewState?.columnOrder,
+  }), [sortConfig, searchQuery, currentViewState]);
+
+  const handleQuickCaptureSave = useCallback((app: Application) => {
+    const updates = executeRules(app, 'application_created');
+    const finalApp = updates ? { ...app, ...updates } : app;
+    addApplication(finalApp);
+    setQuickCaptureText('');
+    showToast('success', 'Application captured successfully!', 'Quick Capture');
+  }, [executeRules, addApplication, showToast]);
+
+  const handleAddNew = useCallback(() => openModal(null), [openModal]);
+  const handleShowHelp = useCallback(() => setIsHelpOpen(true), []);
+  const handleCloseHelp = useCallback(() => setIsHelpOpen(false), []);
+  const handleCloseComparison = useCallback(() => setIsComparisonOpen(false), []);
+  const handleCloseBulkOps = useCallback(() => setIsBulkOperationsOpen(false), []);
+  const handleCloseSettings = useCallback(() => setSettingsOpen(false), []);
+  const handleOpenKanbanConfig = useCallback(() => setIsKanbanConfigOpen(true), []);
+  const handleOpenColumnConfig = useCallback(() => setIsColumnConfigOpen(true), []);
+  const handleOpenAutomationRules = useCallback(() => setIsAutomationRulesOpen(true), []);
+  const handleOpenViewPresets = useCallback(() => setIsViewPresetOpen(true), []);
+  const handleCloseQuickCapture = useCallback(() => {
+    setIsQuickCaptureOpen(false);
+    setQuickCaptureText('');
+  }, []);
+  const handleCloseExportConfig = useCallback(() => setIsExportConfigOpen(false), []);
+  const handleCloseKanbanConfig = useCallback(() => setIsKanbanConfigOpen(false), []);
+  const handleCloseColumnConfig = useCallback(() => setIsColumnConfigOpen(false), []);
+  const handleCloseViewPreset = useCallback(() => setIsViewPresetOpen(false), []);
+  const handleCloseAutomationRules = useCallback(() => setIsAutomationRulesOpen(false), []);
 
   return (
     <>
@@ -560,7 +595,7 @@ const App: React.FC = () => {
       <div className={`min-h-screen text-[#F5D7DA] font-sans p-4 sm:p-6 lg:p-8 ${desktopRuntime ? 'pt-14 sm:pt-16 lg:pt-16' : ''} relative z-10`}>
         <div className="max-w-7xl mx-auto">
         <Header
-          onAddNew={() => openModal(null)}
+          onAddNew={handleAddNew}
           onAddFaculty={openFacultyModal}
           defaultProgramType={defaultProgramType}
           onSetDefaultProgramType={setDefaultProgramType}
@@ -568,7 +603,7 @@ const App: React.FC = () => {
           onImport={handleImport}
           viewMode={viewMode}
           onViewChange={setViewMode}
-          onShowHelp={() => setIsHelpOpen(true)}
+          onShowHelp={handleShowHelp}
           onQuickCapture={handleQuickCapture}
           applications={applications}
           onSearch={handleAdvancedSearch}
@@ -629,13 +664,18 @@ const App: React.FC = () => {
         />
         <HelpModal
           isOpen={isHelpOpen}
-          onClose={() => setIsHelpOpen(false)}
+          onClose={handleCloseHelp}
         />
-        <ComparisonModal
-          isOpen={isComparisonOpen}
-          onClose={() => setIsComparisonOpen(false)}
-          applications={getSelectedApplications()}
-        />
+      </Suspense>
+
+      <Suspense fallback={<div>Loading...</div>}>
+        {isComparisonOpen && (
+          <ComparisonModal
+            isOpen={true}
+            onClose={handleCloseComparison}
+            applications={getSelectedApplications()}
+          />
+        )}
       </Suspense>
 
       {/* Command Palette */}
@@ -647,8 +687,8 @@ const App: React.FC = () => {
       {/* Bulk Operations Modal */}
       {isBulkOperationsOpen && (
         <BulkOperationsModal
-          isOpen={isBulkOperationsOpen}
-          onClose={() => setIsBulkOperationsOpen(false)}
+          isOpen={true}
+          onClose={handleCloseBulkOps}
           selectedApplications={getSelectedApplications()}
           onUpdate={handleBulkUpdate}
         />
@@ -657,33 +697,21 @@ const App: React.FC = () => {
       {/* Settings Modal */}
       {settingsOpen && (
         <SettingsModal
-          isOpen={settingsOpen}
-          onClose={() => setSettingsOpen(false)}
-          onOpenKanbanConfig={() => setIsKanbanConfigOpen(true)}
-          onOpenColumnConfig={() => setIsColumnConfigOpen(true)}
-          onOpenAutomationRules={() => setIsAutomationRulesOpen(true)}
-          onOpenViewPresets={() => setIsViewPresetOpen(true)}
+          isOpen={true}
+          onClose={handleCloseSettings}
+          onOpenKanbanConfig={handleOpenKanbanConfig}
+          onOpenColumnConfig={handleOpenColumnConfig}
+          onOpenAutomationRules={handleOpenAutomationRules}
+          onOpenViewPresets={handleOpenViewPresets}
           initialTab={settingsTab}
         />
       )}
 
       {isQuickCaptureOpen && (
         <QuickCaptureModal
-          isOpen={isQuickCaptureOpen}
-          onClose={() => {
-            setIsQuickCaptureOpen(false);
-            setQuickCaptureText('');
-          }}
-          onSave={(app) => {
-            addApplication(app);
-            setQuickCaptureText('');
-            // Execute automation rules for new applications
-            const updates = executeRules(app, 'application_created');
-            if (updates) {
-              updateApplication({ ...app, ...updates });
-            }
-            showToast('success', 'Application captured successfully!', 'Quick Capture');
-          }}
+          isOpen={true}
+          onClose={handleCloseQuickCapture}
+          onSave={handleQuickCaptureSave}
           initialText={quickCaptureText}
         />
       )}
@@ -691,11 +719,10 @@ const App: React.FC = () => {
       {/* Export Config Modal */}
       {isExportConfigOpen && (
         <ExportConfigModal
-          isOpen={isExportConfigOpen}
-          onClose={() => setIsExportConfigOpen(false)}
+          isOpen={true}
+          onClose={handleCloseExportConfig}
           applications={selectedCount > 0 ? getSelectedApplications() : finalFilteredApplications}
           onExport={(format, selectedFields) => {
-            // Map 'markdown' to 'md' format
             const mappedFormat = format === 'markdown' ? 'md' : format;
             handleExport(mappedFormat, selectedFields);
             setIsExportConfigOpen(false);
@@ -706,15 +733,15 @@ const App: React.FC = () => {
       {/* Kanban Config Modal */}
       {isKanbanConfigOpen && (
         <KanbanConfigModal
-          isOpen={isKanbanConfigOpen}
-          onClose={() => setIsKanbanConfigOpen(false)}
+          isOpen={true}
+          onClose={handleCloseKanbanConfig}
         />
       )}
 
       {isColumnConfigOpen && (
         <ColumnConfigModal
-          isOpen={isColumnConfigOpen}
-          onClose={() => setIsColumnConfigOpen(false)}
+          isOpen={true}
+          onClose={handleCloseColumnConfig}
           viewMode={viewMode}
         />
       )}
@@ -722,25 +749,18 @@ const App: React.FC = () => {
       {/* View Preset Modal */}
       {isViewPresetOpen && (
         <ViewPresetModal
-          isOpen={isViewPresetOpen}
-          onClose={() => setIsViewPresetOpen(false)}
+          isOpen={true}
+          onClose={handleCloseViewPreset}
           viewMode={viewMode}
-          currentState={{
-            sortConfig,
-            filters: {},
-            searchQuery,
-            columnWidths: viewState.getViewState()?.columnWidths,
-            visibleColumns: viewState.getViewState()?.visibleColumns,
-            columnOrder: viewState.getViewState()?.columnOrder,
-          }}
+          currentState={viewPresetCurrentState}
         />
       )}
 
       {/* Automation Rules Modal */}
       {isAutomationRulesOpen && (
         <AutomationRulesModal
-          isOpen={isAutomationRulesOpen}
-          onClose={() => setIsAutomationRulesOpen(false)}
+          isOpen={true}
+          onClose={handleCloseAutomationRules}
         />
       )}
 

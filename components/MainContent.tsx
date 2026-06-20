@@ -12,6 +12,7 @@ import { SkeletonCard } from './SkeletonLoader';
 import DataValidationPanel from './DataValidationPanel';
 import AdvancedAnalyticsPanel from './AdvancedAnalyticsPanel';
 import { getStorageItem } from '../utils/browserStorage';
+import { ViewMode } from '../hooks/useViewState';
 
 const DashboardSummary = lazy(() => import('./DashboardSummary'));
 const KanbanBoard = lazy(() => import('./KanbanBoard'));
@@ -22,7 +23,7 @@ const RecommendersView = lazy(() => import('./RecommendersView'));
 const TimelineView = lazy(() => import('./TimelineView'));
 
 interface MainContentProps {
-    viewMode: 'list' | 'kanban' | 'calendar' | 'budget' | 'faculty' | 'recommenders' | 'timeline';
+    viewMode: ViewMode;
     applications: Application[];
     filteredAndSortedApplications: Application[];
     sortConfig: SortConfig;

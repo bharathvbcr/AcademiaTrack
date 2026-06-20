@@ -256,6 +256,8 @@ export function getDeadlineInfo(deadline: string | null): {
   }
 }
 
+export const TAG_REMOVE_PREFIX = '__remove__';
+
 export const RECOMMENDER_STATUS_OPTIONS: RecommenderStatus[] = [
   RecommenderStatus.NotStarted,
   RecommenderStatus.Requested,

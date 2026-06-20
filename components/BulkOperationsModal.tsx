@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useLockBodyScroll } from '../hooks/useLockBodyScroll';
 import { useEscapeKey } from '../hooks/useEscapeKey';
 import { Application, ApplicationStatus, DocumentStatus, ApplicationFeeWaiverStatus, ProgramType, FinancialOffer } from '../types';
-import { STATUS_OPTIONS, DOCUMENT_STATUS_OPTIONS, FEE_WAIVER_STATUS_OPTIONS, TAG_PRESETS, PROGRAM_TYPE_OPTIONS, ADMISSION_TERM_OPTIONS } from '../constants';
+import { STATUS_OPTIONS, DOCUMENT_STATUS_OPTIONS, FEE_WAIVER_STATUS_OPTIONS, TAG_PRESETS, PROGRAM_TYPE_OPTIONS, ADMISSION_TERM_OPTIONS, TAG_REMOVE_PREFIX } from '../constants';
 import { useCustomFields } from '../hooks/useCustomFields';
 
 // Extended type that allows partial documents for bulk updates
@@ -370,11 +370,11 @@ const BulkOperationsModal: React.FC<BulkOperationsModalProps> = ({
                       onClick={() => {
                         const currentTags = updates.tags || [];
                         // For removal, we'll mark with a special prefix
-                        const removeTags = updates.tags?.filter(t => t.startsWith('__remove__')) || [];
-                        if (!removeTags.includes(`__remove__${tag}`)) {
+                        const removeTags = updates.tags?.filter(t => t.startsWith(TAG_REMOVE_PREFIX)) || [];
+                        if (!removeTags.includes(`${TAG_REMOVE_PREFIX}${tag}`)) {
                           setUpdates({
                             ...updates,
-                            tags: [...currentTags, `__remove__${tag}`],
+                            tags: [...currentTags, `${TAG_REMOVE_PREFIX}${tag}`],
                           });
                         }
                       }}

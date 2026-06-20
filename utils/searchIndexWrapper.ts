@@ -21,21 +21,24 @@ export class ApplicationSearchIndexWrapper implements SearchIndexInterface {
   private fallback: ApplicationSearchIndex;
   private useWorker: boolean = false;
   private latestApplications: Application[] = [];
+  private initPromise: Promise<void> | null = null;
+  private destroyed = false;
 
   constructor() {
     this.fallback = new ApplicationSearchIndex();
-    this.initWorker();
+    this.initPromise = this.initWorker();
   }
 
   private async initWorker() {
     try {
-      // Check if workers are supported
       if (typeof Worker !== 'undefined') {
-        // Try to create worker (may fail in some environments)
         const workerInstance = new ApplicationSearchIndexWorker();
-        // Test if worker works by getting stats
         try {
           await workerInstance.getStats();
+          if (this.destroyed) {
+            workerInstance.destroy();
+            return;
+          }
           if (this.latestApplications.length > 0) {
             await workerInstance.rebuild(this.latestApplications);
           }
@@ -119,8 +122,8 @@ export class ApplicationSearchIndexWrapper implements SearchIndexInterface {
   }
 
   destroy() {
-    if (this.worker) {
-      this.worker.destroy();
-    }
+    this.destroyed = true;
+    this.worker?.destroy();
+    this.worker = null;
   }
 }

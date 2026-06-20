@@ -4,10 +4,11 @@ import { Application, ApplicationStatus, FacultyContactStatus } from '../types';
 import { STATUS_OPTIONS, CHART_COLORS, FACULTY_CHART_COLORS, FACULTY_CONTACT_STATUS_OPTIONS } from '../constants';
 import { format, parseISO, isValid } from 'date-fns';
 import { getDaysUntil } from '../utils/dateUtils';
+import { ViewMode } from '../hooks/useViewState';
 
 interface DashboardSummaryProps {
   applications: Application[];
-  viewMode?: 'list' | 'kanban' | 'calendar' | 'budget' | 'faculty' | 'recommenders' | 'timeline';
+  viewMode?: ViewMode;
 }
 
 const DashboardSummary: React.FC<DashboardSummaryProps> = ({ applications, viewMode = 'list' }) => {

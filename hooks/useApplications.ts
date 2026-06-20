@@ -283,10 +283,10 @@ export const useApplications = () => {
         throw new Error('Imported data must be an array of applications');
       }
       // Basic validation - ensure each app has required fields
-      const validApps = newApps.filter(app => {
+      const validApps = newApps.filter((app, index) => {
         if (!app || typeof app !== 'object') return false;
         if (!app.id || !app.universityName || !app.programName) {
-          console.warn('Skipping invalid application:', app);
+          console.warn('Skipping invalid application at index', index, '- missing required fields');
           return false;
         }
         return true;
@@ -307,11 +307,11 @@ export const useApplications = () => {
         throw new Error('Merged data must be an array of applications');
       }
       // Validate and filter valid applications
-      const validApps = newApps.filter(app => {
+      const validApps = newApps.filter((app, index) => {
         if (!app || typeof app !== 'object') return false;
         // For merge, we can be more lenient - just need university name
         if (!app.universityName) {
-          console.warn('Skipping application without university name:', app);
+          console.warn('Skipping application without university name at index', index);
           return false;
         }
         // Generate ID if missing

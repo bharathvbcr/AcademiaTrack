@@ -4,7 +4,7 @@ import confetti from 'canvas-confetti';
 import { Application, ApplicationStatus, ProgramType, FacultyContactStatus, DocumentStatus } from '../../types';
 import { FEE_WAIVER_STATUS_COLORS, TEST_STATUS_COLORS } from '../../constants';
 import { sanitizeURL } from '../../utils';
-import { getStorageItem, setStorageItem } from '../../utils/browserStorage';
+import { getStorageItem, setStorageItem, removeStorageItem } from '../../utils/browserStorage';
 import { CardHeader, DocumentChecklist, FacultyOutreachList, CardFooter } from './subcomponents';
 
 interface ApplicationCardProps {
@@ -51,6 +51,9 @@ const ApplicationCard: React.FC<ApplicationCardProps> = React.memo(({ applicatio
     // Fetch university logo
     useEffect(() => {
         const fetchLogo = async () => {
+            if (!getStorageItem('fetch-logos-enabled')) return;
+            if (!getStorageItem('showUniversityLogos')) return;
+
             const cacheKey = `university_logo_${universityName}`;
             const cached = getStorageItem(cacheKey);
             if (cached) {
@@ -60,19 +63,35 @@ const ApplicationCard: React.FC<ApplicationCardProps> = React.memo(({ applicatio
 
             try {
                 const cleanName = universityName.split('(')[0].trim();
-                const response = await fetch(`http://universities.hipolabs.com/search?name=${encodeURIComponent(cleanName)}`);
+                const response = await fetch(`https://universities.hipolabs.com/search?name=${encodeURIComponent(cleanName)}`);
                 const data = await response.json();
 
                 if (data && data.length > 0 && data[0].domains && data[0].domains.length > 0) {
                     const domain = data[0].domains[0];
-                    const url = `https://logo.clearbit.com/${domain}`;
-                    setLogoUrl(url);
-                    setStorageItem(cacheKey, url);
+                    const clearbitUrl = `https://logo.clearbit.com/${domain}`;
+                    const imgResponse = await fetch(clearbitUrl);
+                    const blob = await imgResponse.blob();
+                    const dataUrl = await new Promise<string>((resolve, reject) => {
+                        const reader = new FileReader();
+                        reader.onload = () => resolve(reader.result as string);
+                        reader.onerror = reject;
+                        reader.readAsDataURL(blob);
+                    });
+                    setLogoUrl(dataUrl);
+                    setStorageItem(cacheKey, dataUrl);
                 }
             } catch (e) {
                 console.error("Failed to fetch logo", e);
             }
         };
+
+        if (!getStorageItem('fetch-logos-enabled') || !getStorageItem('showUniversityLogos')) {
+            Object.keys(localStorage)
+                .filter(k => k.startsWith('university_logo_'))
+                .forEach(k => removeStorageItem(k));
+            setLogoUrl(null);
+            return;
+        }
 
         if (universityName) fetchLogo();
     }, [universityName]);
