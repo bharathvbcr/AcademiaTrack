@@ -31,9 +31,14 @@ class ErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    // Log error to console
-    console.error('ErrorBoundary caught an error:', error, errorInfo);
-    
+    // Avoid logging full error objects / component stacks in production (they can
+    // contain user-entered values and reveal app structure); keep the message.
+    if (process.env.NODE_ENV !== 'production') {
+      console.error('ErrorBoundary caught an error:', error, errorInfo);
+    } else {
+      console.error('ErrorBoundary caught an error:', error.message);
+    }
+
     // Call optional error handler
     if (this.props.onError) {
       this.props.onError(error, errorInfo);

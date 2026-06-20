@@ -17,8 +17,13 @@ root.render(
   <React.StrictMode>
     <ErrorBoundary
       onError={(error, errorInfo) => {
-        // Log to external service if needed
-        console.error('Application error:', error, errorInfo);
+        // Avoid dumping full error objects / component stacks (which can echo
+        // user-entered field values and app structure) in production builds.
+        if (process.env.NODE_ENV !== 'production') {
+          console.error('Application error:', error, errorInfo);
+        } else {
+          console.error('Application error:', error.message);
+        }
       }}
     >
       <CommandProvider>

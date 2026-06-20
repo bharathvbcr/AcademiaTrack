@@ -7,6 +7,33 @@ import { getStorageItem, readJsonFromStorage, writeJsonToStorage } from '../util
 import { getDaysUntil } from '../utils/dateUtils';
 import { ToastType } from './useToast';
 
+// Imported records (especially hand-edited or third-party JSON) may be missing
+// required nested structures that UI components dereference without guards
+// (documents.cv.required, gre, englishTest, facultyContacts, ...). Merge each
+// imported app over safe defaults so a partial record degrades gracefully
+// instead of crashing the whole view.
+const ensureApplicationDefaults = (app: Application): Application => {
+  const blankDoc = () => ({ required: false, status: DocumentStatus.NotStarted, submitted: null });
+  const existingDocs = (app.documents ?? {}) as Partial<Application['documents']>;
+  return {
+    ...app,
+    facultyContacts: Array.isArray(app.facultyContacts) ? app.facultyContacts : [],
+    reminders: Array.isArray(app.reminders) ? app.reminders : [],
+    statusHistory: Array.isArray(app.statusHistory) ? app.statusHistory : [],
+    documents: {
+      cv: existingDocs.cv ?? blankDoc(),
+      statementOfPurpose: existingDocs.statementOfPurpose ?? blankDoc(),
+      transcripts: existingDocs.transcripts ?? blankDoc(),
+      lor1: existingDocs.lor1 ?? blankDoc(),
+      lor2: existingDocs.lor2 ?? blankDoc(),
+      lor3: existingDocs.lor3 ?? blankDoc(),
+      writingSample: existingDocs.writingSample ?? blankDoc(),
+    },
+    gre: app.gre ?? { status: TestStatus.NotApplicable },
+    englishTest: app.englishTest ?? { type: 'Not Required', status: TestStatus.NotApplicable },
+  };
+};
+
 export const useApplications = (showToast?: (type: ToastType, message: string, title?: string) => void) => {
   const { state: applications, setState: setApplications, undo, redo, canUndo, canRedo, reset } = useUndoRedo<Application[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
@@ -117,7 +144,7 @@ export const useApplications = (showToast?: (type: ToastType, message: string, t
     };
 
     saveData();
-  }, [applications, debouncedApplications, isLoaded]);
+  }, [applications, debouncedApplications, isLoaded, showToast]);
 
   // Periodic deadline check
   // Keep a ref to applications for the interval to access the latest state without resetting
@@ -154,7 +181,7 @@ export const useApplications = (showToast?: (type: ToastType, message: string, t
       if (app.deadline && app.status !== ApplicationStatus.Submitted) {
         const diffDays = getDaysUntil(app.deadline);
 
-        if (diffDays === 7 || diffDays === 3 || diffDays === 1) {
+        if (diffDays !== null && (diffDays === 7 || diffDays === 3 || diffDays === 1)) {
           const key = `${app.id}|${app.deadline}|${diffDays}`;
           if (notifiedDeadlinesRef.current.has(key)) {
             return;
@@ -314,7 +341,7 @@ export const useApplications = (showToast?: (type: ToastType, message: string, t
       if (validApps.length === 0 && newApps.length > 0) {
         throw new Error('No valid applications found in imported data');
       }
-      reset(validApps);
+      reset(validApps.map(ensureApplicationDefaults));
     } catch (error) {
       console.error('Failed to import applications:', error);
       throw error instanceof Error ? error : new Error('Failed to import applications. Please check the data format.');
@@ -326,20 +353,21 @@ export const useApplications = (showToast?: (type: ToastType, message: string, t
       if (!Array.isArray(newApps)) {
         throw new Error('Merged data must be an array of applications');
       }
-      // Validate and filter valid applications
-      const validApps = newApps.filter((app, index) => {
-        if (!app || typeof app !== 'object') return false;
-        // For merge, we can be more lenient - just need university name
-        if (!app.universityName) {
-          console.warn('Skipping application without university name at index', index);
-          return false;
-        }
-        // Generate ID if missing
-        if (!app.id) {
-          app.id = crypto.randomUUID();
-        }
-        return true;
-      });
+      // Validate and normalize without mutating the caller's input array/objects.
+      const validApps = newApps
+        .filter((app, index) => {
+          if (!app || typeof app !== 'object') return false;
+          // For merge, we can be more lenient - just need university name
+          if (!app.universityName) {
+            console.warn('Skipping application without university name at index', index);
+            return false;
+          }
+          return true;
+        })
+        .map(app => ensureApplicationDefaults({
+          ...app,
+          id: app.id || crypto.randomUUID(),
+        }));
       setApplications(apps => [...apps, ...validApps]);
     } catch (error) {
       console.error('Failed to merge applications:', error);

@@ -77,7 +77,10 @@ const MainContent: React.FC<MainContentProps> = ({
 }) => {
     const { isSelectionMode, selectedIds, onToggleSelection, onEnterSelectionMode } = useBulkSelectionContext();
     const { openModal, requestDelete, updateApplication, duplicateApplication } = useApplicationActionsContext();
-    const visibleColumns = (() => {
+    // Read + parse the persisted view-state once and keep a stable reference so
+    // memoized children (ApplicationList) aren't re-rendered by a new array on
+    // every parent render.
+    const visibleColumns = React.useMemo<string[] | undefined>(() => {
         const configured = getStorageItem('view-states');
         if (!configured) return undefined;
 
@@ -87,7 +90,7 @@ const MainContent: React.FC<MainContentProps> = ({
         } catch {
             return undefined;
         }
-    })();
+    }, []);
 
     const renderViewContent = () => {
         switch (viewMode) {

@@ -89,6 +89,20 @@ fn assert_within_app_data(app: &AppHandle, path: &Path) -> Result<(), String> {
   Ok(())
 }
 
+/// Validates that restored/backup JSON has a structure the app can load.
+/// Accepts either the legacy bare-array format (schema version 0) or the
+/// current `{ version, applications: [...] }` wrapper. Anything else (a number,
+/// string, or an object without an `applications` array) would corrupt the app
+/// state on next load, so it is rejected before any live data is overwritten.
+fn is_loadable_data_schema(value: &Value) -> bool {
+  if value.is_array() {
+    return true;
+  }
+  value
+    .get("applications")
+    .map_or(false, |applications| applications.is_array())
+}
+
 fn backup_result_error(error: impl ToString) -> BackupResult {
   BackupResult {
     success: false,
@@ -220,13 +234,33 @@ fn copy_document_impl(
   doc_type: &str,
 ) -> Result<PathBuf, String> {
   let (_, documents_dir, _) = ensure_dirs(app)?;
+
+  // Validate the source before copying. Canonicalizing resolves symlinks and
+  // `..` segments so a malicious/dangling path cannot read arbitrary files into
+  // the documents directory, and the regular-file + extension checks mirror the
+  // Electron implementation's security model (no executables/scripts).
+  let canonical_source =
+    fs::canonicalize(source_path).map_err(|_| "Source file not found".to_string())?;
+  let metadata =
+    fs::metadata(&canonical_source).map_err(|_| "Cannot access source file".to_string())?;
+  if !metadata.is_file() {
+    return Err("Source must be a regular file".to_string());
+  }
+  let allowed_extensions = ["pdf", "doc", "docx", "txt"];
+  let extension = canonical_source
+    .extension()
+    .and_then(|ext| ext.to_str())
+    .unwrap_or("")
+    .to_lowercase();
+  if !allowed_extensions.contains(&extension.as_str()) {
+    return Err("File type not permitted".to_string());
+  }
+
   let safe_app_id = sanitize_path_segment(app_id);
   let safe_doc_type = sanitize_path_segment(doc_type);
   let app_doc_dir = documents_dir.join(safe_app_id);
   fs::create_dir_all(&app_doc_dir).map_err(|error| error.to_string())?;
 
-  let source = PathBuf::from(source_path);
-  let extension = source.extension().and_then(|ext| ext.to_str()).unwrap_or("");
   let filename = if extension.is_empty() {
     safe_doc_type
   } else {
@@ -234,7 +268,7 @@ fn copy_document_impl(
   };
   let destination = app_doc_dir.join(filename);
 
-  fs::copy(source, &destination).map_err(|error| error.to_string())?;
+  fs::copy(&canonical_source, &destination).map_err(|error| error.to_string())?;
   Ok(destination)
 }
 
@@ -337,6 +371,23 @@ fn restore_backup(app: AppHandle, filename: String) -> BackupResult {
     return backup_result_error("Access denied: path outside backup directory");
   }
 
+  // Validate the backup BEFORE touching live data. Reading + parsing + a schema
+  // check up front guarantees that an unparseable or structurally-broken backup
+  // can never overwrite the user's current data.
+  let contents = match fs::read_to_string(&canonical_source) {
+    Ok(c) => c,
+    Err(error) => return backup_result_error(error),
+  };
+  let parsed: Value = match serde_json::from_str(&contents) {
+    Ok(value) => value,
+    Err(_) => return backup_result_error("Backup file is not valid JSON"),
+  };
+  if !is_loadable_data_schema(&parsed) {
+    return backup_result_error("Backup file has an unrecognized or corrupted structure");
+  }
+
+  // Snapshot the current live data so the user can recover if anything downstream
+  // goes wrong.
   if data_file_path.exists() {
     let safety_path = backup_dir.join(format!("pre-restore-{}.json", Utc::now().timestamp_millis()));
     if let Err(error) = fs::copy(&data_file_path, safety_path) {
@@ -344,22 +395,22 @@ fn restore_backup(app: AppHandle, filename: String) -> BackupResult {
     }
   }
 
-  if let Err(error) = fs::copy(&source, &data_file_path) {
+  // Write atomically (temp + rename) using the already-validated contents.
+  let temp_path = data_file_path.with_extension("json.tmp");
+  if let Err(error) = fs::write(&temp_path, &contents) {
+    return backup_result_error(error);
+  }
+  if let Err(error) = fs::rename(&temp_path, &data_file_path) {
+    let _ = fs::remove_file(&temp_path);
     return backup_result_error(error);
   }
 
-  match fs::read_to_string(&data_file_path)
-    .map_err(|error| error.to_string())
-    .and_then(|data| serde_json::from_str::<Value>(&data).map_err(|error| error.to_string()))
-  {
-    Ok(data) => BackupResult {
-      success: true,
-      error: None,
-      path: None,
-      timestamp: None,
-      data: Some(data),
-    },
-    Err(error) => backup_result_error(error),
+  BackupResult {
+    success: true,
+    error: None,
+    path: None,
+    timestamp: None,
+    data: Some(parsed),
   }
 }
 
