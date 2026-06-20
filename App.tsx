@@ -492,7 +492,7 @@ const App: React.FC = () => {
             `Found ${validApplications.length} valid application(s). This will ADD them to your current list. Proceed?`,
             () => {
               try {
-                mergeApplications(validApplications);
+                mergeApplications(validApplications as Application[]);
                 showToast('success', `Successfully imported ${validApplications.length} application(s)`, 'Import Success');
               } catch (error) {
                 showToast('error', error instanceof Error ? error.message : 'Failed to import applications', 'Import Error');
@@ -506,7 +506,7 @@ const App: React.FC = () => {
             `Found ${validApplications.length} valid application(s). This will OVERWRITE your current data. Are you sure you want to proceed?`,
             () => {
               try {
-                importApplications(validApplications);
+                importApplications(validApplications as Application[]);
                 showToast('success', `Successfully imported ${validApplications.length} application(s)`, 'Import Success');
               } catch (error) {
                 showToast('error', error instanceof Error ? error.message : 'Failed to import applications', 'Import Error');

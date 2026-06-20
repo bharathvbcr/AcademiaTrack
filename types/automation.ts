@@ -52,10 +52,15 @@ export interface AutomationRule {
   executionCount: number;
 }
 
-export type TriggerData =
-  | { newStatus: ApplicationStatus; oldStatus: ApplicationStatus }
-  | { field: string }
-  | Record<string, never>;
+// Context passed alongside a trigger. Fields are optional because which ones are
+// present depends on the trigger type (status_changed supplies newStatus/oldStatus,
+// field_updated supplies field). Using a single optional-field shape lets callers
+// read the relevant property without unsafe union narrowing.
+export interface TriggerData {
+  newStatus?: ApplicationStatus;
+  oldStatus?: ApplicationStatus;
+  field?: string;
+}
 
 export interface AutomationExecutionLog {
   id: string;

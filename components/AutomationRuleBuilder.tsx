@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAutomation } from '../hooks/useAutomation';
 import { AutomationRule, TriggerType, ActionType, AutomationCondition, AutomationAction } from '../types/automation';
-import { ApplicationStatus } from '../types';
+import { Application, ApplicationStatus } from '../types';
 import { STATUS_OPTIONS } from '../constants';
 
 interface AutomationRuleBuilderProps {
@@ -71,8 +71,11 @@ const AutomationRuleBuilder: React.FC<AutomationRuleBuilderProps> = ({ rule, onS
     setActions([...actions, { type: 'create_reminder', params: {} }]);
   };
 
-  const updateAction = (index: number, updates: Partial<AutomationAction>) => {
-    setActions(actions.map((a, i) => i === index ? { ...a, ...updates } : a));
+  // `updates` is intentionally loose: the editor merges partial type/params edits
+  // into a discriminated-union member, which TypeScript cannot express via
+  // Partial<AutomationAction>. The merged result is asserted back to the union.
+  const updateAction = (index: number, updates: { type?: ActionType; params?: Record<string, unknown> }) => {
+    setActions(actions.map((a, i) => i === index ? ({ ...a, ...updates } as AutomationAction) : a));
   };
 
   const removeAction = (index: number) => {
@@ -172,7 +175,7 @@ const AutomationRuleBuilder: React.FC<AutomationRuleBuilderProps> = ({ rule, onS
           <div key={index} className="flex gap-2 mb-2">
             <select
               value={condition.field}
-              onChange={(e) => updateCondition(index, { field: e.target.value })}
+              onChange={(e) => updateCondition(index, { field: e.target.value as keyof Application })}
               className="px-2 py-1 border rounded text-sm"
               aria-label={`Condition ${index + 1} field`}
               title={`Condition ${index + 1} field`}
@@ -181,7 +184,6 @@ const AutomationRuleBuilder: React.FC<AutomationRuleBuilderProps> = ({ rule, onS
               <option value="programType">Program Type</option>
               <option value="universityName">University Name</option>
               <option value="applicationFee">Application Fee</option>
-              <option value="gpaRequirement">GPA Requirement</option>
             </select>
             <select
               value={condition.operator}
@@ -328,7 +330,7 @@ const AutomationRuleBuilder: React.FC<AutomationRuleBuilderProps> = ({ rule, onS
                 <input
                   type="text"
                   aria-label="New value"
-                  value={action.params.value || ''}
+                  value={action.params.value != null ? String(action.params.value) : ''}
                   onChange={(e) => updateAction(index, { params: { ...action.params, value: e.target.value } })}
                   placeholder="New value"
                   className="w-full px-2 py-1 border rounded text-sm"

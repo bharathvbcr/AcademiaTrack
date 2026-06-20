@@ -28,7 +28,8 @@ const migrations: Record<number, MigrationFn> = {
     // Version 1 -> 2: Add isPinned, statusHistory, admissionChance fields
     1: (data: unknown): DataSchema => {
         const schema = data as DataSchema;
-        const migratedApps = schema.applications.map(app => ({
+        const apps = Array.isArray(schema?.applications) ? schema.applications : [];
+        const migratedApps = apps.map(app => ({
             ...app,
             isPinned: app.isPinned ?? false,
             statusHistory: app.statusHistory ?? [],
@@ -43,7 +44,8 @@ const migrations: Record<number, MigrationFn> = {
     // Version 2 -> 3: Add decisionDeadline field
     2: (data: unknown): DataSchema => {
         const schema = data as DataSchema;
-        const migratedApps = schema.applications.map(app => ({
+        const apps = Array.isArray(schema?.applications) ? schema.applications : [];
+        const migratedApps = apps.map(app => ({
             ...app,
             decisionDeadline: app.decisionDeadline ?? undefined,
         }));
@@ -79,6 +81,20 @@ export function migrateData(data: unknown): DataSchema {
     let currentVersion = detectDataVersion(data);
     let currentData = data;
 
+    // Data from a NEWER app version: don't attempt to downgrade or blindly cast
+    // unknown structure. If it already looks like a valid schema, keep it as-is
+    // (forward compatibility — unknown fields are preserved by spreads elsewhere);
+    // otherwise fall back to an empty schema rather than corrupting state.
+    if (currentVersion >= CURRENT_DATA_VERSION) {
+        if (validateDataSchema(currentData)) {
+            return currentData;
+        }
+        if (process.env.NODE_ENV !== 'production') {
+            console.warn(`Data reports version ${currentVersion} but failed schema validation; using empty schema`);
+        }
+        return createEmptyDataSchema();
+    }
+
     // Apply migrations sequentially until we reach the current version
     while (currentVersion < CURRENT_DATA_VERSION) {
         const migration = migrations[currentVersion];
@@ -92,11 +108,19 @@ export function migrateData(data: unknown): DataSchema {
         if (process.env.NODE_ENV !== 'production') {
             console.log(`Migrating data from version ${currentVersion} to ${currentVersion + 1}`);
         }
-        currentData = migration(currentData);
+        try {
+            currentData = migration(currentData);
+        } catch (error) {
+            // A single failing migration must not crash the whole load. Surface the
+            // error and stop migrating; the partially-migrated (or original) data is
+            // validated by the caller before use.
+            console.error(`Migration from version ${currentVersion} failed:`, error);
+            break;
+        }
         currentVersion++;
     }
 
-    return currentData as DataSchema;
+    return validateDataSchema(currentData) ? currentData : createEmptyDataSchema();
 }
 
 /**

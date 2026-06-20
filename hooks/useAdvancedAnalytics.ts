@@ -139,18 +139,16 @@ export const useAdvancedAnalytics = (applications: Application[]) => {
   }, [applications]);
 
   const deadlineUrgency = useMemo(() => {
-    const urgent = applications.filter(app => {
-      if (!app.deadline || app.status === ApplicationStatus.Submitted) return false;
+    // Single pass: one getDaysUntil() call per application instead of two filters.
+    let urgent = 0;
+    let upcoming = 0;
+    applications.forEach(app => {
+      if (!app.deadline || app.status === ApplicationStatus.Submitted) return;
       const diffDays = getDaysUntil(app.deadline);
-      return diffDays !== null && diffDays >= 0 && diffDays <= 7;
-    }).length;
-
-    const upcoming = applications.filter(app => {
-      if (!app.deadline || app.status === ApplicationStatus.Submitted) return false;
-      const diffDays = getDaysUntil(app.deadline);
-      return diffDays !== null && diffDays > 7 && diffDays <= 30;
-    }).length;
-
+      if (diffDays === null) return;
+      if (diffDays >= 0 && diffDays <= 7) urgent++;
+      else if (diffDays > 7 && diffDays <= 30) upcoming++;
+    });
     return { urgent, upcoming };
   }, [applications]);
 
