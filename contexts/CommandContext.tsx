@@ -111,7 +111,7 @@ export const CommandProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
                 const title = command.title.toLowerCase();
                 const subtitle = command.subtitle?.toLowerCase() || '';
-                const keywords = command.keywords?.map(k => k.toLowerCase()) || [];
+                const keywords = command.keywords || [];
 
                 if (title === actualQuery) {
                     return { command, score: 100, matchType: 'exact' as const };

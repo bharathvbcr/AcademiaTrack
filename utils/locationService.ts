@@ -1,7 +1,11 @@
 import { LocationDetails } from '../types';
+import { getStorageItem } from './browserStorage';
 
 const NOMINATIM_BASE_URL = 'https://nominatim.openstreetmap.org/search';
 const TIMEAPI_BASE_URL = 'https://timeapi.io/api/TimeZone/coordinate';
+
+export const isLocationLookupEnabled = (): boolean =>
+    getStorageItem('location-lookup-enabled') !== 'false';
 
 interface NominatimResult {
     place_id: number;
@@ -35,6 +39,7 @@ interface TimeApiResult {
 }
 
 export const searchLocation = async (query: string): Promise<LocationDetails[]> => {
+    if (!isLocationLookupEnabled()) return [];
     try {
         const params = new URLSearchParams({
             q: query,
@@ -81,6 +86,7 @@ export const searchLocation = async (query: string): Promise<LocationDetails[]> 
 };
 
 export const getLocationTimezone = async (latitude: number, longitude: number): Promise<Partial<LocationDetails>> => {
+    if (!isLocationLookupEnabled()) return {};
     try {
         const params = new URLSearchParams({
             latitude: latitude.toString(),

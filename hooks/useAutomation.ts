@@ -148,7 +148,6 @@ export const useAutomation = () => {
         id: crypto.randomUUID(),
         ruleId: rule.id,
         ruleName: rule.name,
-        applicationId: app.id,
         timestamp: Date.now(),
         success: true,
         actionsExecuted: rule.actions.map(a => a.type),

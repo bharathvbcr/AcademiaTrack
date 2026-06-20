@@ -98,6 +98,22 @@ if (!gotTheLock) {
       },
     });
 
+    mainWindow.webContents.on('will-navigate', (event, url) => {
+      const allowed = isDev ? 'http://localhost:3000' : 'file://';
+      if (!url.startsWith(allowed)) {
+        event.preventDefault();
+      }
+    });
+
+    mainWindow.webContents.on('will-redirect', (event, url) => {
+      const allowed = isDev ? 'http://localhost:3000' : 'file://';
+      if (!url.startsWith(allowed)) {
+        event.preventDefault();
+      }
+    });
+
+    mainWindow.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
+
     mainWindow.once('ready-to-show', () => {
       mainWindow?.show();
     });
@@ -159,10 +175,26 @@ if (!gotTheLock) {
 
     ipcMain.handle('copyDocument', async (_event, { sourcePath, appId, docType }) => {
       try {
+        const validAppId = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(appId)
+          || /^temp-\d+$/.test(appId);
+        if (!validAppId) throw new Error('Invalid appId');
+
+        const knownDocTypes = ['cv', 'statementOfPurpose', 'transcripts', 'lor1', 'lor2', 'lor3', 'writingSample'];
+        const validDocType = knownDocTypes.includes(docType)
+          || /^essay-[\w-]+-draft-[\w-]+$/.test(docType);
+        if (!validDocType) throw new Error('Invalid docType');
+
+        const resolvedDocumentsDir = path.resolve(documentsDir);
         const appDocDir = path.join(documentsDir, appId);
         await mkdir(appDocDir, { recursive: true });
         const ext = path.extname(sourcePath);
         const destPath = path.join(appDocDir, `${docType}${ext}`);
+
+        const resolvedDest = path.resolve(destPath);
+        if (!resolvedDest.startsWith(resolvedDocumentsDir + path.sep)) {
+          throw new Error('Path traversal detected');
+        }
+
         await copyFile(sourcePath, destPath);
         return { success: true, path: destPath };
       } catch (error) {
@@ -173,7 +205,12 @@ if (!gotTheLock) {
 
     ipcMain.handle('deleteDocument', async (_event, filePath) => {
       try {
-        if (fs.existsSync(filePath)) await unlink(filePath);
+        const resolved = path.resolve(filePath);
+        const allowedDir = path.resolve(documentsDir);
+        if (!resolved.startsWith(allowedDir + path.sep)) {
+          return { success: false, error: 'Access denied' };
+        }
+        if (fs.existsSync(resolved)) await unlink(resolved);
         return { success: true };
       } catch (error) {
         const message = error instanceof Error ? error.message : 'Unknown error';
@@ -221,12 +258,17 @@ if (!gotTheLock) {
 
     ipcMain.handle('restoreBackup', async (_event, backupPath) => {
       try {
-        if (!fs.existsSync(backupPath)) return { success: false, error: 'Backup file not found' };
+        const resolved = path.resolve(backupPath);
+        const allowedDir = path.resolve(backupDir);
+        if (!resolved.startsWith(allowedDir + path.sep)) {
+          return { success: false, error: 'Access denied' };
+        }
+        if (!fs.existsSync(resolved)) return { success: false, error: 'Backup file not found' };
         if (fs.existsSync(dataFilePath)) {
           const safetyPath = path.join(backupDir, `pre-restore-${Date.now()}.json`);
           await copyFile(dataFilePath, safetyPath);
         }
-        await copyFile(backupPath, dataFilePath);
+        await copyFile(resolved, dataFilePath);
         const data = await readFile(dataFilePath, 'utf-8');
         return { success: true, data: JSON.parse(data) };
       } catch (error) {
@@ -237,7 +279,12 @@ if (!gotTheLock) {
 
     ipcMain.handle('deleteBackup', async (_event, backupPath) => {
       try {
-        if (fs.existsSync(backupPath)) await unlink(backupPath);
+        const resolved = path.resolve(backupPath);
+        const allowedDir = path.resolve(backupDir);
+        if (!resolved.startsWith(allowedDir + path.sep)) {
+          return { success: false, error: 'Access denied' };
+        }
+        if (fs.existsSync(resolved)) await unlink(resolved);
         return { success: true };
       } catch (error) {
         const message = error instanceof Error ? error.message : 'Unknown error';

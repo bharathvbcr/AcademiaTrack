@@ -3,7 +3,7 @@ import { Application, ApplicationStatus } from '../types';
 /**
  * Generate an iCalendar (.ics) file from application deadlines
  */
-export function generateICS(applications: Application[]): string {
+export function generateICS(applications: Application[], includeContactDetails: boolean = false): string {
     const now = new Date();
     const formatDate = (dateStr: string): string => {
         // Convert YYYY-MM-DD to YYYYMMDD format
@@ -53,7 +53,7 @@ UID:interview-${app.id}-${contact.id}@academiatrack
 DTSTAMP:${formatDateTime(now)}
 DTSTART;VALUE=DATE:${formatDate(contact.interviewDate)}
 SUMMARY:🎤 Interview: ${escapeText(contact.name)} (${escapeText(app.universityName)})
-DESCRIPTION:${escapeText(`Interview with ${contact.name}\\nEmail: ${contact.email}\\n${contact.interviewNotes || ''}`)}
+DESCRIPTION:${escapeText(includeContactDetails ? `Interview with ${contact.name}\\nEmail: ${contact.email}\\n${contact.interviewNotes || ''}` : `Interview with ${contact.name}\\nSee AcademiaTrack for full contact details.`)}
 CATEGORIES:INTERVIEW
 END:VEVENT`);
             }
@@ -76,7 +76,10 @@ END:VCALENDAR`;
  * Download the ICS file
  */
 export function downloadICS(applications: Application[]): void {
-    const icsContent = generateICS(applications);
+    const includeContactDetails = window.confirm(
+        'Include faculty email addresses and interview notes in the calendar file? This information will be uploaded to your calendar provider (Google Calendar, Apple Calendar, etc.).'
+    );
+    const icsContent = generateICS(applications, includeContactDetails);
     const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
     const url = URL.createObjectURL(blob);
 

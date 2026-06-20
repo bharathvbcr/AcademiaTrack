@@ -1,16 +1,17 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { AppCommand } from '../types/commands';
 import { Application } from '../types';
 import { FilterGroup, SavedFilter } from './useAdvancedFilter';
 import { SearchQuery } from './useAdvancedSearch';
 import { useCommandRegistry } from '../contexts/CommandContext';
+import { ViewMode } from './useViewState';
 
 interface AppCommandsProps {
   openCommandPalette: () => void;
   openModal: (app: Application | null) => void;
   openSettings: () => void;
   setSettingsTab: (tab: 'shortcuts' | 'views' | 'general' | 'fields' | 'kanban' | 'automation') => void;
-  setViewMode: (view: 'list' | 'kanban' | 'calendar' | 'budget' | 'faculty' | 'recommenders' | 'timeline') => void;
+  setViewMode: (view: ViewMode) => void;
   handleExport: (format: 'csv' | 'json' | 'ics' | 'md' | 'pdf', selectedFields?: string[]) => void;
   setIsBulkOperationsOpen: (open: boolean) => void;
   setIsQuickCaptureOpen: (open: boolean) => void;
@@ -67,6 +68,8 @@ export const useAppCommands = ({
   canRedo,
 }: AppCommandsProps) => {
   const { registerCommands, unregisterCommands } = useCommandRegistry();
+  const prevAppCommandIdsRef = useRef<string[]>([]);
+  const isMountedRef = useRef(false);
   const clearTransientSearchState = () => {
     setActiveFilter(null);
     setSearchQuery('');
@@ -516,10 +519,21 @@ export const useAppCommands = ({
       execute: () => openModal(app),
     }));
 
+    const currentIds = appCommands.map(c => c.id);
+    const prevIds = prevAppCommandIdsRef.current;
+    const removedIds = prevIds.filter(id => !currentIds.includes(id));
+
     registerCommands(appCommands);
 
+    if (removedIds.length > 0) {
+      unregisterCommands(removedIds);
+    }
+
+    prevAppCommandIdsRef.current = currentIds;
+
     return () => {
-      unregisterCommands(appCommands.map(cmd => cmd.id));
+      unregisterCommands(prevAppCommandIdsRef.current);
+      prevAppCommandIdsRef.current = [];
     };
   }, [
     applications,

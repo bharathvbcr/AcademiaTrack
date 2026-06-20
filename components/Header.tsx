@@ -1,13 +1,12 @@
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { ProgramType, Application } from '../types';
 import { PROGRAM_TYPE_OPTIONS } from '../constants';
 import Tooltip from './Tooltip';
 import { useClickOutside } from '../hooks/useClickOutside';
 import AdvancedSearchBar from './AdvancedSearchBar';
+import { ViewMode } from '../hooks/useViewState';
 
-
-type ViewMode = 'list' | 'kanban' | 'calendar' | 'budget' | 'faculty' | 'recommenders' | 'timeline';
 type ViewSection = 'apps' | 'schedule' | 'resources';
 
 interface HeaderProps {
@@ -28,6 +27,39 @@ interface HeaderProps {
 const MaterialIcon: React.FC<{ name: string; className?: string }> = ({ name, className }) => (
   <span className={`material-symbols-outlined ${className}`}>{name}</span>
 );
+
+interface ViewIconButtonProps {
+  mode: ViewMode;
+  icon: string;
+  label: string;
+  viewMode: ViewMode;
+  onPointerDown: (event: React.PointerEvent<HTMLButtonElement>, mode: ViewMode) => void;
+  onClick: (mode: ViewMode) => void;
+}
+
+const ViewIconButton = React.memo(({ mode, icon, label, viewMode, onPointerDown, onClick }: ViewIconButtonProps) => {
+  const isActive = viewMode === mode;
+  return (
+    <Tooltip content={label}>
+      <button
+        type="button"
+        aria-label={label}
+        aria-pressed={isActive}
+        onPointerDown={(event) => onPointerDown(event, mode)}
+        onClick={() => onClick(mode)}
+        className={`relative p-2 rounded-lg transition-all duration-200 ${isActive
+          ? 'text-[#f4f4f5] bg-[#27272a]'
+          : 'text-[#a1a1aa] hover:text-[#f4f4f5] hover:bg-[#27272a]'
+        }`}
+      >
+        <MaterialIcon name={icon} className="text-xl" />
+        {isActive && (
+          <div className="absolute inset-0 rounded-lg bg-white/10 opacity-50 pointer-events-none filter blur-[1px]"></div>
+        )}
+      </button>
+    </Tooltip>
+  );
+});
 
 const Header: React.FC<HeaderProps> = ({
   onAddNew,
@@ -93,7 +125,6 @@ const Header: React.FC<HeaderProps> = ({
     }
   };
 
-  // Calculate direction on mount, resize, and when hover state changes
   useEffect(() => {
     calculateExpandDirection();
 
@@ -105,7 +136,7 @@ const Header: React.FC<HeaderProps> = ({
     return () => {
       window.removeEventListener('resize', handleResize);
     };
-  }, [isAddNewHovered]);
+  }, []);
 
   // Track mouse hover for expanding toolbar
   const [hoveredSection, setHoveredSection] = useState<ViewSection | null>(null);
@@ -142,46 +173,21 @@ const Header: React.FC<HeaderProps> = ({
     onViewChange(mode);
   };
 
-  const handleViewPointerDown = (event: React.PointerEvent<HTMLButtonElement>, mode: ViewMode) => {
+  const handleViewPointerDown = useCallback((event: React.PointerEvent<HTMLButtonElement>, mode: ViewMode) => {
     if (event.button !== 0) return;
 
     pointerSelectedViewRef.current = mode;
     handleViewChange(mode);
-  };
+  }, [handleViewChange]);
 
-  const handleViewClick = (mode: ViewMode) => {
+  const handleViewClick = useCallback((mode: ViewMode) => {
     if (pointerSelectedViewRef.current === mode) {
       pointerSelectedViewRef.current = null;
       return;
     }
 
     handleViewChange(mode);
-  };
-
-  // Helper for Icon Buttons
-  const ViewIconButton = ({ mode, icon, label }: { mode: ViewMode, icon: string, label: string }) => {
-    const isActive = viewMode === mode;
-    return (
-      <Tooltip content={label}>
-        <button
-          type="button"
-          aria-label={label}
-          aria-pressed={isActive}
-          onPointerDown={(event) => handleViewPointerDown(event, mode)}
-          onClick={() => handleViewClick(mode)}
-          className={`relative p-2 rounded-lg transition-all duration-200 ${isActive
-            ? 'text-[#f4f4f5] bg-[#27272a]'
-            : 'text-[#a1a1aa] hover:text-[#f4f4f5] hover:bg-[#27272a]'
-            }`}
-        >
-          <MaterialIcon name={icon} className="text-xl" />
-          {isActive && (
-            <div className="absolute inset-0 rounded-lg bg-white/10 opacity-50 pointer-events-none filter blur-[1px]"></div>
-          )}
-        </button>
-      </Tooltip>
-    );
-  };
+  }, [handleViewChange]);
 
   return (
     <header className="mb-6">
@@ -219,9 +225,9 @@ const Header: React.FC<HeaderProps> = ({
             >
               {showApps ? (
                 <div className="flex items-center gap-1 animate-fadeIn px-1">
-                  <ViewIconButton mode="list" icon="list" label="List View" />
-                  <ViewIconButton mode="kanban" icon="view_kanban" label="Kanban Board" />
-                  <ViewIconButton mode="budget" icon="attach_money" label="Budget" />
+                  <ViewIconButton mode="list" icon="list" label="List View" viewMode={viewMode} onPointerDown={handleViewPointerDown} onClick={handleViewClick} />
+                  <ViewIconButton mode="kanban" icon="view_kanban" label="Kanban Board" viewMode={viewMode} onPointerDown={handleViewPointerDown} onClick={handleViewClick} />
+                  <ViewIconButton mode="budget" icon="attach_money" label="Budget" viewMode={viewMode} onPointerDown={handleViewPointerDown} onClick={handleViewClick} />
                 </div>
               ) : (
                 <button
@@ -245,8 +251,8 @@ const Header: React.FC<HeaderProps> = ({
             >
               {showSchedule ? (
                 <div className="flex items-center gap-1 animate-fadeIn px-1">
-                  <ViewIconButton mode="timeline" icon="timeline" label="Timeline" />
-                  <ViewIconButton mode="calendar" icon="calendar_month" label="Calendar" />
+                  <ViewIconButton mode="timeline" icon="timeline" label="Timeline" viewMode={viewMode} onPointerDown={handleViewPointerDown} onClick={handleViewClick} />
+                  <ViewIconButton mode="calendar" icon="calendar_month" label="Calendar" viewMode={viewMode} onPointerDown={handleViewPointerDown} onClick={handleViewClick} />
                 </div>
               ) : (
                 <button
@@ -270,8 +276,8 @@ const Header: React.FC<HeaderProps> = ({
             >
               {showResources ? (
                 <div className="flex items-center gap-1 animate-fadeIn px-1">
-                  <ViewIconButton mode="faculty" icon="school" label="Faculty" />
-                  <ViewIconButton mode="recommenders" icon="assignment_ind" label="Recommenders" />
+                  <ViewIconButton mode="faculty" icon="school" label="Faculty" viewMode={viewMode} onPointerDown={handleViewPointerDown} onClick={handleViewClick} />
+                  <ViewIconButton mode="recommenders" icon="assignment_ind" label="Recommenders" viewMode={viewMode} onPointerDown={handleViewPointerDown} onClick={handleViewClick} />
                 </div>
               ) : (
                 <button
@@ -520,4 +526,4 @@ const Header: React.FC<HeaderProps> = ({
   );
 };
 
-export default Header;
+export default React.memo(Header);

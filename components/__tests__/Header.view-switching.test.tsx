@@ -3,6 +3,7 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import Header from '../Header';
 import { ProgramType } from '../../types';
+import { ViewMode } from '../../hooks/useViewState';
 
 vi.mock('../AdvancedSearchBar', () => ({
   default: () => <div data-testid="advanced-search-bar" />,
@@ -12,7 +13,7 @@ vi.mock('../Tooltip', () => ({
   default: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));
 
-const renderHeader = (viewMode: 'list' | 'kanban' | 'calendar' | 'budget' | 'faculty' | 'recommenders' | 'timeline') => {
+const renderHeader = (viewMode: ViewMode) => {
   const onViewChange = vi.fn();
 
   render(
@@ -32,8 +33,6 @@ const renderHeader = (viewMode: 'list' | 'kanban' | 'calendar' | 'budget' | 'fac
 
   return { onViewChange };
 };
-
-type ViewMode = 'list' | 'kanban' | 'calendar' | 'budget' | 'faculty' | 'recommenders' | 'timeline';
 
 const renderStatefulHeader = (initialViewMode: ViewMode) => {
   const HeaderHarness = () => {

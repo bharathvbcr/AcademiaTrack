@@ -33,7 +33,7 @@ export interface ParsedSearchQuery {
 
 export const useAdvancedSearch = (applications: Application[]) => {
   const [savedSearches, setSavedSearches] = useLocalStorage<SearchQuery[]>('saved-searches', []);
-  const [searchHistory, setSearchHistory] = useLocalStorage<string[]>('search-history', []);
+  const [searchHistory, setSearchHistory] = useState<string[]>([]);
 
   const parseQuery = useCallback((query: string): ParsedSearchQuery[] => {
     if (!query.trim()) return [];
@@ -205,13 +205,14 @@ export const useAdvancedSearch = (applications: Application[]) => {
     const parsedQueries = parseQuery(query);
     const results = applications.filter(app => matchesQuery(app, parsedQueries));
 
-    // Add to history
-    if (query.trim() && !searchHistory.includes(query.trim())) {
-      setSearchHistory(prev => [query.trim(), ...prev.slice(0, 9)]);
+    if (query.trim()) {
+      setSearchHistory(prev =>
+        prev.includes(query.trim()) ? prev : [query.trim(), ...prev.slice(0, 9)]
+      );
     }
 
     return results;
-  }, [applications, parseQuery, matchesQuery, searchHistory, setSearchHistory]);
+  }, [applications, parseQuery, matchesQuery, setSearchHistory]);
 
   const saveSearch = useCallback((name: string, query: string) => {
     const newSearch: SearchQuery = {

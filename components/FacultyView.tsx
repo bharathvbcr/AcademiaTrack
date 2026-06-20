@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { Application, FacultyContact, FacultyContactStatus } from '../types';
 import { FACULTY_CONTACT_STATUS_OPTIONS, FACULTY_CONTACT_STATUS_COLORS } from '../constants';
+import { sanitizeURL } from '../utils';
 
 interface FacultyViewProps {
     applications: Application[];
@@ -297,7 +298,7 @@ const FacultyView: React.FC<FacultyViewProps> = ({ applications, updateApplicati
                                             <div className="flex items-center justify-end gap-1">
                                                 {faculty.website && (
                                                     <a
-                                                        href={faculty.website}
+                                                        href={sanitizeURL(faculty.website)}
                                                         target="_blank"
                                                         rel="noopener noreferrer"
                                                         className="p-1.5 text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
