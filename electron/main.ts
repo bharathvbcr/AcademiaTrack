@@ -87,7 +87,9 @@ if (!gotTheLock) {
       show: false, // Show window when ready-to-show
       frame: false,
       titleBarStyle: 'hidden',
-      icon: path.join(__dirname, '../assets/icon.png'),
+      icon: isDev
+        ? path.join(__dirname, '../public/AcademiaTrack.png')
+        : path.join(__dirname, '../dist/AcademiaTrack.png'),
       webPreferences: {
         preload: path.join(__dirname, 'preload.cjs'),
         nodeIntegration: false,

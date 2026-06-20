@@ -21,6 +21,7 @@ import { ProgramType, Application, FacultyContact, ApplicationStatus } from './t
 import { DropResult } from '@hello-pangea/dnd';
 import { exportToCSV, parseCSV } from './utils';
 import { ApplicationSearchIndexWrapper } from './utils/searchIndexWrapper';
+import { DESKTOP_BRIDGE_READY_EVENT, isDesktopRuntime } from './lib/desktopBridge';
 
 import Header from './components/Header';
 import TitleBar from './components/TitleBar';
@@ -259,7 +260,19 @@ const App: React.FC = () => {
     setIsQuickCaptureOpen(true);
   }, []);
 
-  const handleExport = async (format: 'csv' | 'json' | 'ics' | 'md' | 'pdf', selectedFields?: string[]) => {
+  const handleAdvancedSearch = React.useCallback((results: Application[], query: string) => {
+    const active = query.trim().length > 0;
+
+    setAdvancedSearchState(prev => {
+      if (prev.active === active && prev.results === results) {
+        return prev;
+      }
+
+      return { active, results };
+    });
+  }, []);
+
+  const handleExport = React.useCallback(async (format: 'csv' | 'json' | 'ics' | 'md' | 'pdf', selectedFields?: string[]) => {
     const appsToExport = isSelectionMode && selectedCount > 0
       ? getSelectedApplications()
       : applications;
@@ -285,7 +298,11 @@ const App: React.FC = () => {
       linkElement.setAttribute('download', exportFileDefaultName);
       linkElement.click();
     }
-  };
+  }, [applications, getSelectedApplications, isSelectionMode, selectedCount]);
+
+  const openSettings = React.useCallback(() => {
+    setSettingsOpen(true);
+  }, []);
 
   // Initialize App Commands
   useAppCommands({
@@ -293,9 +310,7 @@ const App: React.FC = () => {
     openModal,
     setViewMode,
     handleExport,
-    openSettings: () => {
-      setSettingsOpen(true);
-    },
+    openSettings,
     setSettingsTab,
     setIsBulkOperationsOpen,
     setIsQuickCaptureOpen,
@@ -525,15 +540,24 @@ const App: React.FC = () => {
     enhancedDragDrop.handleDragEnd(result);
   }, [enhancedDragDrop]);
 
-  // Check if running in the desktop runtime so the custom titlebar has room.
-  const isDesktopRuntime =
-    !!window.desktop?.windowControls ||
-    (typeof navigator !== 'undefined' && navigator.userAgent.toLowerCase().includes('electron'));
+  const [desktopRuntime, setDesktopRuntime] = React.useState(() => isDesktopRuntime());
+
+  useEffect(() => {
+    const refreshDesktopRuntime = () => {
+      setDesktopRuntime(isDesktopRuntime());
+    };
+
+    refreshDesktopRuntime();
+    window.addEventListener(DESKTOP_BRIDGE_READY_EVENT, refreshDesktopRuntime);
+    return () => {
+      window.removeEventListener(DESKTOP_BRIDGE_READY_EVENT, refreshDesktopRuntime);
+    };
+  }, []);
 
   return (
     <>
       <TitleBar />
-      <div className={`min-h-screen text-[#F5D7DA] font-sans p-4 sm:p-6 lg:p-8 ${isDesktopRuntime ? 'pt-14 sm:pt-16 lg:pt-16' : ''} relative z-10`}>
+      <div className={`min-h-screen text-[#F5D7DA] font-sans p-4 sm:p-6 lg:p-8 ${desktopRuntime ? 'pt-14 sm:pt-16 lg:pt-16' : ''} relative z-10`}>
         <div className="max-w-7xl mx-auto">
         <Header
           onAddNew={() => openModal(null)}
@@ -547,12 +571,7 @@ const App: React.FC = () => {
           onShowHelp={() => setIsHelpOpen(true)}
           onQuickCapture={handleQuickCapture}
           applications={applications}
-          onSearch={(results, query) => {
-            setAdvancedSearchState({
-              active: query.trim().length > 0,
-              results,
-            });
-          }}
+          onSearch={handleAdvancedSearch}
         />
 
         <MainContent

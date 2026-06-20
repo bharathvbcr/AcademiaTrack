@@ -8,6 +8,7 @@ import AdvancedSearchBar from './AdvancedSearchBar';
 
 
 type ViewMode = 'list' | 'kanban' | 'calendar' | 'budget' | 'faculty' | 'recommenders' | 'timeline';
+type ViewSection = 'apps' | 'schedule' | 'resources';
 
 interface HeaderProps {
   onAddNew: () => void;
@@ -46,6 +47,7 @@ const Header: React.FC<HeaderProps> = ({
   const quickInputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const moreMenuRef = useRef<HTMLDivElement>(null);
+  const pointerSelectedViewRef = useRef<ViewMode | null>(null);
   const [showExportMenu, setShowExportMenu] = useState(false);
   const [showMoreMenu, setShowMoreMenu] = useState(false);
   const [isAddNewHovered, setIsAddNewHovered] = useState(false);
@@ -105,6 +107,57 @@ const Header: React.FC<HeaderProps> = ({
     };
   }, [isAddNewHovered]);
 
+  // Track mouse hover for expanding toolbar
+  const [hoveredSection, setHoveredSection] = useState<ViewSection | null>(null);
+
+  // Track last used views without scheduling an extra render on every view change.
+  const lastAppViewRef = useRef<ViewMode>('list');
+  const lastScheduleViewRef = useRef<ViewMode>('timeline');
+  const lastResourceViewRef = useRef<ViewMode>('faculty');
+
+  const getSectionForView = (mode: ViewMode): ViewSection => {
+    if (['list', 'kanban', 'budget'].includes(mode)) return 'apps';
+    if (['timeline', 'calendar'].includes(mode)) return 'schedule';
+    return 'resources';
+  };
+
+  if (['list', 'kanban', 'budget'].includes(viewMode)) {
+    lastAppViewRef.current = viewMode;
+  } else if (['timeline', 'calendar'].includes(viewMode)) {
+    lastScheduleViewRef.current = viewMode;
+  } else if (['faculty', 'recommenders'].includes(viewMode)) {
+    lastResourceViewRef.current = viewMode;
+  }
+
+  const isAppView = ['list', 'kanban', 'budget'].includes(viewMode);
+  const isScheduleView = ['timeline', 'calendar'].includes(viewMode);
+  const isResourceView = ['faculty', 'recommenders'].includes(viewMode);
+
+  const showApps = isAppView || hoveredSection === 'apps';
+  const showSchedule = isScheduleView || hoveredSection === 'schedule';
+  const showResources = isResourceView || hoveredSection === 'resources';
+
+  const handleViewChange = (mode: ViewMode) => {
+    setHoveredSection(getSectionForView(mode));
+    onViewChange(mode);
+  };
+
+  const handleViewPointerDown = (event: React.PointerEvent<HTMLButtonElement>, mode: ViewMode) => {
+    if (event.button !== 0) return;
+
+    pointerSelectedViewRef.current = mode;
+    handleViewChange(mode);
+  };
+
+  const handleViewClick = (mode: ViewMode) => {
+    if (pointerSelectedViewRef.current === mode) {
+      pointerSelectedViewRef.current = null;
+      return;
+    }
+
+    handleViewChange(mode);
+  };
+
   // Helper for Icon Buttons
   const ViewIconButton = ({ mode, icon, label }: { mode: ViewMode, icon: string, label: string }) => {
     const isActive = viewMode === mode;
@@ -114,7 +167,8 @@ const Header: React.FC<HeaderProps> = ({
           type="button"
           aria-label={label}
           aria-pressed={isActive}
-          onClick={() => onViewChange(mode)}
+          onPointerDown={(event) => handleViewPointerDown(event, mode)}
+          onClick={() => handleViewClick(mode)}
           className={`relative p-2 rounded-lg transition-all duration-200 ${isActive
             ? 'text-[#f4f4f5] bg-[#27272a]'
             : 'text-[#a1a1aa] hover:text-[#f4f4f5] hover:bg-[#27272a]'
@@ -151,29 +205,83 @@ const Header: React.FC<HeaderProps> = ({
 
         <div className="flex flex-wrap items-center gap-2 sm:gap-4">
 
-          {/* View Toolbar */}
+          {/* Expanding Toolbar */}
           <nav
-            className="flex flex-wrap liquid-glass-nav p-1.5 rounded-xl items-center gap-1 transition-all duration-300 relative"
+            className="flex liquid-glass-nav p-1.5 rounded-xl items-center gap-1 transition-all duration-300 relative overflow-hidden"
             aria-label="View tabs"
           >
-            <div className="flex items-center gap-1 px-1">
-              <ViewIconButton mode="list" icon="list" label="List View" />
-              <ViewIconButton mode="kanban" icon="view_kanban" label="Kanban Board" />
-              <ViewIconButton mode="budget" icon="attach_money" label="Budget" />
+            {/* Applications Section */}
+            <div
+              className="flex items-center"
+              aria-label="Applications view group"
+              onMouseEnter={() => setHoveredSection('apps')}
+              onMouseLeave={() => setHoveredSection(null)}
+            >
+              {showApps ? (
+                <div className="flex items-center gap-1 animate-fadeIn px-1">
+                  <ViewIconButton mode="list" icon="list" label="List View" />
+                  <ViewIconButton mode="kanban" icon="view_kanban" label="Kanban Board" />
+                  <ViewIconButton mode="budget" icon="attach_money" label="Budget" />
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => handleViewChange(lastAppViewRef.current)}
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium text-[#a1a1aa] hover:bg-[#27272a] hover:text-[#f4f4f5] transition-colors"
+                >
+                  <span>Applications</span>
+                </button>
+              )}
             </div>
 
             <div className="h-5 w-px bg-[#27272a] mx-1"></div>
 
-            <div className="flex items-center gap-1 px-1">
-              <ViewIconButton mode="timeline" icon="timeline" label="Timeline" />
-              <ViewIconButton mode="calendar" icon="calendar_month" label="Calendar" />
+            {/* Schedule Section */}
+            <div
+              className="flex items-center"
+              aria-label="Schedule view group"
+              onMouseEnter={() => setHoveredSection('schedule')}
+              onMouseLeave={() => setHoveredSection(null)}
+            >
+              {showSchedule ? (
+                <div className="flex items-center gap-1 animate-fadeIn px-1">
+                  <ViewIconButton mode="timeline" icon="timeline" label="Timeline" />
+                  <ViewIconButton mode="calendar" icon="calendar_month" label="Calendar" />
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => handleViewChange(lastScheduleViewRef.current)}
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium text-[#a1a1aa] hover:bg-[#27272a] hover:text-[#f4f4f5] transition-colors"
+                >
+                  <span>Schedule</span>
+                </button>
+              )}
             </div>
 
             <div className="h-5 w-px bg-[#27272a] mx-1"></div>
 
-            <div className="flex items-center gap-1 px-1">
-              <ViewIconButton mode="faculty" icon="school" label="Faculty" />
-              <ViewIconButton mode="recommenders" icon="assignment_ind" label="Recommenders" />
+            {/* Resources Section */}
+            <div
+              className="flex items-center"
+              aria-label="Resources view group"
+              onMouseEnter={() => setHoveredSection('resources')}
+              onMouseLeave={() => setHoveredSection(null)}
+            >
+              {showResources ? (
+                <div className="flex items-center gap-1 animate-fadeIn px-1">
+                  <ViewIconButton mode="faculty" icon="school" label="Faculty" />
+                  <ViewIconButton mode="recommenders" icon="assignment_ind" label="Recommenders" />
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => handleViewChange(lastResourceViewRef.current)}
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium text-[#a1a1aa] hover:bg-[#27272a] hover:text-[#f4f4f5] transition-colors"
+                >
+                  <span>Resources</span>
+                </button>
+              )}
             </div>
           </nav>
 

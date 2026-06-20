@@ -27,6 +27,29 @@ coverage/
 .gemini/
 gha-creds-*.json
 
-# Local/generated Markdown reports
+# Local/generated Markdown reports and temp notes
 /*_REPORT.md
 /*-report.md
+/*_report.md
+/*-REPORT.md
+/*.report.md
+/*report*.md
+/*temp*.md
+/*scratch*.md
+/*draft*.md
+/*notes*.md
+.gitnexus
+
+# Local agent/tool settings and caches
+.claude/
+.codex/
+.devcouncil/
+.electrobun-win-drive/
+graphify-out/
+.env.local
+.env.*.local
+build-profile.json
+build-timings.json
+.FullName
+.tmp-patch-new/
+.tmp-patch-orig/
