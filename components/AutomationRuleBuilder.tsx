@@ -22,16 +22,20 @@ const AutomationRuleBuilder: React.FC<AutomationRuleBuilderProps> = ({ rule, onS
   const [triggerParams, setTriggerParams] = useState(rule?.triggerParams || {});
   const [conditions, setConditions] = useState<AutomationCondition[]>(rule?.conditions || []);
   const [actions, setActions] = useState<AutomationAction[]>(rule?.actions || []);
+  const [nameError, setNameError] = useState('');
+  const [actionsError, setActionsError] = useState('');
 
   const handleSave = () => {
     if (!name.trim()) {
-      alert('Please enter a rule name');
+      setNameError('Rule name is required');
       return;
     }
     if (actions.length === 0) {
-      alert('Please add at least one action');
+      setActionsError('At least one action is required');
       return;
     }
+    setNameError('');
+    setActionsError('');
 
     const ruleData: Omit<AutomationRule, 'id' | 'createdAt' | 'updatedAt' | 'executionCount'> = {
       name: name.trim(),
@@ -78,14 +82,18 @@ const AutomationRuleBuilder: React.FC<AutomationRuleBuilderProps> = ({ rule, onS
   return (
     <div className="space-y-6 p-4 bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700">
       <div>
-        <label className="block text-sm font-medium mb-2">Rule Name</label>
+        <label htmlFor="rule-name" className="block text-sm font-medium mb-2">Rule Name</label>
         <input
+          id="rule-name"
           type="text"
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder="e.g., Auto-remind on submission"
           className="w-full px-4 py-2 border rounded-lg"
+          aria-invalid={!!nameError}
+          aria-describedby={nameError ? 'rule-name-error' : undefined}
         />
+        {nameError && <p id="rule-name-error" role="alert" className="text-red-500 text-sm mt-1">{nameError}</p>}
       </div>
 
       <div>
@@ -100,8 +108,9 @@ const AutomationRuleBuilder: React.FC<AutomationRuleBuilderProps> = ({ rule, onS
       </div>
 
       <div>
-        <label className="block text-sm font-medium mb-2">Trigger</label>
+        <label htmlFor="rule-trigger" className="block text-sm font-medium mb-2">Trigger</label>
         <select
+          id="rule-trigger"
           value={trigger}
           onChange={(e) => setTrigger(e.target.value as TriggerType)}
           className="w-full px-4 py-2 border rounded-lg"
@@ -136,8 +145,9 @@ const AutomationRuleBuilder: React.FC<AutomationRuleBuilderProps> = ({ rule, onS
 
         {trigger === 'deadline_approaching' && (
           <div className="mt-2">
-            <label className="block text-xs mb-1">Days before deadline:</label>
+            <label htmlFor="days-before-deadline" className="block text-xs mb-1">Days before deadline:</label>
             <input
+              id="days-before-deadline"
               type="number"
               value={triggerParams.daysBefore || ''}
               onChange={(e) => setTriggerParams({ ...triggerParams, daysBefore: parseInt(e.target.value) || 0 })}
@@ -170,6 +180,8 @@ const AutomationRuleBuilder: React.FC<AutomationRuleBuilderProps> = ({ rule, onS
               <option value="status">Status</option>
               <option value="programType">Program Type</option>
               <option value="universityName">University Name</option>
+              <option value="applicationFee">Application Fee</option>
+              <option value="gpaRequirement">GPA Requirement</option>
             </select>
             <select
               value={condition.operator}
@@ -181,6 +193,8 @@ const AutomationRuleBuilder: React.FC<AutomationRuleBuilderProps> = ({ rule, onS
               <option value="equals">Equals</option>
               <option value="not_equals">Not Equals</option>
               <option value="contains">Contains</option>
+              <option value="greater_than">Greater Than</option>
+              <option value="less_than">Less Than</option>
               <option value="is_empty">Is Empty</option>
               <option value="is_not_empty">Is Not Empty</option>
             </select>
@@ -215,12 +229,13 @@ const AutomationRuleBuilder: React.FC<AutomationRuleBuilderProps> = ({ rule, onS
         <div className="flex items-center justify-between mb-2">
           <label className="block text-sm font-medium">Actions</label>
           <button
-            onClick={addAction}
+            onClick={() => { addAction(); setActionsError(''); }}
             className="text-xs px-2 py-1 border rounded hover:bg-slate-100 dark:hover:bg-slate-700"
           >
             Add Action
           </button>
         </div>
+        {actionsError && <p role="alert" className="text-red-500 text-sm mb-2">{actionsError}</p>}
         {actions.map((action, index) => (
           <div key={index} className="mb-3 p-3 bg-slate-50 dark:bg-slate-900 rounded border">
             <div className="flex items-center gap-2 mb-2">
@@ -250,6 +265,7 @@ const AutomationRuleBuilder: React.FC<AutomationRuleBuilderProps> = ({ rule, onS
               <div className="space-y-2">
                 <input
                   type="text"
+                  aria-label="Reminder text"
                   value={action.params.text || ''}
                   onChange={(e) => updateAction(index, { params: { ...action.params, text: e.target.value } })}
                   placeholder="Reminder text"
@@ -257,6 +273,7 @@ const AutomationRuleBuilder: React.FC<AutomationRuleBuilderProps> = ({ rule, onS
                 />
                 <input
                   type="number"
+                  aria-label="Days from trigger (0 = same day)"
                   value={action.params.daysOffset || ''}
                   onChange={(e) => updateAction(index, { params: { ...action.params, daysOffset: parseInt(e.target.value) || 0 } })}
                   placeholder="Days from trigger (0 = same day)"
@@ -281,11 +298,42 @@ const AutomationRuleBuilder: React.FC<AutomationRuleBuilderProps> = ({ rule, onS
             {action.type === 'add_tag' && (
               <input
                 type="text"
+                aria-label="Tag name"
                 value={action.params.tag || ''}
                 onChange={(e) => updateAction(index, { params: { ...action.params, tag: e.target.value } })}
                 placeholder="Tag name"
                 className="w-full px-2 py-1 border rounded text-sm"
               />
+            )}
+            {action.type === 'remove_tag' && (
+              <input
+                type="text"
+                aria-label="Tag name"
+                value={action.params.tag || ''}
+                onChange={(e) => updateAction(index, { params: { ...action.params, tag: e.target.value } })}
+                placeholder="Tag name"
+                className="w-full px-2 py-1 border rounded text-sm"
+              />
+            )}
+            {action.type === 'update_field' && (
+              <div className="space-y-2">
+                <input
+                  type="text"
+                  aria-label="Field name"
+                  value={action.params.field || ''}
+                  onChange={(e) => updateAction(index, { params: { ...action.params, field: e.target.value } })}
+                  placeholder="Field name"
+                  className="w-full px-2 py-1 border rounded text-sm"
+                />
+                <input
+                  type="text"
+                  aria-label="New value"
+                  value={action.params.value || ''}
+                  onChange={(e) => updateAction(index, { params: { ...action.params, value: e.target.value } })}
+                  placeholder="New value"
+                  className="w-full px-2 py-1 border rounded text-sm"
+                />
+              </div>
             )}
           </div>
         ))}

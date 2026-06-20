@@ -82,9 +82,11 @@ const ComparisonView: React.FC<ComparisonViewProps> = ({ applications }) => {
                 </h2>
                 <button
                     onClick={() => setShowView(!showView)}
+                    aria-expanded={showView}
+                    aria-controls="comparison-view-content"
                     className="flex items-center gap-2 text-sm font-medium text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors"
                 >
-                    <span className="material-symbols-outlined text-lg">
+                    <span className="material-symbols-outlined text-lg" aria-hidden="true">
                         {showView ? 'expand_less' : 'expand_more'}
                     </span>
                     {showView ? 'Hide' : 'Show'}
@@ -94,6 +96,7 @@ const ComparisonView: React.FC<ComparisonViewProps> = ({ applications }) => {
             <AnimatePresence>
                 {showView && (
                     <motion.div
+                        id="comparison-view-content"
                         initial={{ opacity: 0, height: 0 }}
                         animate={{ opacity: 1, height: 'auto' }}
                         exit={{ opacity: 0, height: 0 }}
@@ -168,13 +171,15 @@ const ComparisonView: React.FC<ComparisonViewProps> = ({ applications }) => {
                                         <div className="flex justify-between">
                                             <span className="text-slate-500 dark:text-slate-400">Health Insurance</span>
                                             <span className={`font-medium ${app.hasInsurance ? 'text-green-600' : 'text-slate-400'}`}>
-                                                {app.hasInsurance ? '✓ Included' : '✗ Not included'}
+                                                <span aria-hidden="true">{app.hasInsurance ? '✓ ' : '✗ '}</span>
+                                                {app.hasInsurance ? 'Included' : 'Not included'}
                                             </span>
                                         </div>
                                         <div className="flex justify-between">
                                             <span className="text-slate-500 dark:text-slate-400">Assistantship</span>
                                             <span className={`font-medium ${app.hasAssistantship ? 'text-green-600' : 'text-slate-400'}`}>
-                                                {app.hasAssistantship ? '✓ Yes' : '✗ No'}
+                                                <span aria-hidden="true">{app.hasAssistantship ? '✓ ' : '✗ '}</span>
+                                                {app.hasAssistantship ? 'Yes' : 'No'}
                                             </span>
                                         </div>
                                     </div>

@@ -33,6 +33,8 @@ const DataValidationPanel: React.FC<DataValidationPanelProps> = ({ applications 
     <section className="my-6 rounded-xl border border-[#27272a] bg-[#18181b]/80 p-4 text-[#f4f4f5]">
       <button
         type="button"
+        aria-expanded={expanded}
+        aria-controls="validation-panel-content"
         onClick={() => setExpanded(prev => !prev)}
         className="flex w-full items-center justify-between gap-4 text-left"
       >
@@ -52,7 +54,7 @@ const DataValidationPanel: React.FC<DataValidationPanelProps> = ({ applications 
       </button>
 
       {expanded && (
-        <div className="mt-4 space-y-3 border-t border-[#27272a] pt-4">
+        <div id="validation-panel-content" className="mt-4 space-y-3 border-t border-[#27272a] pt-4">
           {duplicates.map((group) => (
             <div key={group.map(app => app.id).join('-')} className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-3">
               <div className="font-medium text-amber-200">Possible duplicate applications</div>
@@ -78,6 +80,7 @@ const DataValidationPanel: React.FC<DataValidationPanelProps> = ({ applications 
                 <ul className="mt-3 space-y-1 text-sm">
                   {[...result.errors, ...result.warnings, ...result.info].map(issue => (
                     <li key={issue.id} className={issue.severity === 'error' ? 'text-red-300' : 'text-amber-200'}>
+                      <span className="sr-only">{issue.severity === 'error' ? 'Error: ' : issue.severity === 'warning' ? 'Warning: ' : 'Info: '}</span>
                       {issue.message}
                     </li>
                   ))}

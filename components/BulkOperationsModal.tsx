@@ -125,7 +125,7 @@ const BulkOperationsModal: React.FC<BulkOperationsModalProps> = ({
           const newReminder = {
             id: crypto.randomUUID(),
             text: reminderToAdd.text,
-            date: reminderDate.toISOString(),
+            date: reminderDate.toISOString().split('T')[0],
             completed: false,
           };
           newUpdates.reminders = [...(app.reminders || []), newReminder];

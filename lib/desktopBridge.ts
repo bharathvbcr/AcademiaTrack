@@ -63,8 +63,8 @@ const installTauriBridge = () => {
     deleteDocument: (filePath: string) => invoke("delete_document", { filePath }),
     createBackup: () => invoke("create_backup"),
     listBackups: () => invoke("list_backups"),
-    restoreBackup: (backupPath: string) => invoke("restore_backup", { backupPath }),
-    deleteBackup: (backupPath: string) => invoke("delete_backup", { backupPath }),
+    restoreBackup: (filename: string) => invoke("restore_backup", { filename }),
+    deleteBackup: (filename: string) => invoke("delete_backup", { filename }),
     autoBackup: () => invoke("auto_backup"),
     windowControls: {
       minimize: () => appWindow.minimize(),

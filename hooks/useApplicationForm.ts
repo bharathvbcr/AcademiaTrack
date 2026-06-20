@@ -110,10 +110,11 @@ export const useApplicationForm = (isOpen: boolean, applicationToEdit?: Applicat
                     facultyContacts: migratedFaculty,
                     documents: normalizedDocs,
                     gre: {
-                        status: (gre as any)?.status ?? TestStatus.NotApplicable,
-                        cost: (gre as any)?.cost
+                        status: (gre as { status?: TestStatus } | undefined)?.status ?? TestStatus.NotApplicable,
+                        cost: (gre as { cost?: number } | undefined)?.cost
                     },
-                    englishTest: (applicationToEdit as any).englishTest || { type: 'Not Required', status: TestStatus.NotApplicable },
+                    englishTest: (applicationToEdit as { englishTest?: Application['englishTest'] }).englishTest
+                        ?? { type: 'Not Required', status: TestStatus.NotApplicable },
                     recommenders: applicationToEdit.recommenders || [],
                     reminders: applicationToEdit.reminders || [],
                     admissionTerm: admissionTerm || null,
@@ -140,7 +141,7 @@ export const useApplicationForm = (isOpen: boolean, applicationToEdit?: Applicat
 
     const handleNumericChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
-        setAppData(prev => ({ ...prev, [name]: value === '' ? '' : Math.max(0, parseInt(value, 10)) }));
+        setAppData(prev => ({ ...prev, [name]: value === '' ? 0 : Math.max(0, parseInt(value, 10)) }));
     }, []);
 
     const handleCheckboxChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
@@ -275,7 +276,7 @@ export const useApplicationForm = (isOpen: boolean, applicationToEdit?: Applicat
         setAppData(prev => ({
             ...prev,
             facultyContacts: [...prev.facultyContacts, {
-                id: Date.now(),
+                id: crypto.randomUUID(),
                 name: '',
                 website: '',
                 email: '',
@@ -336,7 +337,7 @@ export const useApplicationForm = (isOpen: boolean, applicationToEdit?: Applicat
         setAppData(prev => {
             const updatedFaculty = [...prev.facultyContacts];
             const facultyToUpdate = { ...updatedFaculty[index] };
-            facultyToUpdate.correspondence = [...(facultyToUpdate.correspondence || []), { ...correspondence, id: Date.now() }];
+            facultyToUpdate.correspondence = [...(facultyToUpdate.correspondence || []), { ...correspondence, id: crypto.randomUUID() }];
             updatedFaculty[index] = facultyToUpdate;
             return { ...prev, facultyContacts: updatedFaculty };
         });
@@ -357,7 +358,7 @@ export const useApplicationForm = (isOpen: boolean, applicationToEdit?: Applicat
         setAppData(prev => ({
             ...prev,
             essays: [...(prev.essays || []), {
-                id: Date.now(),
+                id: crypto.randomUUID(),
                 type,
                 name,
                 status: 'Not Started',
@@ -387,7 +388,7 @@ export const useApplicationForm = (isOpen: boolean, applicationToEdit?: Applicat
                 if (e.id === essayId) {
                     return {
                         ...e,
-                        drafts: [...e.drafts, { ...draft, id: Date.now() }]
+                        drafts: [...e.drafts, { ...draft, id: crypto.randomUUID() }]
                     };
                 }
                 return e;
@@ -511,7 +512,7 @@ export const useApplicationForm = (isOpen: boolean, applicationToEdit?: Applicat
         setAppData(prev => ({
             ...prev,
             recommenders: [...(prev.recommenders || []), {
-                id: Date.now(),
+                id: crypto.randomUUID(),
                 name: '',
                 title: '',
                 email: '',
@@ -537,7 +538,7 @@ export const useApplicationForm = (isOpen: boolean, applicationToEdit?: Applicat
         if (!text || !text.trim()) return;
         setAppData(prev => ({
             ...prev,
-            reminders: [...(prev.reminders || []), { id: Date.now().toString(), text: text.trim(), date: new Date().toISOString().split('T')[0], completed: false }]
+            reminders: [...(prev.reminders || []), { id: crypto.randomUUID(), text: text.trim(), date: new Date().toISOString().split('T')[0], completed: false }]
         }));
     }, []);
 
@@ -601,7 +602,7 @@ export const useApplicationForm = (isOpen: boolean, applicationToEdit?: Applicat
         setAppData(prev => ({
             ...prev,
             scholarships: [...(prev.scholarships || []), {
-                id: Date.now(),
+                id: crypto.randomUUID(),
                 name: '',
                 amount: 0,
                 duration: '',

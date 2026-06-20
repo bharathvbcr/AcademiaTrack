@@ -214,8 +214,12 @@ const CommandPalette: React.FC<CommandPaletteProps> = ({
                     exit={{ opacity: 0 }}
                     className="fixed inset-0 liquid-glass-modal"
                     onClick={onClose}
+                    aria-hidden="true"
                 />
                 <motion.div
+                    role="dialog"
+                    aria-modal="true"
+                    aria-label="Command Palette"
                     initial={{ opacity: 0, scale: 0.95, y: -20 }}
                     animate={{ opacity: 1, scale: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.95, y: -20 }}
@@ -235,6 +239,8 @@ const CommandPalette: React.FC<CommandPaletteProps> = ({
                                 placeholder="Type to search... (> actions, @ apps, # filters)"
                                 className="flex-1 bg-transparent border-none outline-none text-[#F5D7DA] text-xl placeholder-[#E8B4B8]/40"
                                 autoFocus
+                                aria-label="Search commands"
+                                aria-controls="command-palette-listbox"
                             />
                             <div className="flex items-center gap-2">
                                 <kbd className="px-2 py-1 text-[10px] font-bold text-[#E8B4B8] bg-[rgba(139,0,0,0.4)] rounded border border-[#E8B4B8]/30 shadow-inner uppercase tracking-tighter">
@@ -245,6 +251,7 @@ const CommandPalette: React.FC<CommandPaletteProps> = ({
 
                         {/* Commands List */}
                         <div
+                            id="command-palette-listbox"
                             ref={scrollContainerRef}
                             className="max-h-[50vh] overflow-y-auto liquid-scrollbar"
                             role="listbox"

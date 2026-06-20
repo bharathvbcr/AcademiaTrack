@@ -68,6 +68,7 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({
                     <MaterialIcon name="search" className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg" />
                     <input
                         type="text"
+                        aria-label="Search applications"
                         value={searchQuery}
                         onChange={(e) => onSearchChange(e.target.value)}
                         placeholder="Search universities, programs, faculty, notes..."
@@ -190,6 +191,7 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({
                                 <button
                                     key={tag.name}
                                     onClick={() => toggleTag(tag.name)}
+                                    aria-pressed={filters.tags.includes(tag.name)}
                                     className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs transition-all ${filters.tags.includes(tag.name)
                                             ? tag.bgClass + ' ring-2 ring-offset-1 ring-current'
                                             : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600'

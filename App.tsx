@@ -29,10 +29,10 @@ import TitleBar from './components/TitleBar';
 import ConfirmationModal from './components/ConfirmationModal';
 import MainContent from './components/MainContent';
 import CommandPalette from './components/CommandPalette';
-import BulkOperationsModal from './components/BulkOperationsModal';
-import AdvancedFilterBuilder from './components/AdvancedFilterBuilder';
-import SettingsModal from './components/SettingsModal';
 import { ToastContainer } from './components/Toast';
+import { BulkSelectionProvider } from './contexts/BulkSelectionContext';
+import { ApplicationActionsProvider } from './contexts/ApplicationActionsContext';
+import { useAppCommands } from './hooks/useAppCommands';
 
 const ApplicationModal = lazy(() => import('./components/ApplicationModal'));
 const FacultyContactModal = lazy(() => import('./components/FacultyContactModal'));
@@ -44,11 +44,14 @@ const KanbanConfigModal = lazy(() => import('./components/KanbanConfigModal'));
 const ColumnConfigModal = lazy(() => import('./components/ColumnConfigModal'));
 const ViewPresetModal = lazy(() => import('./components/ViewPresetModal'));
 const AutomationRulesModal = lazy(() => import('./components/AutomationRulesModal'));
-
-import { useAppCommands } from './hooks/useAppCommands';
+const BulkOperationsModal = lazy(() => import('./components/BulkOperationsModal'));
+const AdvancedFilterBuilder = lazy(() => import('./components/AdvancedFilterBuilder'));
+const SettingsModal = lazy(() => import('./components/SettingsModal'));
 
 const App: React.FC = () => {
   useDarkMode();
+  // Toast notifications (declared first so showToast can be passed to useApplications)
+  const { toasts, showToast, removeToast } = useToast();
   const {
     applications,
     addApplication,
@@ -62,7 +65,7 @@ const App: React.FC = () => {
     redo,
     canUndo,
     canRedo,
-  } = useApplications();
+  } = useApplications(showToast);
 
   const {
     isModalOpen,
@@ -205,8 +208,6 @@ const App: React.FC = () => {
   // View state
   const viewState = useViewState(viewMode);
 
-  // Toast notifications
-  const { toasts, showToast, removeToast } = useToast();
   const { applyActiveTheme } = useThemeCustomization();
 
   useEffect(() => {
@@ -216,11 +217,9 @@ const App: React.FC = () => {
   const handleSave = React.useCallback((app: Application) => {
     try {
       if (editingApplication) {
-        updateApplication(app);
         const updates = executeRules(app, 'field_updated', { field: 'any' });
-        if (updates) {
-          updateApplication({ ...app, ...updates });
-        }
+        const finalApp = updates ? { ...app, ...updates } : app;
+        updateApplication(finalApp);
       } else {
         const updates = executeRules(app, 'application_created');
         const finalApp = updates ? { ...app, ...updates } : app;
@@ -288,7 +287,7 @@ const App: React.FC = () => {
       exportToPDF(appsToExport, selectedFields);
     } else {
       const { exportToJSON } = await import('./utils/exportFormats');
-      const dataStr = exportToJSON(appsToExport, selectedFields);
+      const dataStr = exportToJSON(appsToExport);
       const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
       const exportFileDefaultName = `applications-${new Date().toISOString().split('T')[0]}.json`;
 
@@ -339,7 +338,11 @@ const App: React.FC = () => {
     if (selectedIds.has(id)) {
       clearSelection();
     }
-  }, [deleteApplication, selectedIds, clearSelection]);
+    if (editingApplication?.id === id) {
+      closeModal();
+      showToast('warning', 'The application you were editing was deleted.');
+    }
+  }, [deleteApplication, selectedIds, clearSelection, editingApplication, closeModal, showToast]);
 
   const handleBulkStatusChange = React.useCallback((status: ApplicationStatus) => {
     const selected = getSelectedApplications();
@@ -369,12 +372,17 @@ const App: React.FC = () => {
       'Delete Selected Applications',
       `Delete ${selectedCount} selected application(s)?`,
       () => {
-        getSelectedApplications().forEach(app => deleteApplication(app.id));
+        const appsToDelete = getSelectedApplications();
+        appsToDelete.forEach(app => deleteApplication(app.id));
+        if (editingApplication && appsToDelete.some(app => app.id === editingApplication.id)) {
+          closeModal();
+          showToast('warning', 'The application you were editing was deleted.');
+        }
         clearSelection();
       },
       true
     );
-  }, [clearSelection, deleteApplication, getSelectedApplications, selectedCount, showConfirmation]);
+  }, [clearSelection, deleteApplication, getSelectedApplications, selectedCount, showConfirmation, editingApplication, closeModal, showToast]);
 
   const handleBulkCompare = React.useCallback(() => {
     if (selectedCount > 0) {
@@ -442,6 +450,14 @@ const App: React.FC = () => {
 
         if (json.length === 0) {
           throw new Error('File contains no applications');
+        }
+
+        // Detect presentation (flat/label-key) exports that cannot be imported
+        if (!file.name.toLowerCase().endsWith('.csv')) {
+          const firstItem = (json as unknown[])[0];
+          if (firstItem && typeof firstItem === 'object' && 'University Name' in firstItem) {
+            throw new Error('This file was exported as a presentation report and cannot be imported — please use a backup JSON file instead.');
+          }
         }
 
         // Validate each application
@@ -610,32 +626,38 @@ const App: React.FC = () => {
           onSearch={handleAdvancedSearch}
         />
 
-        <MainContent
-          viewMode={viewMode}
-          applications={applications}
-          filteredAndSortedApplications={finalFilteredApplications}
-          sortConfig={sortConfig}
-          requestSort={requestSort}
-          searchQuery={searchQuery}
-          hasActiveAdvancedSearch={advancedSearchState.active}
-          setSearchQuery={setSearchQuery}
-          openModal={openModal}
-          requestDelete={requestDelete}
-          updateApplication={updateApplication}
-          duplicateApplication={duplicateApplication}
-          handleDragEnd={handleDragEnd}
-          // Bulk selection props
-          isSelectionMode={isSelectionMode}
-          selectedIds={selectedIds}
-          selectedCount={selectedCount}
-          toggleSelectionMode={toggleSelectionMode}
-          toggleSelection={toggleSelection}
-          selectAll={selectAll}
-          clearSelection={clearSelection}
-          onBulkStatusChange={handleBulkStatusChange}
-          onBulkDelete={handleBulkDelete}
-          onBulkCompare={handleBulkCompare}
-        />
+        <BulkSelectionProvider value={{
+          isSelectionMode,
+          selectedIds,
+          onToggleSelection: toggleSelection,
+          onEnterSelectionMode: toggleSelectionMode,
+        }}>
+          <ApplicationActionsProvider value={{
+            openModal,
+            requestDelete,
+            updateApplication,
+            duplicateApplication,
+          }}>
+            <MainContent
+              viewMode={viewMode}
+              applications={applications}
+              filteredAndSortedApplications={finalFilteredApplications}
+              sortConfig={sortConfig}
+              requestSort={requestSort}
+              searchQuery={searchQuery}
+              hasActiveAdvancedSearch={advancedSearchState.active}
+              setSearchQuery={setSearchQuery}
+              handleDragEnd={handleDragEnd}
+              selectedCount={selectedCount}
+              toggleSelectionMode={toggleSelectionMode}
+              selectAll={selectAll}
+              clearSelection={clearSelection}
+              onBulkStatusChange={handleBulkStatusChange}
+              onBulkDelete={handleBulkDelete}
+              onBulkCompare={handleBulkCompare}
+            />
+          </ApplicationActionsProvider>
+        </BulkSelectionProvider>
 
 
       </div>
@@ -686,27 +708,31 @@ const App: React.FC = () => {
       />
 
       {/* Bulk Operations Modal */}
-      {isBulkOperationsOpen && (
-        <BulkOperationsModal
-          isOpen={true}
-          onClose={handleCloseBulkOps}
-          selectedApplications={getSelectedApplications()}
-          onUpdate={handleBulkUpdate}
-        />
-      )}
+      <Suspense fallback={null}>
+        {isBulkOperationsOpen && (
+          <BulkOperationsModal
+            isOpen={true}
+            onClose={handleCloseBulkOps}
+            selectedApplications={getSelectedApplications()}
+            onUpdate={handleBulkUpdate}
+          />
+        )}
+      </Suspense>
 
       {/* Settings Modal */}
-      {settingsOpen && (
-        <SettingsModal
-          isOpen={true}
-          onClose={handleCloseSettings}
-          onOpenKanbanConfig={handleOpenKanbanConfig}
-          onOpenColumnConfig={handleOpenColumnConfig}
-          onOpenAutomationRules={handleOpenAutomationRules}
-          onOpenViewPresets={handleOpenViewPresets}
-          initialTab={settingsTab}
-        />
-      )}
+      <Suspense fallback={null}>
+        {settingsOpen && (
+          <SettingsModal
+            isOpen={true}
+            onClose={handleCloseSettings}
+            onOpenKanbanConfig={handleOpenKanbanConfig}
+            onOpenColumnConfig={handleOpenColumnConfig}
+            onOpenAutomationRules={handleOpenAutomationRules}
+            onOpenViewPresets={handleOpenViewPresets}
+            initialTab={settingsTab}
+          />
+        )}
+      </Suspense>
 
       {isQuickCaptureOpen && (
         <QuickCaptureModal
@@ -768,6 +794,7 @@ const App: React.FC = () => {
 
 
       {/* Advanced Filter Builder */}
+      <Suspense fallback={null}>
       {isAdvancedFilterOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center liquid-glass-modal">
           <div className="liquid-glass-modal-content rounded-2xl max-w-4xl w-full mx-4 max-h-[90vh] overflow-auto p-6">
@@ -807,6 +834,7 @@ const App: React.FC = () => {
           </div>
         </div>
       )}
+      </Suspense>
 
       <ToastContainer toasts={toasts} onRemove={removeToast} />
       </div>

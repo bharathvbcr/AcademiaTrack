@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { Application } from '../types';
 import { useLocalStorage } from './useLocalStorage';
 
@@ -29,6 +29,33 @@ export interface ParsedSearchQuery {
   value: string;
   exclude?: boolean;
   fuzzy?: boolean;
+}
+
+function searchInField(
+  fieldValue: string | null | undefined,
+  searchValue: string,
+  operator: ParsedSearchQuery['operator'] = 'contains',
+  fuzzy?: boolean
+): boolean {
+  if (!fieldValue) return false;
+  const lowerField = fieldValue.toLowerCase();
+
+  if (fuzzy) {
+    return lowerField.includes(searchValue) ||
+           searchValue.split('').every(char => lowerField.includes(char));
+  }
+
+  switch (operator) {
+    case 'equals':
+      return lowerField === searchValue;
+    case 'startsWith':
+      return lowerField.startsWith(searchValue);
+    case 'endsWith':
+      return lowerField.endsWith(searchValue);
+    case 'contains':
+    default:
+      return lowerField.includes(searchValue);
+  }
 }
 
 export const useAdvancedSearch = (applications: Application[]) => {
@@ -171,34 +198,6 @@ export const useAdvancedSearch = (applications: Application[]) => {
     });
   }, []);
 
-  const searchInField = (
-    fieldValue: string | null | undefined,
-    searchValue: string,
-    operator: ParsedSearchQuery['operator'] = 'contains',
-    fuzzy?: boolean
-  ): boolean => {
-    if (!fieldValue) return false;
-    const lowerField = fieldValue.toLowerCase();
-
-    if (fuzzy) {
-      // Simple fuzzy matching (Levenshtein-like)
-      return lowerField.includes(searchValue) || 
-             searchValue.split('').every(char => lowerField.includes(char));
-    }
-
-    switch (operator) {
-      case 'equals':
-        return lowerField === searchValue;
-      case 'startsWith':
-        return lowerField.startsWith(searchValue);
-      case 'endsWith':
-        return lowerField.endsWith(searchValue);
-      case 'contains':
-      default:
-        return lowerField.includes(searchValue);
-    }
-  };
-
   const search = useCallback((query: string): Application[] => {
     if (!query.trim()) return applications;
 
@@ -243,19 +242,12 @@ export const useAdvancedSearch = (applications: Application[]) => {
     setSavedSearches(prev => prev.filter(s => s.id !== id));
   }, [setSavedSearches]);
 
-  const clearSavedSearches = useCallback(() => {
-    setSavedSearches([]);
-    localStorage.removeItem('saved-searches');
-  }, [setSavedSearches]);
-
   return {
     search,
-    parseQuery,
     savedSearches,
     searchHistory,
     saveSearch,
     loadSearch,
     deleteSearch,
-    clearSavedSearches,
   };
 };

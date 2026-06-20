@@ -1,7 +1,7 @@
 import { useCallback, useMemo } from 'react';
 import { useLocalStorage } from './useLocalStorage';
 import { Application } from '../types';
-import { AutomationRule, AutomationExecutionLog, AutomationCondition } from '../types/automation';
+import { AutomationRule, AutomationExecutionLog, AutomationCondition, TriggerData } from '../types/automation';
 
 export const useAutomation = () => {
   const [rules, setRules] = useLocalStorage<AutomationRule[]>('automation-rules', []);
@@ -42,7 +42,7 @@ export const useAutomation = () => {
     if (!conditions || conditions.length === 0) return true;
 
     return conditions.every(condition => {
-      const fieldValue = (app as any)[condition.field];
+      const fieldValue = app[condition.field];
       
       switch (condition.operator) {
         case 'equals':
@@ -80,7 +80,7 @@ export const useAutomation = () => {
             {
               id: crypto.randomUUID(),
               text: action.params.text || 'Reminder',
-              date: reminderDate.toISOString(),
+              date: reminderDate.toISOString().split('T')[0],
               completed: false,
             },
           ];
@@ -94,7 +94,7 @@ export const useAutomation = () => {
 
         case 'update_field':
           if (action.params.field && action.params.value !== undefined) {
-            (updates as any)[action.params.field] = action.params.value;
+            (updates as Record<string, unknown>)[action.params.field as string] = action.params.value;
           }
           break;
 
@@ -119,7 +119,7 @@ export const useAutomation = () => {
   const executeRules = useCallback((
     app: Application,
     trigger: AutomationRule['trigger'],
-    triggerData?: any
+    triggerData?: TriggerData
   ): Partial<Application> | null => {
     const applicableRules = enabledRules.filter(rule => {
       if (rule.trigger !== trigger) return false;
@@ -148,6 +148,7 @@ export const useAutomation = () => {
         id: crypto.randomUUID(),
         ruleId: rule.id,
         ruleName: rule.name,
+        applicationId: app.id,
         timestamp: Date.now(),
         success: true,
         actionsExecuted: rule.actions.map(a => a.type),

@@ -1,5 +1,4 @@
 import { Application } from '../types';
-import { readJsonFromStorage, removeStorageItem, writeJsonToStorage } from './browserStorage';
 
 export interface SearchIndex {
   [key: string]: Set<string>; // term -> set of application IDs
@@ -16,14 +15,11 @@ export interface IndexStats {
 export class ApplicationSearchIndex {
   private index: SearchIndex = {};
   private applications: Map<string, Application> = new Map();
-  private pendingUpdates: Set<string> = new Set();
   private updateTimer: number | null = null;
   private readonly BATCH_UPDATE_DELAY = 100; // ms
-  private readonly STORAGE_KEY = 'academiatrack-search-index';
   private lastRebuildTime: number = Date.now();
 
   constructor() {
-    this.loadFromStorage();
   }
 
   indexApplication(app: Application) {
@@ -53,7 +49,6 @@ export class ApplicationSearchIndex {
       clearTimeout(this.updateTimer);
     }
     this.updateTimer = window.setTimeout(() => {
-      this.saveToStorage();
       this.updateTimer = null;
     }, this.BATCH_UPDATE_DELAY);
   }
@@ -233,7 +228,6 @@ export class ApplicationSearchIndex {
       this.addToIndex(app);
     });
     this.lastRebuildTime = Date.now();
-    this.saveToStorage();
   }
 
   getStats(): IndexStats {
@@ -261,29 +255,9 @@ export class ApplicationSearchIndex {
     return stats;
   }
 
-  // Persistence methods
-  private saveToStorage() {
-    // Only save index metadata, not full index (too large)
-    const metadata = {
-      indexedCount: this.applications.size,
-      indexTermsCount: Object.keys(this.index).length,
-      lastUpdated: Date.now(),
-    };
-
-    writeJsonToStorage(this.STORAGE_KEY, metadata);
-  }
-
-  private loadFromStorage() {
-    const metadata = readJsonFromStorage<{ lastUpdated?: number }>(this.STORAGE_KEY);
-    if (metadata) {
-      this.lastRebuildTime = metadata.lastUpdated || Date.now();
-    }
-  }
-
   // Clear index (useful for debugging or reset)
   clear() {
     this.index = {};
     this.applications.clear();
-    removeStorageItem(this.STORAGE_KEY);
   }
 }

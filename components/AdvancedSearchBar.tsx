@@ -23,6 +23,7 @@ const AdvancedSearchBar: React.FC<AdvancedSearchBarProps> = ({
   const [query, setQuery] = useState('');
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [showSavedSearches, setShowSavedSearches] = useState(false);
+  const [highlightedIdx, setHighlightedIdx] = useState(-1);
   const [saveDialogOpen, setSaveDialogOpen] = useState(false);
   const [saveName, setSaveName] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
@@ -71,6 +72,31 @@ const AdvancedSearchBar: React.FC<AdvancedSearchBarProps> = ({
     h.toLowerCase().includes(query.toLowerCase()) && h !== query
   ).slice(0, 5);
 
+  const visibleItems = suggestions.length > 0 ? suggestions : searchHistory.slice(0, 5);
+  const dropdownOpen = showSuggestions && (suggestions.length > 0 || searchHistory.length > 0);
+
+  const handleInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Escape') {
+      setShowSuggestions(false);
+      setShowSavedSearches(false);
+      setHighlightedIdx(-1);
+      return;
+    }
+    if (!dropdownOpen) return;
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      setHighlightedIdx(prev => (prev + 1) % visibleItems.length);
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      setHighlightedIdx(prev => (prev <= 0 ? visibleItems.length - 1 : prev - 1));
+    } else if (e.key === 'Enter' && highlightedIdx >= 0) {
+      e.preventDefault();
+      setQuery(visibleItems[highlightedIdx]);
+      setShowSuggestions(false);
+      setHighlightedIdx(-1);
+    }
+  };
+
   return (
     <div ref={containerRef} className="relative w-full">
       <div className="relative">
@@ -81,9 +107,16 @@ const AdvancedSearchBar: React.FC<AdvancedSearchBarProps> = ({
         <input
           ref={inputRef}
           type="text"
+          role="combobox"
+          aria-label="Advanced search"
+          aria-expanded={dropdownOpen}
+          aria-autocomplete="list"
+          aria-controls="search-suggestions"
+          aria-activedescendant={highlightedIdx >= 0 ? `suggestion-${highlightedIdx}` : undefined}
           value={query}
-          onChange={(e) => setQuery(e.target.value)}
+          onChange={(e) => { setQuery(e.target.value); setHighlightedIdx(-1); }}
           onFocus={() => setShowSuggestions(true)}
+          onKeyDown={handleInputKeyDown}
           placeholder={placeholder}
           className="w-full pl-9 pr-20 py-1.5 text-sm liquid-glass rounded-lg focus:ring-2 focus:ring-[#dc2626] focus:border-transparent outline-none transition-all text-[#f4f4f5] placeholder:text-[#a1a1aa]/50"
         />
@@ -124,19 +157,28 @@ const AdvancedSearchBar: React.FC<AdvancedSearchBarProps> = ({
       </div>
 
       {/* Search Suggestions */}
-      {showSuggestions && (suggestions.length > 0 || searchHistory.length > 0) && (
-        <div className="absolute z-50 w-full mt-1 liquid-glass-modal-content rounded-lg max-h-60 overflow-y-auto">
+      {dropdownOpen && (
+        <div
+          role="listbox"
+          id="search-suggestions"
+          aria-label="Search suggestions"
+          className="absolute z-50 w-full mt-1 liquid-glass-modal-content rounded-lg max-h-60 overflow-y-auto"
+        >
           {suggestions.length > 0 && (
             <div className="p-2">
               <div className="text-xs font-semibold text-[#a1a1aa] px-2 py-1">Suggestions</div>
               {suggestions.map((suggestion, idx) => (
                 <button
+                  role="option"
+                  aria-selected={highlightedIdx === idx}
                   key={idx}
+                  id={`suggestion-${idx}`}
                   onClick={() => {
                     setQuery(suggestion);
                     setShowSuggestions(false);
+                    setHighlightedIdx(-1);
                   }}
-                  className="w-full text-left px-3 py-2 hover:bg-[#27272a] rounded flex items-center gap-2 text-[#f4f4f5]"
+                  className={`w-full text-left px-3 py-2 hover:bg-[#27272a] rounded flex items-center gap-2 text-[#f4f4f5]${highlightedIdx === idx ? ' bg-[#27272a]' : ''}`}
                 >
                   <MaterialIcon name="history" className="text-sm text-[#a1a1aa]" />
                   <span className="text-sm">{suggestion}</span>
@@ -149,12 +191,16 @@ const AdvancedSearchBar: React.FC<AdvancedSearchBarProps> = ({
               <div className="text-xs font-semibold text-[#a1a1aa] px-2 py-1">Recent Searches</div>
               {searchHistory.slice(0, 5).map((history, idx) => (
                 <button
+                  role="option"
+                  aria-selected={highlightedIdx === idx}
                   key={idx}
+                  id={`suggestion-${idx}`}
                   onClick={() => {
                     setQuery(history);
                     setShowSuggestions(false);
+                    setHighlightedIdx(-1);
                   }}
-                  className="w-full text-left px-3 py-2 hover:bg-[#27272a] rounded flex items-center gap-2 text-[#f4f4f5]"
+                  className={`w-full text-left px-3 py-2 hover:bg-[#27272a] rounded flex items-center gap-2 text-[#f4f4f5]${highlightedIdx === idx ? ' bg-[#27272a]' : ''}`}
                 >
                   <MaterialIcon name="history" className="text-sm text-[#a1a1aa]" />
                   <span className="text-sm">{history}</span>
@@ -167,7 +213,11 @@ const AdvancedSearchBar: React.FC<AdvancedSearchBarProps> = ({
 
       {/* Saved Searches */}
       {showSavedSearches && (
-        <div className="absolute z-50 w-full mt-1 liquid-glass-modal-content rounded-lg max-h-60 overflow-y-auto">
+        <div
+          role="menu"
+          aria-label="Saved searches"
+          className="absolute z-50 w-full mt-1 liquid-glass-modal-content rounded-lg max-h-60 overflow-y-auto"
+        >
           <div className="p-2">
             <div className="text-xs font-semibold text-[#a1a1aa] px-2 py-1 mb-2">Saved Searches</div>
             {savedSearches.length === 0 ? (
@@ -178,6 +228,7 @@ const AdvancedSearchBar: React.FC<AdvancedSearchBarProps> = ({
               savedSearches.map(saved => (
                 <div
                   key={saved.id}
+                  role="menuitem"
                   className="flex items-center justify-between px-3 py-2 hover:bg-[#27272a] rounded group"
                 >
                   <button
@@ -193,7 +244,7 @@ const AdvancedSearchBar: React.FC<AdvancedSearchBarProps> = ({
                   <Tooltip content="Delete Search">
                     <button
                       onClick={() => deleteSearch(saved.id)}
-                      className="p-1 opacity-0 group-hover:opacity-100 hover:bg-red-500/20 rounded"
+                      className="p-1 opacity-0 group-hover:opacity-100 focus:opacity-100 hover:bg-red-500/20 rounded"
                       aria-label={`Delete saved search ${saved.name}`}
                     >
                       <MaterialIcon name="delete" className="text-sm text-[#dc2626]" />
