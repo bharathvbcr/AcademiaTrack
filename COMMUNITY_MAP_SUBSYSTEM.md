@@ -36,7 +36,7 @@ Goal: expose subsystem ownership and wiring so agents can jump directly to the r
 `components/CommandPalette.tsx`, `contexts/CommandContext.tsx`, `hooks/useAppCommands.ts`, `hooks/useEnhancedKeyboardShortcuts.ts`, `hooks/useKeyboardShortcuts.ts`, `hooks/useCommandPalette.ts`, `types/commands.ts`, `components/SettingsModal.tsx`, `contexts/__tests__/CommandContext.test.tsx`, `utils.ts`
 
 ### C7 Desktop Runtime Bridge
-`electron/main.ts`, `electron/preload.ts`, `electron/tsconfig.json`, `lib/desktopBridge.ts`, `types/interfaces.ts`, `components/TitleBar.tsx`, `components/ErrorBoundary.tsx`, `hooks/useApplications.ts`, `hooks/useApplicationForm.ts`
+`src-tauri/src/lib.rs`, `src-tauri/src/main.rs`, `src-tauri/tauri.conf.json`, `src-tauri/capabilities/default.json`, `electron/main.ts`, `electron/preload.ts`, `electron/preload.cjs`, `electron/tsconfig.json`, `lib/desktopBridge.ts`, `types/interfaces.ts`, `components/TitleBar.tsx`, `components/ErrorBoundary.tsx`, `hooks/useApplications.ts`, `hooks/useApplicationForm.ts`
 
 ### C8 Settings & Profile Customization
 `hooks/useThemeCustomization.ts`, `hooks/useTemplates.ts`, `hooks/useCustomFields.ts`, `hooks/useViewState.ts`, `hooks/useKanbanConfig.ts`, `hooks/useEnhancedKeyboardShortcuts.ts`, `hooks/useAutomation.ts`, `components/SettingsModal.tsx`, `components/ViewPresetModal.tsx`, `components/AutomationRulesModal.tsx`, `components/ColumnConfigModal.tsx`, `components/Toast.tsx`
@@ -52,7 +52,7 @@ Goal: expose subsystem ownership and wiring so agents can jump directly to the r
 ### Core persistence path
 - `C1 Shell` invokes `hooks` in `C3` for application state.
 - `C3` state hooks read/write normalized data through `C4`.
-- `C4` persistence adapters persist to either Electron IPC or browser `localStorage`.
+- `C4` persistence adapters persist to either Tauri commands, legacy Electron IPC, or browser `localStorage`.
 - Browser persistence keys (notably `phd-applications`, `saved-searches`, `saved-filters`, `saved-keyboard-shortcuts`, etc.) are consumed by UI state in `C2/C3`.
 
 ### Commanding path
@@ -62,7 +62,7 @@ Goal: expose subsystem ownership and wiring so agents can jump directly to the r
 
 ### Desktop bridge path
 - `C3` feature hooks call `window.desktop` in `C7` for file persistence and side-effects.
-- `C7` forwards those calls to `electron/main.ts` handlers that interact with the local filesystem.
+- `C7` forwards those calls to Tauri command handlers in `src-tauri/src/lib.rs`, with legacy Electron handlers retained in `electron/main.ts`.
 - `components/ErrorBoundary.tsx` and `components/TitleBar.tsx` also consume desktop contracts from `C7`.
 
 ### Search + views path
@@ -71,6 +71,6 @@ Goal: expose subsystem ownership and wiring so agents can jump directly to the r
 
 ## Stability Notes
 
-- `C7` runtime bridge contracts are strongly coupled with the desktop application lifecycle and require Electron process availability.
+- `C7` runtime bridge contracts are strongly coupled with the desktop application lifecycle and require either the Tauri runtime or the legacy Electron process.
 - `C4` contains the canonical migration boundary for `Application` schema changes (`CURRENT_DATA_VERSION = 3`).
 - `C6` has dynamic command registration; stale command nodes in shared hooks/components should be expected as the application state changes.

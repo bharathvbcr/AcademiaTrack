@@ -7,7 +7,7 @@ This file maps user interactions to their persistence outcomes in AcademiaTrack.
 - **App/UI**: component event handler in renderer layer (`components/`, `App.tsx`, `contexts/`).
 - **State Hook**: domain hook that mutates in-memory state (`hooks/`).
 - **Normalizer**: migration/schema step before write (`utils/dataMigration.ts`).
-- **Writer**: runtime persistence adapter (`electron` IPC or `localStorage`).
+- **Writer**: runtime persistence adapter (Tauri command bridge, legacy Electron IPC, or `localStorage`).
 
 ## 1) Create or Edit Application
 
@@ -19,8 +19,8 @@ S1 --> U1["useUndoRedo.setState"]
 U1 --> D1["useApplications debounced effect"]
 D1 --> N1["dataMigration.wrapInSchema"]
 N1 --> W1["window.desktop.saveData"]:::ipc
-W1 --> M1["electron/main.ts ipcMain.handle('saveData')"]
-M1 --> F1["write data.json to userData (temp + rename)"]
+W1 --> M1["src-tauri/src/lib.rs save_data"]
+M1 --> F1["write data.json to app data dir (temp + rename)"]
 ```
 
 ### Variants
@@ -66,7 +66,7 @@ A1 --> D2["second persistence cycle"]
 flowchart LR
 U[User attaches/removes file in form] --> F["hooks/useApplicationForm handlers"]
 F --> DIPC["window.desktop.selectFile/copyDocument | openFile | deleteDocument"]
-DIPC --> M["electron/main.ts ipcMain handles document calls"]
+DIPC --> M["src-tauri/src/lib.rs handles document commands"]
 M --> FS["filesystem operations in userData/documents/<appId>/..."]
 ```
 
@@ -103,12 +103,12 @@ Key keys and owners:
 
 ```mermaid
 flowchart LR
-U[No direct UI call in current App flow] --> P["electron API surface exists"]
-P --> M["preload + ipc handlers"]
-M --> FS["filesystem methods in electron/main.ts"]
+U[No direct UI call in current App flow] --> P["desktop API surface exists"]
+P --> M["Tauri commands + legacy Electron handlers"]
+M --> FS["filesystem methods in src-tauri/src/lib.rs or electron/main.ts"]
 ```
 
-- `createBackup`, `listBackups`, `restoreBackup`, `deleteBackup`, `autoBackup` are implemented in `electron/main.ts` and exposed in `preload.ts`.
+- `createBackup`, `listBackups`, `restoreBackup`, `deleteBackup`, `autoBackup` are implemented in `src-tauri/src/lib.rs` for Tauri and retained in `electron/main.ts` for the legacy Electron path.
 - Current renderer code path does not consistently invoke backup/update APIs, so these are available surface area rather than active call chains.
 
 ## 7) One-Loop Data Freshness Rule

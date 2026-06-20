@@ -66,7 +66,7 @@ export const useAppCommands = ({
   canUndo,
   canRedo,
 }: AppCommandsProps) => {
-  const { registerCommand, unregisterCommand } = useCommandRegistry();
+  const { registerCommands, unregisterCommands } = useCommandRegistry();
   const clearTransientSearchState = () => {
     setActiveFilter(null);
     setSearchQuery('');
@@ -399,14 +399,14 @@ export const useAppCommands = ({
       },
     ];
 
-    globalCommands.forEach(cmd => registerCommand(cmd));
+    registerCommands(globalCommands);
 
     return () => {
-      globalCommands.forEach(cmd => unregisterCommand(cmd.id));
+      unregisterCommands(globalCommands.map(cmd => cmd.id));
     };
   }, [
-    registerCommand,
-    unregisterCommand,
+    registerCommands,
+    unregisterCommands,
     openCommandPalette,
     openModal,
     openSettings,
@@ -479,14 +479,14 @@ export const useAppCommands = ({
       })),
     ];
 
-    searchCommands.forEach(cmd => registerCommand(cmd));
+    registerCommands(searchCommands);
 
     return () => {
-      searchCommands.forEach(cmd => unregisterCommand(cmd.id));
+      unregisterCommands(searchCommands.map(cmd => cmd.id));
     };
   }, [
-    registerCommand,
-    unregisterCommand,
+    registerCommands,
+    unregisterCommands,
     savedSearches,
     searchHistory,
     setSearchQuery,
@@ -516,15 +516,15 @@ export const useAppCommands = ({
       execute: () => openModal(app),
     }));
 
-    appCommands.forEach(cmd => registerCommand(cmd));
+    registerCommands(appCommands);
 
     return () => {
-      appCommands.forEach(cmd => unregisterCommand(cmd.id));
+      unregisterCommands(appCommands.map(cmd => cmd.id));
     };
   }, [
     applications,
-    registerCommand,
-    unregisterCommand,
+    registerCommands,
+    unregisterCommands,
     openModal,
   ]);
 };

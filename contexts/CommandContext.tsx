@@ -4,7 +4,9 @@ import { AppCommand, CommandSearchResult, CommandShortcut } from '../types/comma
 interface CommandContextType {
     commands: AppCommand[];
     registerCommand: (command: AppCommand) => void;
+    registerCommands: (commands: AppCommand[]) => void;
     unregisterCommand: (id: string) => void;
+    unregisterCommands: (ids: string[]) => void;
     executeCommand: (id: string) => void;
     searchCommands: (query: string) => CommandSearchResult[];
     getCommandShortcuts: () => CommandShortcut[];
@@ -15,21 +17,47 @@ const CommandContext = createContext<CommandContextType | undefined>(undefined);
 export const CommandProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [commands, setCommands] = useState<AppCommand[]>([]);
 
-    const registerCommand = useCallback((command: AppCommand) => {
+    const upsertCommands = useCallback((nextCommands: AppCommand[]) => {
         setCommands(prev => {
-            const index = prev.findIndex(c => c.id === command.id);
-            if (index !== -1) {
-                const newCommands = [...prev];
-                newCommands[index] = command;
-                return newCommands;
-            }
-            return [...prev, command];
+            let changed = false;
+            const next = [...prev];
+
+            nextCommands.forEach(command => {
+                const index = next.findIndex(c => c.id === command.id);
+
+                if (index !== -1) {
+                    next[index] = command;
+                    changed = true;
+                    return;
+                }
+
+                next.push(command);
+                changed = true;
+            });
+
+            return changed ? next : prev;
+        });
+    }, []);
+
+    const registerCommand = useCallback((command: AppCommand) => {
+        upsertCommands([command]);
+    }, [upsertCommands]);
+
+    const registerCommands = useCallback((commandsToRegister: AppCommand[]) => {
+        upsertCommands(commandsToRegister);
+    }, [upsertCommands]);
+
+    const unregisterCommands = useCallback((ids: string[]) => {
+        setCommands(prev => {
+            const idsToRemove = new Set(ids);
+            const next = prev.filter(c => !idsToRemove.has(c.id));
+            return next.length === prev.length ? prev : next;
         });
     }, []);
 
     const unregisterCommand = useCallback((id: string) => {
-        setCommands(prev => prev.filter(c => c.id !== id));
-    }, []);
+        unregisterCommands([id]);
+    }, [unregisterCommands]);
 
     const executeCommand = useCallback((id: string) => {
         const command = commands.find(c => c.id === id);
@@ -135,11 +163,13 @@ export const CommandProvider: React.FC<{ children: React.ReactNode }> = ({ child
     const value = useMemo(() => ({
         commands,
         registerCommand,
+        registerCommands,
         unregisterCommand,
+        unregisterCommands,
         executeCommand,
         searchCommands,
         getCommandShortcuts,
-    }), [commands, registerCommand, unregisterCommand, executeCommand, searchCommands]);
+    }), [commands, registerCommand, registerCommands, unregisterCommand, unregisterCommands, executeCommand, searchCommands]);
 
     return (
         <CommandContext.Provider value={value}>

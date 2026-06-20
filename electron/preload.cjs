@@ -36,8 +36,8 @@ const desktopApi = {
   deleteDocument: (filePath) => ipcRenderer.invoke('deleteDocument', filePath),
   createBackup: () => ipcRenderer.invoke('createBackup'),
   listBackups: () => ipcRenderer.invoke('listBackups'),
-  restoreBackup: (backupPath) => ipcRenderer.invoke('restoreBackup'),
-  deleteBackup: (backupPath) => ipcRenderer.invoke('deleteBackup'),
+  restoreBackup: (backupPath) => ipcRenderer.invoke('restoreBackup', backupPath),
+  deleteBackup: (backupPath) => ipcRenderer.invoke('deleteBackup', backupPath),
   autoBackup: () => ipcRenderer.invoke('autoBackup'),
   windowControls: {
     minimize: () => ipcRenderer.invoke('windowMinimize'),
