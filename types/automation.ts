@@ -19,15 +19,19 @@ export type ActionType =
   | 'log_action';
 
 export interface AutomationCondition {
-  field: string;
+  field: keyof Application;
   operator: 'equals' | 'not_equals' | 'contains' | 'greater_than' | 'less_than' | 'is_empty' | 'is_not_empty';
   value?: string | number | boolean;
 }
 
-export interface AutomationAction {
-  type: ActionType;
-  params: Record<string, any>;
-}
+export type AutomationAction =
+  | { type: 'create_reminder'; params: { text?: string; date?: string; daysOffset?: number } }
+  | { type: 'update_status'; params: { status: ApplicationStatus } }
+  | { type: 'update_field'; params: { field: string; value: unknown } }
+  | { type: 'add_tag'; params: { tag: string } }
+  | { type: 'remove_tag'; params: { tag: string } }
+  | { type: 'send_notification'; params: { title?: string; body?: string } }
+  | { type: 'log_action'; params: { message?: string } };
 
 export interface AutomationRule {
   id: string;
@@ -47,6 +51,11 @@ export interface AutomationRule {
   lastExecuted?: number;
   executionCount: number;
 }
+
+export type TriggerData =
+  | { newStatus: ApplicationStatus; oldStatus: ApplicationStatus }
+  | { field: string }
+  | Record<string, never>;
 
 export interface AutomationExecutionLog {
   id: string;

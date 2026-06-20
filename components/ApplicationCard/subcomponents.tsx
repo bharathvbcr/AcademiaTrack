@@ -5,10 +5,11 @@ import { STATUS_OPTIONS, STATUS_COLORS, DOCUMENT_LABELS, DOCUMENT_STATUS_COLORS,
 interface MaterialIconProps {
     name: string;
     className?: string;
+    'aria-hidden'?: boolean | 'true' | 'false';
 }
 
-const MaterialIcon: React.FC<MaterialIconProps> = ({ name, className }) => (
-    <span className={`material-symbols-outlined ${className}`}>{name}</span>
+const MaterialIcon: React.FC<MaterialIconProps> = ({ name, className, 'aria-hidden': ariaHidden }) => (
+    <span className={`material-symbols-outlined ${className}`} aria-hidden={ariaHidden}>{name}</span>
 );
 
 // ============================================================================
@@ -66,9 +67,13 @@ export const CardHeader: React.FC<CardHeaderProps> = ({
             </div>
             <div className="flex items-center gap-2 shrink-0">
                 {hasUpcomingInterview && (
-                    <div className="text-red-500 animate-pulse" title="Upcoming Interview">
-                        <MaterialIcon name="event_upcoming" className="text-2xl" />
-                    </div>
+                    <span
+                        role="img"
+                        aria-label="Upcoming interview scheduled"
+                        className="text-red-500 animate-pulse"
+                    >
+                        <MaterialIcon name="event_upcoming" className="text-2xl" aria-hidden="true" />
+                    </span>
                 )}
                 <div className="relative" onClick={e => e.stopPropagation()}>
                     <select

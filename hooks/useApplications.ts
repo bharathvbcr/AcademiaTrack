@@ -5,8 +5,9 @@ import { migrateData, wrapInSchema, createEmptyDataSchema } from '../utils/dataM
 import { useUndoRedo } from './useUndoRedo';
 import { getStorageItem, readJsonFromStorage, writeJsonToStorage } from '../utils/browserStorage';
 import { getDaysUntil } from '../utils/dateUtils';
+import { ToastType } from './useToast';
 
-export const useApplications = () => {
+export const useApplications = (showToast?: (type: ToastType, message: string, title?: string) => void) => {
   const { state: applications, setState: setApplications, undo, redo, canUndo, canRedo, reset } = useUndoRedo<Application[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
   const debouncedApplications = useDebounce(applications, 1000);
@@ -73,7 +74,15 @@ export const useApplications = () => {
             console.error('Automatic backup failed:', e);
           });
         } else {
-          writeJsonToStorage('phd-applications', dataToSave);
+          try {
+            writeJsonToStorage('phd-applications', dataToSave);
+          } catch (e) {
+            if (e instanceof DOMException && e.name === 'QuotaExceededError') {
+              showToast?.('error', 'Storage is full. Your changes could not be saved. Consider exporting your data.', 'Storage Full');
+              return;
+            }
+            throw e;
+          }
         }
       } catch (error) {
         console.error('Failed to save applications:', error);
@@ -90,7 +99,15 @@ export const useApplications = () => {
                   console.error('Retry save also failed:', e);
                 });
             } else {
-              writeJsonToStorage('phd-applications', dataToSave);
+              try {
+                writeJsonToStorage('phd-applications', dataToSave);
+              } catch (e) {
+                if (e instanceof DOMException && e.name === 'QuotaExceededError') {
+                  showToast?.('error', 'Storage is full. Your changes could not be saved. Consider exporting your data.', 'Storage Full');
+                  return;
+                }
+                throw e;
+              }
             }
           } catch (retryError) {
             console.error('Retry save failed:', retryError);
@@ -288,7 +305,8 @@ export const useApplications = () => {
       const validApps = newApps.filter((app, index) => {
         if (!app || typeof app !== 'object') return false;
         if (!app.id || !app.universityName || !app.programName) {
-          console.warn('Skipping invalid application at index', index, '- missing required fields');
+          const missing = [!app.id && 'id', !app.universityName && 'universityName', !app.programName && 'programName'].filter(Boolean).join(', ');
+          console.warn(`Skipping invalid application at index ${index} - missing required fields: ${missing}`);
           return false;
         }
         return true;

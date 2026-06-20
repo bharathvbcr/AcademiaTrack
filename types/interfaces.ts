@@ -73,7 +73,7 @@ export interface FacultyContact {
 export interface Reminder {
     id: string;
     text: string;
-    date: string; // ISO Date
+    date: string; // YYYY-MM-DD (required by HTML date input)
     completed: boolean;
 }
 

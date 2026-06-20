@@ -79,6 +79,16 @@ fn ensure_dirs(app: &AppHandle) -> Result<(PathBuf, PathBuf, PathBuf), String> {
   Ok((user_data_path.join("data.json"), documents_dir, backup_dir))
 }
 
+fn assert_within_app_data(app: &AppHandle, path: &Path) -> Result<(), String> {
+  let base = app.path().app_data_dir().map_err(|e| e.to_string())?;
+  let canonical = std::fs::canonicalize(path)
+    .map_err(|_| "File not found".to_string())?;
+  if !canonical.starts_with(&base) {
+    return Err("Access denied: path outside app data".to_string());
+  }
+  Ok(())
+}
+
 fn backup_result_error(error: impl ToString) -> BackupResult {
   BackupResult {
     success: false,
@@ -105,7 +115,10 @@ fn save_data(app: AppHandle, data: Value) -> Result<bool, String> {
   let (data_file_path, _, _) = ensure_dirs(&app)?;
   let temp_path = data_file_path.with_extension("json.tmp");
   let serialized = serde_json::to_string_pretty(&data).map_err(|error| error.to_string())?;
-
+  const MAX_BYTES: usize = 50 * 1024 * 1024;
+  if serialized.len() > MAX_BYTES {
+    return Err("Data exceeds maximum allowed size (50 MB)".to_string());
+  }
   fs::write(&temp_path, serialized).map_err(|error| error.to_string())?;
   fs::rename(&temp_path, &data_file_path).map_err(|error| error.to_string())?;
 
@@ -113,14 +126,17 @@ fn save_data(app: AppHandle, data: Value) -> Result<bool, String> {
 }
 
 #[tauri::command]
-fn show_notification(app: AppHandle, title: String, body: String) -> bool {
-  let _ = app
+fn show_notification(app: AppHandle, title: String, body: String) -> Result<bool, String> {
+  let title = title.chars().take(256).collect::<String>();
+  let body = body.chars().take(1024).collect::<String>();
+  app
     .notification()
     .builder()
     .title(title)
     .body(body)
-    .show();
-  true
+    .show()
+    .map(|_| true)
+    .map_err(|e| e.to_string())
 }
 
 #[tauri::command]
@@ -142,7 +158,23 @@ async fn select_file(app: AppHandle) -> Result<Option<String>, String> {
 }
 
 #[tauri::command]
-fn open_file(file_path: String) -> Result<(), String> {
+fn open_file(app: AppHandle, file_path: String) -> Result<(), String> {
+  let allowed_extensions = ["pdf", "doc", "docx", "txt"];
+  let path = PathBuf::from(&file_path);
+  let ext = path
+    .extension()
+    .and_then(|e| e.to_str())
+    .unwrap_or("")
+    .to_lowercase();
+  if !allowed_extensions.contains(&ext.as_str()) {
+    return Err("File type not allowed".to_string());
+  }
+  let base = app_data_dir(&app)?.join("documents");
+  let canonical = std::fs::canonicalize(&path).map_err(|_| "File not found".to_string())?;
+  if !canonical.starts_with(&base) {
+    return Err("Access denied: path outside documents directory".to_string());
+  }
+
   #[cfg(target_os = "windows")]
   let mut command = {
     let mut command = Command::new("explorer");
@@ -207,18 +239,15 @@ fn copy_document_impl(
 }
 
 #[tauri::command]
-fn delete_document(file_path: String) -> BackupResult {
+fn delete_document(app: AppHandle, file_path: String) -> BackupResult {
+  let path = PathBuf::from(&file_path);
+  if let Err(e) = assert_within_app_data(&app, &path) {
+    return backup_result_error(e);
+  }
   if let Err(error) = delete_document_impl(&file_path) {
     return backup_result_error(error);
   }
-
-  BackupResult {
-    success: true,
-    error: None,
-    path: None,
-    timestamp: None,
-    data: None,
-  }
+  BackupResult { success: true, error: None, path: None, timestamp: None, data: None }
 }
 
 fn delete_document_impl(file_path: &str) -> Result<(), String> {
@@ -276,8 +305,8 @@ fn list_backups(app: AppHandle) -> Vec<BackupInfo> {
       let modified = metadata.modified().ok()?;
       let timestamp = DateTime::<Utc>::from(modified).to_rfc3339();
       Some(BackupInfo {
-        filename,
-        path: path_to_string(&path),
+        filename: filename.clone(),
+        path: filename,
         timestamp,
         size: metadata.len(),
       })
@@ -289,15 +318,23 @@ fn list_backups(app: AppHandle) -> Vec<BackupInfo> {
 }
 
 #[tauri::command]
-fn restore_backup(app: AppHandle, backup_path: String) -> BackupResult {
+fn restore_backup(app: AppHandle, filename: String) -> BackupResult {
   let (data_file_path, _, backup_dir) = match ensure_dirs(&app) {
     Ok(paths) => paths,
     Err(error) => return backup_result_error(error),
   };
 
-  let source = PathBuf::from(backup_path);
-  if !source.exists() {
-    return backup_result_error("Backup file not found");
+  let source = backup_dir.join(&filename);
+  let canonical_backup_dir = match fs::canonicalize(&backup_dir) {
+    Ok(p) => p,
+    Err(e) => return backup_result_error(e),
+  };
+  let canonical_source = match fs::canonicalize(&source) {
+    Ok(p) => p,
+    Err(_) => return backup_result_error("Backup file not found"),
+  };
+  if !canonical_source.starts_with(&canonical_backup_dir) {
+    return backup_result_error("Access denied: path outside backup directory");
   }
 
   if data_file_path.exists() {
@@ -327,21 +364,29 @@ fn restore_backup(app: AppHandle, backup_path: String) -> BackupResult {
 }
 
 #[tauri::command]
-fn delete_backup(backup_path: String) -> BackupResult {
-  let path = PathBuf::from(backup_path);
+fn delete_backup(app: AppHandle, filename: String) -> BackupResult {
+  let (_, _, backup_dir) = match ensure_dirs(&app) {
+    Ok(paths) => paths,
+    Err(error) => return backup_result_error(error),
+  };
+  let path = backup_dir.join(&filename);
+  let canonical_backup_dir = match fs::canonicalize(&backup_dir) {
+    Ok(p) => p,
+    Err(e) => return backup_result_error(e),
+  };
+  let canonical_path = match fs::canonicalize(&path) {
+    Ok(p) => p,
+    Err(_) => return backup_result_error("Backup file not found"),
+  };
+  if !canonical_path.starts_with(&canonical_backup_dir) {
+    return backup_result_error("Access denied: path outside backup directory");
+  }
   if path.exists() {
-    if let Err(error) = fs::remove_file(path) {
+    if let Err(error) = fs::remove_file(&path) {
       return backup_result_error(error);
     }
   }
-
-  BackupResult {
-    success: true,
-    error: None,
-    path: None,
-    timestamp: None,
-    data: None,
-  }
+  BackupResult { success: true, error: None, path: None, timestamp: None, data: None }
 }
 
 #[tauri::command]

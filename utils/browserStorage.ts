@@ -34,7 +34,8 @@ export const setStorageItem = (key: string, value: string): boolean => {
   try {
     storage.setItem(key, value);
     return true;
-  } catch {
+  } catch (e) {
+    if (e instanceof DOMException && e.name === 'QuotaExceededError') throw e;
     return false;
   }
 };

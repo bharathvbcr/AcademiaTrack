@@ -11,7 +11,7 @@ import {
     subMonths,
     isToday
 } from 'date-fns';
-import { Application, FacultyContactStatus } from '../types';
+import { Application } from '../types';
 
 interface CalendarViewProps {
     applications: Application[];
@@ -25,15 +25,13 @@ const CalendarView: React.FC<CalendarViewProps> = ({ applications, onEdit }) => 
     const prevMonth = () => setCurrentMonth(subMonths(currentMonth, 1));
     const goToToday = () => setCurrentMonth(new Date());
 
-    const monthStart = startOfMonth(currentMonth);
-    const monthEnd = endOfMonth(monthStart);
-    const startDate = startOfWeek(monthStart);
-    const endDate = endOfWeek(monthEnd);
-
-    const calendarDays = useMemo(() => eachDayOfInterval({
-        start: startDate,
-        end: endDate,
-    }), [currentMonth]);
+    const { monthStart, calendarDays } = useMemo(() => {
+        const monthStart = startOfMonth(currentMonth);
+        const monthEnd = endOfMonth(monthStart);
+        const startDate = startOfWeek(monthStart);
+        const endDate = endOfWeek(monthEnd);
+        return { monthStart, calendarDays: eachDayOfInterval({ start: startDate, end: endDate }) };
+    }, [currentMonth]);
 
     const eventsByDay = useMemo(() => {
         const map = new Map<string, { type: 'deadline' | 'interview'; app: Application; label: string }[]>();
@@ -63,9 +61,10 @@ const CalendarView: React.FC<CalendarViewProps> = ({ applications, onEdit }) => 
                 <div className="flex items-center gap-2">
                     <button
                         onClick={prevMonth}
+                        aria-label="Previous month"
                         className="p-2 rounded-full hover:bg-[rgba(192,48,80,0.25)] text-[#E8B4B8] hover:text-[#F5D7DA] transition-colors"
                     >
-                        <span className="material-symbols-outlined">chevron_left</span>
+                        <span className="material-symbols-outlined" aria-hidden="true">chevron_left</span>
                     </button>
                     <button
                         onClick={goToToday}
@@ -75,24 +74,25 @@ const CalendarView: React.FC<CalendarViewProps> = ({ applications, onEdit }) => 
                     </button>
                     <button
                         onClick={nextMonth}
+                        aria-label="Next month"
                         className="p-2 rounded-full hover:bg-[rgba(192,48,80,0.25)] text-[#E8B4B8] hover:text-[#F5D7DA] transition-colors"
                     >
-                        <span className="material-symbols-outlined">chevron_right</span>
+                        <span className="material-symbols-outlined" aria-hidden="true">chevron_right</span>
                     </button>
                 </div>
             </div>
 
             {/* Days Header */}
-            <div className="grid grid-cols-7 mb-2">
-                {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
-                    <div key={day} className="text-center text-sm font-semibold text-[#E8B4B8]/70 py-2">
-                        {day}
+            <div role="row" className="grid grid-cols-7 mb-2">
+                {[['Sun','Sunday'],['Mon','Monday'],['Tue','Tuesday'],['Wed','Wednesday'],['Thu','Thursday'],['Fri','Friday'],['Sat','Saturday']].map(([abbr, full]) => (
+                    <div key={abbr} role="columnheader" aria-label={full} className="text-center text-sm font-semibold text-[#E8B4B8]/70 py-2">
+                        {abbr}
                     </div>
                 ))}
             </div>
 
             {/* Calendar Grid */}
-            <div className="grid grid-cols-7 grid-rows-5 gap-2 flex-1 min-h-0">
+            <div role="grid" aria-label="Calendar" className="grid grid-cols-7 grid-rows-5 gap-2 flex-1 min-h-0">
                 {calendarDays.map((day, dayIdx) => {
                     const events = eventsByDay.get(format(day, 'yyyy-MM-dd')) ?? [];
                     const isCurrentMonth = isSameMonth(day, monthStart);
@@ -101,6 +101,8 @@ const CalendarView: React.FC<CalendarViewProps> = ({ applications, onEdit }) => 
                     return (
                         <div
                             key={day.toString()}
+                            role="gridcell"
+                            aria-label={format(day, 'EEEE, MMMM d, yyyy')}
                             className={`
                 relative flex flex-col p-2 rounded-xl border transition-all overflow-hidden
                 ${isCurrentMonth ? 'liquid-glass border-[#E8B4B8]/30' : 'liquid-glass border-[#E8B4B8]/20 text-[#E8B4B8]/50'}

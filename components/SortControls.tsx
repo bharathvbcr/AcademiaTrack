@@ -14,8 +14,8 @@ interface ListControlsProps {
   onSearchChange: (query: string) => void;
 }
 
-const MaterialIcon: React.FC<{ name: string; className?: string }> = ({ name, className }) => (
-  <span className={`material-symbols-outlined ${className}`}>{name}</span>
+const MaterialIcon: React.FC<{ name: string; className?: string; 'aria-hidden'?: boolean | 'true' | 'false' }> = ({ name, className, 'aria-hidden': ariaHidden }) => (
+  <span className={`material-symbols-outlined ${className}`} aria-hidden={ariaHidden}>{name}</span>
 );
 
 const SortChip: React.FC<{
@@ -32,8 +32,13 @@ const SortChip: React.FC<{
   }`;
 
   return (
-    <button onClick={() => requestSort(sortKey)} className={buttonClasses}>
-      {isActive && <MaterialIcon name={sortConfig.direction === 'ascending' ? 'arrow_upward' : 'arrow_downward'} className="text-sm" />}
+    <button
+      onClick={() => requestSort(sortKey)}
+      aria-pressed={isActive}
+      aria-label={isActive ? `Sort by ${label}, ${sortConfig.direction}` : `Sort by ${label}`}
+      className={buttonClasses}
+    >
+      {isActive && <MaterialIcon name={sortConfig.direction === 'ascending' ? 'arrow_upward' : 'arrow_downward'} className="text-sm" aria-hidden="true" />}
       <span>{label}</span>
     </button>
   );

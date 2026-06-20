@@ -13,6 +13,8 @@ import DataValidationPanel from './DataValidationPanel';
 import AdvancedAnalyticsPanel from './AdvancedAnalyticsPanel';
 import { getStorageItem } from '../utils/browserStorage';
 import { ViewMode } from '../hooks/useViewState';
+import { useBulkSelectionContext } from '../contexts/BulkSelectionContext';
+import { useApplicationActionsContext } from '../contexts/ApplicationActionsContext';
 
 const DashboardSummary = lazy(() => import('./DashboardSummary'));
 const KanbanBoard = lazy(() => import('./KanbanBoard'));
@@ -31,17 +33,10 @@ interface MainContentProps {
     searchQuery: string;
     hasActiveAdvancedSearch: boolean;
     setSearchQuery: (query: string) => void;
-    openModal: (app: Application | null) => void;
-    requestDelete: (id: string) => void;
-    updateApplication: (app: Application) => void;
-    duplicateApplication: (id: string) => void;
     handleDragEnd: (result: DropResult) => void;
-    // Bulk selection props
-    isSelectionMode: boolean;
-    selectedIds: Set<string>;
+    // Bulk action bar props (consumed at this level by BulkActionsBar)
     selectedCount: number;
     toggleSelectionMode: () => void;
-    toggleSelection: (id: string) => void;
     selectAll: () => void;
     clearSelection: () => void;
     onBulkStatusChange: (status: ApplicationStatus) => void;
@@ -71,22 +66,17 @@ const MainContent: React.FC<MainContentProps> = ({
     searchQuery,
     hasActiveAdvancedSearch,
     setSearchQuery,
-    openModal,
-    requestDelete,
-    updateApplication,
-    duplicateApplication,
     handleDragEnd,
-    isSelectionMode,
-    selectedIds,
     selectedCount,
     toggleSelectionMode,
-    toggleSelection,
     selectAll,
     clearSelection,
     onBulkStatusChange,
     onBulkDelete,
     onBulkCompare,
 }) => {
+    const { isSelectionMode, selectedIds, onToggleSelection, onEnterSelectionMode } = useBulkSelectionContext();
+    const { openModal, requestDelete, updateApplication, duplicateApplication } = useApplicationActionsContext();
     const visibleColumns = (() => {
         const configured = getStorageItem('view-states');
         if (!configured) return undefined;
@@ -121,8 +111,8 @@ const MainContent: React.FC<MainContentProps> = ({
                             hasActiveFilter={searchQuery.length > 0 || hasActiveAdvancedSearch}
                             isSelectionMode={isSelectionMode}
                             selectedIds={selectedIds}
-                            onToggleSelection={toggleSelection}
-                            onEnterSelectionMode={toggleSelectionMode}
+                            onToggleSelection={onToggleSelection}
+                            onEnterSelectionMode={onEnterSelectionMode}
                             visibleColumns={visibleColumns}
                         />
                     </>

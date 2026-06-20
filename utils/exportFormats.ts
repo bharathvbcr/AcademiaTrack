@@ -93,11 +93,10 @@ export const exportToPDF = async (applications: Application[], selectedFields?: 
   }
 };
 
-export const exportToJSON = (applications: Application[], selectedFields?: string[]): string => {
-  // Default fields if none selected
+export const exportToFlatJSON = (applications: Application[], selectedFields?: string[]): string => {
   const defaultFields = ['universityName', 'programName', 'programType', 'department', 'location', 'status', 'deadline', 'applicationFee', 'tags'];
   const fields = selectedFields || defaultFields;
-  
+
   const data = applications.map(app => {
     const obj: Record<string, string | number | null> = {};
     fields.forEach(fieldId => {
@@ -107,4 +106,8 @@ export const exportToJSON = (applications: Application[], selectedFields?: strin
   });
 
   return JSON.stringify(data, null, 2);
+};
+
+export const exportToJSON = (applications: Application[]): string => {
+  return JSON.stringify(applications, null, 2);
 };

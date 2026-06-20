@@ -39,7 +39,7 @@ const parseShortcut = (shortcut: string) => {
   };
 };
 
-const toKeyName = (event: KeyboardEvent) => event.key.length === 1 ? event.key.toLowerCase() : event.key.toLowerCase();
+const toKeyName = (event: KeyboardEvent) => event.key.toLowerCase();
 
 const isEditableElement = () =>
   document.activeElement instanceof HTMLInputElement ||
