@@ -53,7 +53,7 @@ describe('installDesktopBridge', () => {
     await window.desktop?.saveData({ applications: [] });
     await window.desktop?.copyDocument('C:/source/cv.pdf', 'app/1', 'cv');
     await window.desktop?.deleteDocument('C:/stored/cv.pdf');
-    await window.desktop?.restoreBackup('C:/backup.json');
+    await window.desktop?.restoreBackup('backup.json');
 
     expect(invoke).toHaveBeenCalledWith('save_data', { data: { applications: [] } });
     expect(invoke).toHaveBeenCalledWith('copy_document', {
@@ -62,7 +62,7 @@ describe('installDesktopBridge', () => {
       docType: 'cv',
     });
     expect(invoke).toHaveBeenCalledWith('delete_document', { filePath: 'C:/stored/cv.pdf' });
-    expect(invoke).toHaveBeenCalledWith('restore_backup', { backupPath: 'C:/backup.json' });
+    expect(invoke).toHaveBeenCalledWith('restore_backup', { filename: 'backup.json' });
   });
 
   it('routes Tauri window controls through the current app window', async () => {
