@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## [Unreleased]
+## [5.4.0] - 2026-06-20
 
 ### Added
 - **Press Escape to Close Modals:** Every dialog (application editor, faculty contact, bulk operations, export, settings, comparison, help, quick capture, automation rules, kanban/column config, view presets, confirmations, and the advanced filter builder) now closes on Escape via a shared, stacking-aware `useEscapeKey` hook so only the topmost dialog dismisses. Previously Escape only worked in a couple of modals, and only when a specific input was focused.
