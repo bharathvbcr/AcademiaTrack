@@ -106,11 +106,10 @@ export const useTemplates = () => {
   const createFromApplication = useCallback((name: string, application: Application) => {
     const defaultValues: Partial<Application> = {
       programType: application.programType,
-      applicationFee: application.applicationFee,
-      feeWaiverStatus: application.feeWaiverStatus,
-      gre: application.gre,
-      englishTest: application.englishTest,
-      documents: application.documents,
+      feeWaiverStatus: ApplicationFeeWaiverStatus.NotRequested,
+      gre: { status: application.gre.status },
+      englishTest: { type: application.englishTest.type, status: application.englishTest.status },
+      documents: Object.fromEntries(Object.entries(application.documents).map(([k, v]) => [k, { required: (v as { required: boolean }).required, status: DocumentStatus.NotStarted, submitted: null }])) as Application['documents'],
       isR1: application.isR1,
       department: application.department,
     };

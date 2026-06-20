@@ -13,16 +13,19 @@ export const useCustomFields = () => {
     }, [customFields]);
 
     const addField = useCallback((field: Omit<CustomFieldDefinition, 'id'>) => {
-        const maxOrder = customFields.reduce((max, f) => Math.max(max, f.order ?? 0), 0);
-        const newField: CustomFieldDefinition = {
-            ...field,
-            id: crypto.randomUUID(),
-            visible: field.visible !== false,
-            order: field.order ?? maxOrder + 1,
-        };
-        setCustomFields(prev => [...prev, newField]);
-        return newField.id;
-    }, [setCustomFields, customFields]);
+        const newId = crypto.randomUUID();
+        setCustomFields(prev => {
+            const maxOrder = prev.reduce((max, f) => Math.max(max, f.order ?? 0), 0);
+            const newField: CustomFieldDefinition = {
+                ...field,
+                id: newId,
+                visible: field.visible !== false,
+                order: field.order ?? maxOrder + 1,
+            };
+            return [...prev, newField];
+        });
+        return newId;
+    }, [setCustomFields]);
 
     const updateField = useCallback((id: string, updates: Partial<CustomFieldDefinition>) => {
         setCustomFields(prev => prev.map(f => f.id === id ? { ...f, ...updates } : f));

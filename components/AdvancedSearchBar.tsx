@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useAdvancedSearch } from '../hooks/useAdvancedSearch';
+import { useDebounce } from '../hooks/useDebounce';
 import { Application } from '../types';
 import Tooltip from './Tooltip';
 
@@ -27,14 +28,16 @@ const AdvancedSearchBar: React.FC<AdvancedSearchBarProps> = ({
   const inputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
+  const debouncedQuery = useDebounce(query, 200);
+
   useEffect(() => {
-    if (query.trim()) {
-      const results = search(query);
-      onSearch(results, query);
+    if (debouncedQuery.trim()) {
+      const results = search(debouncedQuery);
+      onSearch(results, debouncedQuery);
     } else {
-      onSearch(applications, query);
+      onSearch(applications, debouncedQuery);
     }
-  }, [query, applications, search, onSearch]);
+  }, [debouncedQuery, applications, search, onSearch]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {

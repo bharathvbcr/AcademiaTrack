@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { getLocalStorage, readJsonFromStorage, writeJsonToStorage } from '../utils/browserStorage';
+import React, { useState } from 'react';
+import { readJsonFromStorage, writeJsonToStorage } from '../utils/browserStorage';
 
 export function useLocalStorage<T,>(key: string, initialValue: T): [T, React.Dispatch<React.SetStateAction<T>>] {
   const [storedValue, setStoredValue] = useState<T>(() => {
@@ -14,14 +14,6 @@ export function useLocalStorage<T,>(key: string, initialValue: T): [T, React.Dis
       return nextValue;
     });
   }, [key]);
-
-  useEffect(() => {
-    if (!getLocalStorage()) {
-      return;
-    }
-
-    writeJsonToStorage(key, storedValue);
-  }, [key, storedValue]);
 
   return [storedValue, setValue];
 }

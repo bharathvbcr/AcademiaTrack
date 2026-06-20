@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useReducer, useCallback } from 'react';
 
 const MAX_HISTORY = 50;
 
@@ -12,59 +12,68 @@ export interface UndoRedoResult<T> {
     reset: (newState: T) => void;
 }
 
+type State<T> = { past: T[]; present: T; future: T[] };
+type Action<T> =
+  | { type: 'UNDO' }
+  | { type: 'REDO' }
+  | { type: 'SET'; payload: T | ((prev: T) => T) }
+  | { type: 'RESET'; payload: T };
+
+function undoRedoReducer<T>(state: State<T>, action: Action<T>): State<T> {
+  switch (action.type) {
+    case 'UNDO': {
+      if (state.past.length === 0) return state;
+      const previous = state.past[state.past.length - 1];
+      return {
+        past: state.past.slice(0, -1),
+        present: previous,
+        future: [state.present, ...state.future],
+      };
+    }
+    case 'REDO': {
+      if (state.future.length === 0) return state;
+      const next = state.future[0];
+      return {
+        past: [...state.past, state.present].slice(-MAX_HISTORY),
+        present: next,
+        future: state.future.slice(1),
+      };
+    }
+    case 'SET': {
+      const resolved = action.payload instanceof Function ? action.payload(state.present) : action.payload;
+      if (resolved === state.present) return state;
+      return {
+        past: [...state.past, state.present].slice(-MAX_HISTORY),
+        present: resolved,
+        future: [],
+      };
+    }
+    case 'RESET':
+      return { past: [], present: action.payload, future: [] };
+    default:
+      return state;
+  }
+}
+
 export const useUndoRedo = <T>(initialState: T): UndoRedoResult<T> => {
-    const [past, setPast] = useState<T[]>([]);
-    const [present, setPresent] = useState<T>(initialState);
-    const [future, setFuture] = useState<T[]>([]);
+    const [{ past, present, future }, dispatch] = useReducer(
+        undoRedoReducer as (state: State<T>, action: Action<T>) => State<T>,
+        { past: [], present: initialState, future: [] }
+    );
 
     const canUndo = past.length > 0;
     const canRedo = future.length > 0;
 
-    const undo = useCallback(() => {
-        if (!canUndo) return;
+    const undo = useCallback(() => dispatch({ type: 'UNDO' }), []);
 
-        const previous = past[past.length - 1];
-        const newPast = past.slice(0, past.length - 1);
-
-        setPast(newPast);
-        setPresent(previous);
-        setFuture([present, ...future]);
-    }, [past, present, future, canUndo]);
-
-    const redo = useCallback(() => {
-        if (!canRedo) return;
-
-        const next = future[0];
-        const newFuture = future.slice(1);
-
-        setPast([...past, present]);
-        setPresent(next);
-        setFuture(newFuture);
-    }, [past, present, future, canRedo]);
+    const redo = useCallback(() => dispatch({ type: 'REDO' }), []);
 
     const setState = useCallback((newState: T | ((prevState: T) => T)) => {
-        setPresent((curr) => {
-            const resolvedState = newState instanceof Function ? newState(curr) : newState;
-
-            if (resolvedState === curr) return curr;
-
-            setPast((prevPast) => {
-                const newPast = [...prevPast, curr];
-                if (newPast.length > MAX_HISTORY) {
-                    return newPast.slice(newPast.length - MAX_HISTORY);
-                }
-                return newPast;
-            });
-            setFuture([]);
-
-            return resolvedState;
-        });
+        dispatch({ type: 'SET', payload: newState });
     }, []);
 
     const reset = useCallback((newState: T) => {
-        setPresent(newState);
-        setPast([]);
-        setFuture([]);
+        dispatch({ type: 'RESET', payload: newState });
     }, []);
 
     return { state: present, setState, undo, redo, canUndo, canRedo, reset };

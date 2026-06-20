@@ -13,13 +13,14 @@ export const useApplications = () => {
 
   // Load data on mount
   useEffect(() => {
+    let isMounted = true;
     const loadApplications = async () => {
       let retries = 3;
       while (retries > 0) {
         try {
           if (window.desktop) {
             const rawData = await window.desktop.loadData();
-            if (rawData) {
+            if (rawData && isMounted) {
               // Migrate data from any version to current version
               const migratedData = migrateData(rawData);
               reset(migratedData.applications);
@@ -27,20 +28,20 @@ export const useApplications = () => {
           } else {
             // Fallback for web-only dev
             const saved = readJsonFromStorage<unknown>('phd-applications');
-            if (saved !== null) {
+            if (saved !== null && isMounted) {
               // Migrate data from any version to current version
               const migratedData = migrateData(saved);
               reset(migratedData.applications);
             }
           }
-          setIsLoaded(true);
+          if (isMounted) setIsLoaded(true);
           return; // Success, exit retry loop
         } catch (e) {
           console.error(`Failed to load applications (${4 - retries}/3):`, e);
           retries--;
           if (retries === 0) {
             console.error('Failed to load applications after retries, starting with empty state');
-            setIsLoaded(true);
+            if (isMounted) setIsLoaded(true);
             return;
           }
           // Wait before retry (exponential backoff)
@@ -49,6 +50,7 @@ export const useApplications = () => {
       }
     };
     loadApplications();
+    return () => { isMounted = false; };
   }, []);
 
   // Save data whenever debounced applications change

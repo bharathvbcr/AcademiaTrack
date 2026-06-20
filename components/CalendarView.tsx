@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
     format,
     startOfMonth,
@@ -7,7 +7,6 @@ import {
     endOfWeek,
     eachDayOfInterval,
     isSameMonth,
-    isSameDay,
     addMonths,
     subMonths,
     isToday
@@ -31,44 +30,28 @@ const CalendarView: React.FC<CalendarViewProps> = ({ applications, onEdit }) => 
     const startDate = startOfWeek(monthStart);
     const endDate = endOfWeek(monthEnd);
 
-    const calendarDays = eachDayOfInterval({
+    const calendarDays = useMemo(() => eachDayOfInterval({
         start: startDate,
         end: endDate,
-    });
+    }), [currentMonth]);
 
-    const getEventsForDay = (day: Date) => {
-        const events: { type: 'deadline' | 'interview'; app: Application; label: string }[] = [];
-
+    const eventsByDay = useMemo(() => {
+        const map = new Map<string, { type: 'deadline' | 'interview'; app: Application; label: string }[]>();
         applications.forEach(app => {
-            // Check Deadlines
             if (app.deadline) {
-                const deadlineDate = new Date(app.deadline + 'T00:00:00');
-                if (isSameDay(deadlineDate, day)) {
-                    events.push({
-                        type: 'deadline',
-                        app,
-                        label: `Deadline: ${app.universityName}`
-                    });
-                }
+                const key = app.deadline;
+                if (!map.has(key)) map.set(key, []);
+                map.get(key)!.push({ type: 'deadline', app, label: `Deadline: ${app.universityName}` });
             }
-
-            // Check Interviews
-            app.facultyContacts.forEach(contact => {
-                if (contact.interviewDate) {
-                    const interviewDate = new Date(contact.interviewDate + 'T00:00:00');
-                    if (isSameDay(interviewDate, day)) {
-                        events.push({
-                            type: 'interview',
-                            app,
-                            label: `Interview: ${contact.name} (${app.universityName})`
-                        });
-                    }
+            app.facultyContacts.forEach(c => {
+                if (c.interviewDate) {
+                    if (!map.has(c.interviewDate)) map.set(c.interviewDate, []);
+                    map.get(c.interviewDate)!.push({ type: 'interview', app, label: `Interview: ${c.name} (${app.universityName})` });
                 }
             });
         });
-
-        return events;
-    };
+        return map;
+    }, [applications]);
 
     return (
         <div className="liquid-glass rounded-3xl p-6 h-[calc(100vh-200px)] flex flex-col">
@@ -111,7 +94,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({ applications, onEdit }) => 
             {/* Calendar Grid */}
             <div className="grid grid-cols-7 grid-rows-5 gap-2 flex-1 min-h-0">
                 {calendarDays.map((day, dayIdx) => {
-                    const events = getEventsForDay(day);
+                    const events = eventsByDay.get(format(day, 'yyyy-MM-dd')) ?? [];
                     const isCurrentMonth = isSameMonth(day, monthStart);
                     const isTodayDate = isToday(day);
 

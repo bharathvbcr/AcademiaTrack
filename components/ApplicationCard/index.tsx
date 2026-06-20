@@ -50,38 +50,43 @@ const ApplicationCard: React.FC<ApplicationCardProps> = React.memo(({ applicatio
 
     // Fetch university logo
     useEffect(() => {
+        let cancelled = false;
+        const controller = new AbortController();
+
         const fetchLogo = async () => {
             if (!getStorageItem('fetch-logos-enabled')) return;
             if (!getStorageItem('showUniversityLogos')) return;
 
             const cacheKey = `university_logo_${universityName}`;
             const cached = getStorageItem(cacheKey);
-            if (cached) {
-                setLogoUrl(cached);
+            const cachedTs = getStorageItem(cacheKey + '_ts');
+            const cacheValid = cached && cachedTs && (Date.now() - parseInt(cachedTs) < 7 * 86400 * 1000);
+            if (cacheValid) {
+                if (!cancelled) setLogoUrl(cached);
                 return;
+            }
+            if (cached) {
+                removeStorageItem(cacheKey);
+                removeStorageItem(cacheKey + '_ts');
             }
 
             try {
                 const cleanName = universityName.split('(')[0].trim();
-                const response = await fetch(`https://universities.hipolabs.com/search?name=${encodeURIComponent(cleanName)}`);
+                const response = await fetch(`https://universities.hipolabs.com/search?name=${encodeURIComponent(cleanName)}`, { signal: controller.signal });
                 const data = await response.json();
 
-                if (data && data.length > 0 && data[0].domains && data[0].domains.length > 0) {
+                if (!cancelled && data && data.length > 0 && data[0].domains && data[0].domains.length > 0) {
                     const domain = data[0].domains[0];
-                    const clearbitUrl = `https://logo.clearbit.com/${domain}`;
-                    const imgResponse = await fetch(clearbitUrl);
-                    const blob = await imgResponse.blob();
-                    const dataUrl = await new Promise<string>((resolve, reject) => {
-                        const reader = new FileReader();
-                        reader.onload = () => resolve(reader.result as string);
-                        reader.onerror = reject;
-                        reader.readAsDataURL(blob);
-                    });
-                    setLogoUrl(dataUrl);
-                    setStorageItem(cacheKey, dataUrl);
+                    if (!/^[a-z0-9][a-z0-9.-]*\.[a-z]{2,}$/i.test(domain)) throw new Error('Invalid domain');
+                    const faviconUrl = `https://${domain}/favicon.ico`;
+                    if (!cancelled) {
+                        setLogoUrl(faviconUrl);
+                        setStorageItem(cacheKey, faviconUrl);
+                        setStorageItem(cacheKey + '_ts', Date.now().toString());
+                    }
                 }
             } catch (e) {
-                console.error("Failed to fetch logo", e);
+                if (!cancelled && !(e instanceof DOMException && e.name === 'AbortError')) console.error("Failed to fetch logo", e);
             }
         };
 
@@ -90,10 +95,14 @@ const ApplicationCard: React.FC<ApplicationCardProps> = React.memo(({ applicatio
                 .filter(k => k.startsWith('university_logo_'))
                 .forEach(k => removeStorageItem(k));
             setLogoUrl(null);
-            return;
+            return () => { cancelled = true; };
         }
 
         if (universityName) fetchLogo();
+        return () => {
+            cancelled = true;
+            controller.abort();
+        };
     }, [universityName]);
 
     // Check for upcoming interviews
@@ -274,15 +283,29 @@ const ApplicationCard: React.FC<ApplicationCardProps> = React.memo(({ applicatio
         </motion.div>
     );
 }, (prevProps, nextProps) => {
-    // Custom comparison function for better memoization
+    const pa = prevProps.application, na = nextProps.application;
     return (
-        prevProps.application.id === nextProps.application.id &&
-        prevProps.application.status === nextProps.application.status &&
-        prevProps.application.deadline === nextProps.application.deadline &&
+        pa.id === na.id &&
+        pa.status === na.status &&
+        pa.deadline === na.deadline &&
+        pa.universityName === na.universityName &&
+        pa.programName === na.programName &&
+        pa.portalLink === na.portalLink &&
+        pa.programType === na.programType &&
+        pa.customProgramType === na.customProgramType &&
+        pa.department === na.department &&
+        pa.admissionTerm === na.admissionTerm &&
+        pa.admissionYear === na.admissionYear &&
+        pa.notes === na.notes &&
+        pa.feeWaiverStatus === na.feeWaiverStatus &&
+        pa.universityRanking === na.universityRanking &&
+        pa.departmentRanking === na.departmentRanking &&
+        pa.gre.status === na.gre.status &&
+        pa.englishTest.status === na.englishTest.status &&
+        pa.englishTest.type === na.englishTest.type &&
         prevProps.isExpanded === nextProps.isExpanded &&
-        JSON.stringify(prevProps.application.documents) === JSON.stringify(nextProps.application.documents) &&
-        JSON.stringify(prevProps.application.facultyContacts) === JSON.stringify(nextProps.application.facultyContacts) &&
-        prevProps.application.notes === nextProps.application.notes
+        pa.documents === na.documents &&
+        pa.facultyContacts === na.facultyContacts
     );
 });
 

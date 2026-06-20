@@ -103,12 +103,12 @@ const BudgetView: React.FC<BudgetViewProps> = ({ applications }) => {
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div className="liquid-glass-card p-6 rounded-2xl">
                     <h3 className="text-sm font-medium text-[#E8B4B8]/70 uppercase tracking-wider">Total Expenses</h3>
-                    <p className="text-3xl font-bold text-[#F5D7DA] mt-2">${totalCost}</p>
+                    <p className="text-3xl font-bold text-[#F5D7DA] mt-2">${totalCost.toLocaleString()}</p>
                 </div>
                 <div className="liquid-glass-card p-6 rounded-2xl">
                     <h3 className="text-sm font-medium text-[#E8B4B8]/70 uppercase tracking-wider">Avg. Cost per App</h3>
                     <p className="text-3xl font-bold text-[#F5D7DA] mt-2">
-                        ${applications.length > 0 ? Math.round(totalCost / applications.length) : 0}
+                        ${applications.length > 0 ? Math.round(totalCost / applications.length).toLocaleString() : 0}
                     </p>
                 </div>
                 <div className="liquid-glass-card p-6 rounded-2xl">

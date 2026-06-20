@@ -53,7 +53,10 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
   const [editingShortcut, setEditingShortcut] = useState<string | null>(null);
   const [autoSaveEnabled, setAutoSaveEnabled] = useLocalStorage<boolean>('auto-save-enabled', true);
   const [deadlineNotificationsEnabled, setDeadlineNotificationsEnabled] = useLocalStorage<boolean>('deadline-notifications-enabled', true);
-  const [analyticsTrackingEnabled, setAnalyticsTrackingEnabled] = useLocalStorage<boolean>('analytics-tracking-enabled', false);
+  /** Controls visibility of the local advanced analytics UI widget only. Does not gate any network telemetry or external data transmission. */
+  const [showAdvancedAnalytics, setShowAdvancedAnalytics] = useLocalStorage<boolean>('analytics-tracking-enabled', false);
+  const [fetchLogosEnabled, setFetchLogosEnabled] = useLocalStorage<boolean>('fetch-logos-enabled', false);
+  const [showUniversityLogos, setShowUniversityLogos] = useLocalStorage<boolean>('showUniversityLogos', false);
   const [backups, setBackups] = useState<BackupInfo[]>([]);
   const [backupStatus, setBackupStatus] = useState<string>('');
   const [updateStatus, setUpdateStatus] = useState<string>('');
@@ -417,12 +420,29 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                   <label className="flex items-center gap-3">
                     <input
                       type="checkbox"
-                      checked={analyticsTrackingEnabled}
-                      onChange={(e) => setAnalyticsTrackingEnabled(e.target.checked)}
+                      checked={showAdvancedAnalytics}
+                      onChange={(e) => setShowAdvancedAnalytics(e.target.checked)}
                       className="w-4 h-4"
                     />
-                    <span>Enable analytics tracking</span>
+                    <span>Show advanced analytics panel</span>
                   </label>
+                  <div className="space-y-2">
+                    <label className="flex items-center gap-3">
+                      <input
+                        type="checkbox"
+                        checked={fetchLogosEnabled && showUniversityLogos}
+                        onChange={(e) => {
+                          setFetchLogosEnabled(e.target.checked);
+                          setShowUniversityLogos(e.target.checked);
+                        }}
+                        className="w-4 h-4"
+                      />
+                      <span>Show university logos</span>
+                    </label>
+                    <p className="text-xs text-[#a1a1aa] ml-7">
+                      University logos are fetched from universities.hipolabs.com and your institution's own server. Your institution names will be sent to universities.hipolabs.com when this is enabled.
+                    </p>
+                  </div>
                 </div>
               </div>
               <div className="border-t border-[#27272a] pt-6">
@@ -486,6 +506,20 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                   </button>
                 </div>
                 {updateStatus && <p className="mt-2 text-sm text-[#a1a1aa]">{updateStatus}</p>}
+              </div>
+              <div className="border-t border-[#27272a] pt-6">
+                <div className="flex items-center justify-between gap-4">
+                  <div>
+                    <h3 className="text-lg font-semibold">Saved Searches</h3>
+                    <p className="text-sm text-[#a1a1aa]">Remove all persisted search queries from local storage.</p>
+                  </div>
+                  <button
+                    onClick={() => localStorage.removeItem('saved-searches')}
+                    className="px-3 py-1.5 text-sm border border-red-500/40 text-red-300 rounded-lg hover:bg-red-500/10"
+                  >
+                    Clear Saved Searches
+                  </button>
+                </div>
               </div>
               <div className="border-t border-[#27272a] pt-6">
                 <h3 className="text-lg font-semibold">Application Templates</h3>

@@ -533,14 +533,12 @@ export const useApplicationForm = (isOpen: boolean, applicationToEdit?: Applicat
         setIsRecommenderOpen(prev => prev.filter((_, index) => index !== indexToRemove));
     }, []);
 
-    const addReminder = useCallback(() => {
-        const text = prompt('Enter reminder text:');
-        if (text) {
-            setAppData(prev => ({
-                ...prev,
-                reminders: [...(prev.reminders || []), { id: Date.now().toString(), text, date: new Date().toISOString().split('T')[0], completed: false }]
-            }));
-        }
+    const addReminder = useCallback((text: string) => {
+        if (!text || !text.trim()) return;
+        setAppData(prev => ({
+            ...prev,
+            reminders: [...(prev.reminders || []), { id: Date.now().toString(), text: text.trim(), date: new Date().toISOString().split('T')[0], completed: false }]
+        }));
     }, []);
 
     const toggleReminder = useCallback((id: string) => {

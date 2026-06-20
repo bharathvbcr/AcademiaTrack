@@ -5,7 +5,7 @@ const NOMINATIM_BASE_URL = 'https://nominatim.openstreetmap.org/search';
 const TIMEAPI_BASE_URL = 'https://timeapi.io/api/TimeZone/coordinate';
 
 export const isLocationLookupEnabled = (): boolean =>
-    getStorageItem('location-lookup-enabled') !== 'false';
+    getStorageItem('location-lookup-enabled') === 'true';
 
 interface NominatimResult {
     place_id: number;

@@ -39,7 +39,7 @@ const TimelineView: React.FC<TimelineViewProps> = ({ applications, onEdit }) => 
 
         // Find min/max dates from deadlines
         const dates = applications
-            .map(app => app.deadline ? new Date(app.deadline) : null)
+            .map(app => app.deadline ? new Date(app.deadline + 'T00:00:00') : null)
             .filter((d): d is Date => d !== null && !isNaN(d.getTime()));
 
         if (dates.length === 0) {
@@ -87,8 +87,8 @@ const TimelineView: React.FC<TimelineViewProps> = ({ applications, onEdit }) => 
             // Put no-deadline apps at the bottom
             if (!a.deadline) return 1;
             if (!b.deadline) return -1;
-            const dateA = new Date(a.deadline).getTime();
-            const dateB = new Date(b.deadline).getTime();
+            const dateA = new Date(a.deadline + 'T00:00:00').getTime();
+            const dateB = new Date(b.deadline + 'T00:00:00').getTime();
             return dateA - dateB;
         });
     }, [applications]);
@@ -158,8 +158,11 @@ const TimelineView: React.FC<TimelineViewProps> = ({ applications, onEdit }) => 
                             let barContent = null;
 
                             if (app.deadline) {
-                                const startX = getXPosition(new Date(new Date(app.deadline).getTime() - 90 * 24 * 60 * 60 * 1000));
-                                const endX = getXPosition(new Date(app.deadline));
+                                const deadlineLocal = new Date(app.deadline + 'T00:00:00');
+                                const startLocal = new Date(deadlineLocal);
+                                startLocal.setDate(startLocal.getDate() - 90);
+                                const startX = getXPosition(startLocal);
+                                const endX = getXPosition(deadlineLocal);
                                 const width = Math.max(endX - startX, 10);
 
                                 barContent = (
@@ -172,10 +175,10 @@ const TimelineView: React.FC<TimelineViewProps> = ({ applications, onEdit }) => 
                                             }`}
                                         style={{ left: startX, width }}
                                         onClick={() => onEdit(app)}
-                                        title={`Deadline: ${new Date(app.deadline).toLocaleDateString()}`}
+                                        title={`Deadline: ${new Date(app.deadline + 'T00:00:00').toLocaleDateString()}`}
                                     >
                                         <div className="absolute right-0 top-1/2 -translate-y-1/2 px-2 text-xs font-semibold text-[#F5D7DA] translate-x-full whitespace-nowrap">
-                                            {new Date(app.deadline).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                                            {new Date(app.deadline + 'T00:00:00').toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
                                         </div>
                                     </div>
                                 );

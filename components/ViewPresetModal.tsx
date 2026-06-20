@@ -4,6 +4,8 @@ import { backdropVariants, modalVariants } from '../hooks/useAnimations';
 import { useLockBodyScroll } from '../hooks/useLockBodyScroll';
 import { useEscapeKey } from '../hooks/useEscapeKey';
 import { useViewState, ViewPreset, ViewMode } from '../hooks/useViewState';
+import { useConfirmation } from '../hooks/useConfirmation';
+import ConfirmationModal from './ConfirmationModal';
 
 interface ViewPresetModalProps {
   isOpen: boolean;
@@ -20,6 +22,7 @@ const ViewPresetModal: React.FC<ViewPresetModalProps> = ({ isOpen, onClose, view
   useLockBodyScroll(isOpen);
   useEscapeKey(isOpen, onClose);
   const { savePreset, loadPreset, deletePreset, updatePreset, getPresetsForView } = useViewState(viewMode);
+  const { confirmation, showConfirmation, closeConfirmation } = useConfirmation();
   const [presetName, setPresetName] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -42,9 +45,7 @@ const ViewPresetModal: React.FC<ViewPresetModalProps> = ({ isOpen, onClose, view
   };
 
   const handleDeletePreset = (presetId: string) => {
-    if (window.confirm('Are you sure you want to delete this preset?')) {
-      deletePreset(presetId);
-    }
+    showConfirmation('Delete Preset', 'Are you sure you want to delete this preset?', () => deletePreset(presetId), true);
   };
 
   const handleStartEdit = (preset: ViewPreset) => {
@@ -63,6 +64,15 @@ const ViewPresetModal: React.FC<ViewPresetModalProps> = ({ isOpen, onClose, view
   if (!isOpen) return null;
 
   return (
+    <>
+    <ConfirmationModal
+      isOpen={confirmation.isOpen}
+      onClose={closeConfirmation}
+      onConfirm={confirmation.onConfirm}
+      title={confirmation.title}
+      message={confirmation.message}
+      isDanger={confirmation.isDanger}
+    />
     <AnimatePresence>
       <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
         <motion.div
@@ -213,6 +223,7 @@ const ViewPresetModal: React.FC<ViewPresetModalProps> = ({ isOpen, onClose, view
         </motion.div>
       </div>
     </AnimatePresence>
+    </>
   );
 };
 

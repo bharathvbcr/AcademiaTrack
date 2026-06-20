@@ -75,10 +75,7 @@ END:VCALENDAR`;
 /**
  * Download the ICS file
  */
-export function downloadICS(applications: Application[]): void {
-    const includeContactDetails = window.confirm(
-        'Include faculty email addresses and interview notes in the calendar file? This information will be uploaded to your calendar provider (Google Calendar, Apple Calendar, etc.).'
-    );
+export function downloadICS(applications: Application[], includeContactDetails: boolean = false): void {
     const icsContent = generateICS(applications, includeContactDetails);
     const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
     const url = URL.createObjectURL(blob);
