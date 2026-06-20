@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { Application, ApplicationStatus } from '../types';
+import { getDaysUntil } from '../utils/dateUtils';
 
 export interface AnalyticsMetric {
   id: string;
@@ -138,21 +139,16 @@ export const useAdvancedAnalytics = (applications: Application[]) => {
   }, [applications]);
 
   const deadlineUrgency = useMemo(() => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    
     const urgent = applications.filter(app => {
       if (!app.deadline || app.status === ApplicationStatus.Submitted) return false;
-      const deadline = new Date(app.deadline);
-      const diffDays = Math.ceil((deadline.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-      return diffDays >= 0 && diffDays <= 7;
+      const diffDays = getDaysUntil(app.deadline);
+      return diffDays !== null && diffDays >= 0 && diffDays <= 7;
     }).length;
 
     const upcoming = applications.filter(app => {
       if (!app.deadline || app.status === ApplicationStatus.Submitted) return false;
-      const deadline = new Date(app.deadline);
-      const diffDays = Math.ceil((deadline.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-      return diffDays > 7 && diffDays <= 30;
+      const diffDays = getDaysUntil(app.deadline);
+      return diffDays !== null && diffDays > 7 && diffDays <= 30;
     }).length;
 
     return { urgent, upcoming };

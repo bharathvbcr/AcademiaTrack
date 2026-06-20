@@ -3,6 +3,7 @@ import Tooltip from './Tooltip';
 import { useEnhancedKeyboardShortcuts, KeyboardShortcut } from '../hooks/useEnhancedKeyboardShortcuts';
 import { useViewState } from '../hooks/useViewState';
 import { useLockBodyScroll } from '../hooks/useLockBodyScroll';
+import { useEscapeKey } from '../hooks/useEscapeKey';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import { useCustomFields } from '../hooks/useCustomFields';
 import { useTemplates } from '../hooks/useTemplates';
@@ -33,6 +34,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
   initialTab,
 }) => {
   useLockBodyScroll(isOpen);
+  useEscapeKey(isOpen, onClose);
   const { shortcuts, updateShortcut, resetShortcuts, enabled, setEnabled } = useEnhancedKeyboardShortcuts({}, { listen: false });
   const {
     customThemes,

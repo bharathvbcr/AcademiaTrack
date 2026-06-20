@@ -1,6 +1,7 @@
 import { useState, useMemo, useCallback } from 'react';
 import { Application, ApplicationStatus, ProgramType, DocumentStatus } from '../types';
 import { useLocalStorage } from './useLocalStorage';
+import { getDaysUntil } from '../utils/dateUtils';
 
 export type FilterOperator = 'AND' | 'OR' | 'NOT';
 export type FilterField = 
@@ -62,11 +63,8 @@ export const useAdvancedFilter = (applications: Application[]) => {
       
       case 'deadline':
         if (!app.deadline) return operator === 'equals' && value === null;
-        const deadline = new Date(app.deadline);
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        const diffDays = Math.ceil((deadline.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-        
+        const diffDays = getDaysUntil(app.deadline) ?? 0;
+
         if (operator === 'lessThan') return diffDays < value;
         if (operator === 'greaterThan') return diffDays > value;
         if (operator === 'between') {

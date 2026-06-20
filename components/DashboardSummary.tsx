@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Application, ApplicationStatus, FacultyContactStatus } from '../types';
 import { STATUS_OPTIONS, CHART_COLORS, FACULTY_CHART_COLORS, FACULTY_CONTACT_STATUS_OPTIONS } from '../constants';
 import { format, parseISO, isValid } from 'date-fns';
+import { getDaysUntil } from '../utils/dateUtils';
 
 interface DashboardSummaryProps {
   applications: Application[];
@@ -37,12 +38,8 @@ const DashboardSummary: React.FC<DashboardSummaryProps> = ({ applications, viewM
       [ApplicationStatus.Submitted, ApplicationStatus.Interview, ApplicationStatus.Waitlisted, ApplicationStatus.InProgress].includes(a.status)
     ).length;
     const upcomingDeadlines = applications.filter(a => {
-      if (!a.deadline) return false;
-      const date = new Date(a.deadline);
-      const today = new Date();
-      const diffTime = date.getTime() - today.getTime();
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-      return diffDays >= 0 && diffDays <= 14; // Next 2 weeks
+      const diffDays = getDaysUntil(a.deadline);
+      return diffDays !== null && diffDays >= 0 && diffDays <= 14; // Next 2 weeks
     }).length;
 
     // Calculate total cost spent

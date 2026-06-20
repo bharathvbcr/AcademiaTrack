@@ -1,7 +1,9 @@
 import React from 'react';
 import { Application, ApplicationStatus } from '../types';
 import { useLockBodyScroll } from '../hooks/useLockBodyScroll';
+import { useEscapeKey } from '../hooks/useEscapeKey';
 import { formatCurrency } from '../utils/formatters';
+import { formatLocalDate } from '../utils/dateUtils';
 
 interface ComparisonModalProps {
     isOpen: boolean;
@@ -11,6 +13,7 @@ interface ComparisonModalProps {
 
 const ComparisonModal: React.FC<ComparisonModalProps> = ({ isOpen, onClose, applications }) => {
     useLockBodyScroll(isOpen);
+    useEscapeKey(isOpen, onClose);
     if (!isOpen) return null;
 
     return (
@@ -88,7 +91,7 @@ const ComparisonModal: React.FC<ComparisonModalProps> = ({ isOpen, onClose, appl
                                     </td>
                                     {applications.map(app => (
                                         <td key={app.id} className="px-6 py-4 text-sm text-slate-600 dark:text-slate-300">
-                                            {app.deadline ? new Date(app.deadline).toLocaleDateString() : '-'}
+                                            {formatLocalDate(app.deadline)}
                                         </td>
                                     ))}
                                 </tr>
