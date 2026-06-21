@@ -153,7 +153,9 @@ export const useDataValidation = (applications: Application[]) => {
 
   const getCompletenessStats = () => {
     const results = validateAll();
-    const avgCompleteness = results.reduce((sum, r) => sum + r.completeness, 0) / results.length;
+    const avgCompleteness = results.length > 0
+      ? results.reduce((sum, r) => sum + r.completeness, 0) / results.length
+      : 0;
     const incomplete = results.filter(r => r.completeness < 100).length;
     const hasErrors = results.filter(r => r.errors.length > 0).length;
     const hasWarnings = results.filter(r => r.warnings.length > 0).length;

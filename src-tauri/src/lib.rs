@@ -81,9 +81,12 @@ fn ensure_dirs(app: &AppHandle) -> Result<(PathBuf, PathBuf, PathBuf), String> {
 
 fn assert_within_app_data(app: &AppHandle, path: &Path) -> Result<(), String> {
   let base = app.path().app_data_dir().map_err(|e| e.to_string())?;
+  // Canonicalize BOTH sides: comparing a canonical target against a
+  // non-canonical base produces false results if the base contains symlinks.
+  let canonical_base = std::fs::canonicalize(&base).map_err(|e| e.to_string())?;
   let canonical = std::fs::canonicalize(path)
     .map_err(|_| "File not found".to_string())?;
-  if !canonical.starts_with(&base) {
+  if !canonical.starts_with(&canonical_base) {
     return Err("Access denied: path outside app data".to_string());
   }
   Ok(())
@@ -184,29 +187,43 @@ fn open_file(app: AppHandle, file_path: String) -> Result<(), String> {
     return Err("File type not allowed".to_string());
   }
   let base = app_data_dir(&app)?.join("documents");
+  // Canonicalize both sides so symlinks/`..` resolve consistently.
+  let canonical_base = std::fs::canonicalize(&base).map_err(|e| e.to_string())?;
   let canonical = std::fs::canonicalize(&path).map_err(|_| "File not found".to_string())?;
-  if !canonical.starts_with(&base) {
+  if !canonical.starts_with(&canonical_base) {
     return Err("Access denied: path outside documents directory".to_string());
   }
+
+  // Hand the OS the already-validated canonical path (not the original string),
+  // closing the TOCTOU window where the original path could be swapped for a
+  // symlink between validation and launch. On Windows, canonicalize() yields a
+  // `\\?\` verbatim path that explorer.exe mishandles, so strip that prefix.
+  #[cfg(target_os = "windows")]
+  let target: String = {
+    let s = canonical.to_string_lossy();
+    s.strip_prefix(r"\\?\").map(str::to_string).unwrap_or_else(|| s.into_owned())
+  };
+  #[cfg(not(target_os = "windows"))]
+  let target: String = canonical.to_string_lossy().into_owned();
 
   #[cfg(target_os = "windows")]
   let mut command = {
     let mut command = Command::new("explorer");
-    command.arg(&file_path);
+    command.arg(&target);
     command
   };
 
   #[cfg(target_os = "macos")]
   let mut command = {
     let mut command = Command::new("open");
-    command.arg(&file_path);
+    command.arg(&target);
     command
   };
 
   #[cfg(target_os = "linux")]
   let mut command = {
     let mut command = Command::new("xdg-open");
-    command.arg(&file_path);
+    command.arg(&target);
     command
   };
 

@@ -169,7 +169,7 @@ export const CommandProvider: React.FC<{ children: React.ReactNode }> = ({ child
         executeCommand,
         searchCommands,
         getCommandShortcuts,
-    }), [commands, registerCommand, registerCommands, unregisterCommand, unregisterCommands, executeCommand, searchCommands]);
+    }), [commands, registerCommand, registerCommands, unregisterCommand, unregisterCommands, executeCommand, searchCommands, getCommandShortcuts]);
 
     return (
         <CommandContext.Provider value={value}>

@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { useLocalStorage } from './useLocalStorage';
 import { ApplicationStatus } from '../types';
 import { STATUS_OPTIONS, STATUS_COLORS, STATUS_LABELS } from '../constants';
@@ -15,23 +16,29 @@ export const useKanbanConfig = () => {
   const [customStatuses, setCustomStatuses] = useLocalStorage<KanbanStatusConfig[]>('kanban-custom-statuses', []);
   const [statusConfig, setStatusConfig] = useLocalStorage<KanbanStatusConfig[]>('kanban-status-config', []);
 
-  // Initialize with default statuses if config is empty
-  const getStatusConfig = (): KanbanStatusConfig[] => {
+  const buildDefaultStatusConfig = (): KanbanStatusConfig[] =>
+    STATUS_OPTIONS.map((status, index) => ({
+      id: status,
+      name: STATUS_LABELS[status],
+      status: status,
+      color: STATUS_COLORS[status],
+      order: index,
+      isCustom: false,
+    }));
+
+  // Persist the default config once, in an effect — never write state during
+  // render (which getStatusConfig is called from).
+  useEffect(() => {
     if (statusConfig.length === 0) {
-      // Initialize with default statuses
-      const defaults: KanbanStatusConfig[] = STATUS_OPTIONS.map((status, index) => ({
-        id: status,
-        name: STATUS_LABELS[status],
-        status: status,
-        color: STATUS_COLORS[status],
-        order: index,
-        isCustom: false,
-      }));
-      setStatusConfig(defaults);
-      return defaults;
+      setStatusConfig(buildDefaultStatusConfig());
     }
-    return statusConfig;
-  };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [statusConfig.length]);
+
+  // Pure getter: returns the persisted config, or computed defaults until the
+  // effect above has stored them.
+  const getStatusConfig = (): KanbanStatusConfig[] =>
+    statusConfig.length === 0 ? buildDefaultStatusConfig() : statusConfig;
 
   const addCustomStatus = (name: string, color: string): string => {
     const customId = `custom-${crypto.randomUUID()}`;
