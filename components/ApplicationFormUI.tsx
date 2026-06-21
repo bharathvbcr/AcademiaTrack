@@ -19,13 +19,16 @@ interface BaseFieldProps {
     error?: string;
 }
 
-export const Input: React.FC<React.InputHTMLAttributes<HTMLInputElement> & BaseFieldProps> = ({ label, className, error, ...props }) => (
-    <div className={className}>
-        <label htmlFor={props.name} className="block text-sm font-medium text-[#a1a1aa] mb-1.5">{label}</label>
-        <input {...props} id={props.name} className={`${baseInputClasses} ${error ? errorInputClasses : ''}`} />
-        {error && <p className="mt-1 text-sm text-[#dc2626]">{error}</p>}
-    </div>
-);
+export const Input: React.FC<React.InputHTMLAttributes<HTMLInputElement> & BaseFieldProps> = ({ label, className, error, ...props }) => {
+    const errorId = props.name ? `${props.name}-error` : undefined;
+    return (
+        <div className={className}>
+            <label htmlFor={props.name} className="block text-sm font-medium text-[#a1a1aa] mb-1.5">{label}</label>
+            <input {...props} id={props.name} aria-invalid={error ? true : undefined} aria-describedby={error && errorId ? errorId : undefined} className={`${baseInputClasses} ${error ? errorInputClasses : ''}`} />
+            {error && <p id={errorId} className="mt-1 text-sm text-[#dc2626]">{error}</p>}
+        </div>
+    );
+};
 
 export const Select: React.FC<React.SelectHTMLAttributes<HTMLSelectElement> & BaseFieldProps> = ({ label, children, className, error, name, ...props }) => {
     const selectId = name || `select-${Math.random().toString(36).substr(2, 9)}`;
@@ -33,16 +36,19 @@ export const Select: React.FC<React.SelectHTMLAttributes<HTMLSelectElement> & Ba
     return (
         <div className={className}>
             <label id={labelId} htmlFor={selectId} className="block text-sm font-medium text-[#a1a1aa] mb-1.5">{label}</label>
-            <select {...props} name={name} id={selectId} aria-labelledby={labelId} aria-label={label} title={label} className={`${baseInputClasses} ${error ? errorInputClasses : ''}`}>{children}</select>
-            {error && <p className="mt-1 text-sm text-[#dc2626]">{error}</p>}
+            <select {...props} name={name} id={selectId} aria-labelledby={labelId} aria-label={label} title={label} aria-invalid={error ? true : undefined} aria-describedby={error ? `${selectId}-error` : undefined} className={`${baseInputClasses} ${error ? errorInputClasses : ''}`}>{children}</select>
+            {error && <p id={`${selectId}-error`} className="mt-1 text-sm text-[#dc2626]">{error}</p>}
         </div>
     );
 };
 
-export const TextArea: React.FC<React.TextareaHTMLAttributes<HTMLTextAreaElement> & BaseFieldProps> = ({ label, className, error, ...props }) => (
-    <div className={className}>
-        <label htmlFor={props.name} className="block text-sm font-medium text-[#a1a1aa] mb-1.5">{label}</label>
-        <textarea {...props} id={props.name} className={`${baseInputClasses} ${error ? errorInputClasses : ''}`} />
-        {error && <p className="mt-1 text-sm text-[#dc2626]">{error}</p>}
-    </div>
-);
+export const TextArea: React.FC<React.TextareaHTMLAttributes<HTMLTextAreaElement> & BaseFieldProps> = ({ label, className, error, ...props }) => {
+    const errorId = props.name ? `${props.name}-error` : undefined;
+    return (
+        <div className={className}>
+            <label htmlFor={props.name} className="block text-sm font-medium text-[#a1a1aa] mb-1.5">{label}</label>
+            <textarea {...props} id={props.name} aria-invalid={error ? true : undefined} aria-describedby={error && errorId ? errorId : undefined} className={`${baseInputClasses} ${error ? errorInputClasses : ''}`} />
+            {error && <p id={errorId} className="mt-1 text-sm text-[#dc2626]">{error}</p>}
+        </div>
+    );
+};

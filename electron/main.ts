@@ -293,13 +293,33 @@ if (!gotTheLock) {
           return { success: false, error: 'Access denied' };
         }
         if (!fs.existsSync(resolved)) return { success: false, error: 'Backup file not found' };
+
+        // Validate the backup BEFORE touching live data, so a corrupt/unparseable
+        // or structurally-broken backup can never overwrite the user's data.json.
+        const contents = await readFile(resolved, 'utf-8');
+        let parsed: unknown;
+        try {
+          parsed = JSON.parse(contents);
+        } catch {
+          return { success: false, error: 'Backup file is not valid JSON' };
+        }
+        const isLoadable =
+          Array.isArray(parsed) ||
+          (typeof parsed === 'object' && parsed !== null && Array.isArray((parsed as { applications?: unknown }).applications));
+        if (!isLoadable) {
+          return { success: false, error: 'Backup file has an unrecognized or corrupted structure' };
+        }
+
         if (fs.existsSync(dataFilePath)) {
           const safetyPath = path.join(backupDir, `pre-restore-${Date.now()}.json`);
           await copyFile(dataFilePath, safetyPath);
         }
-        await copyFile(resolved, dataFilePath);
-        const data = await readFile(dataFilePath, 'utf-8');
-        return { success: true, data: JSON.parse(data) };
+
+        // Atomic write of the already-validated contents.
+        const tempPath = `${dataFilePath}.tmp`;
+        await writeFile(tempPath, contents, 'utf-8');
+        await rename(tempPath, dataFilePath);
+        return { success: true, data: parsed };
       } catch (error) {
         const message = error instanceof Error ? error.message : 'Unknown error';
         return { success: false, error: message };

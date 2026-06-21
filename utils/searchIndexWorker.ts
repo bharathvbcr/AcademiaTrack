@@ -65,17 +65,21 @@ export class ApplicationSearchIndexWorker {
     }
 
     const id = `req_${++this.requestIdCounter}_${Date.now()}`;
-    
+
     return new Promise<T>((resolve, reject) => {
-      this.pendingRequests.set(id, { resolve, reject });
-      
-      // Timeout after 10 seconds
-      setTimeout(() => {
+      // Timeout after 10 seconds; cleared as soon as the request settles so the
+      // timer doesn't linger (and keep this instance alive) after a response.
+      const timeoutId = setTimeout(() => {
         if (this.pendingRequests.has(id)) {
           this.pendingRequests.delete(id);
           reject(new Error('Search index operation timed out'));
         }
       }, 10000);
+
+      this.pendingRequests.set(id, {
+        resolve: (value) => { clearTimeout(timeoutId); resolve(value); },
+        reject: (error) => { clearTimeout(timeoutId); reject(error); },
+      });
 
       this.worker!.postMessage({ type, payload, id } as WorkerMessage);
     });

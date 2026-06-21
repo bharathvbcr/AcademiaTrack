@@ -34,6 +34,7 @@ const ComparisonModal: React.FC<ComparisonModalProps> = ({ isOpen, onClose, appl
                         </h3>
                         <button
                             onClick={onClose}
+                            aria-label="Close comparison modal"
                             className="rounded-md text-[#E8B4B8] hover:text-[#F5D7DA] focus:outline-none hover:bg-[rgba(192,48,80,0.25)] p-1"
                         >
                             <span className="material-symbols-outlined">close</span>

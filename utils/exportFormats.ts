@@ -85,11 +85,16 @@ export const exportToPDF = async (applications: Application[], selectedFields?: 
     printWindow.document.write(html);
     printWindow.document.close();
     printWindow.print();
-    printWindow.addEventListener('afterprint', () => printWindow.close());
+    // Single afterprint handler: clear the fallback timer and close the window.
+    // The 30s fallback still closes the window if the user dismisses the dialog
+    // (in which case afterprint never fires).
     const fallback = setTimeout(() => {
       if (!printWindow.closed) printWindow.close();
     }, 30000);
-    printWindow.addEventListener('afterprint', () => clearTimeout(fallback));
+    printWindow.addEventListener('afterprint', () => {
+      clearTimeout(fallback);
+      if (!printWindow.closed) printWindow.close();
+    });
   }
 };
 

@@ -70,6 +70,9 @@ const ApplicationCard: React.FC<ApplicationCardProps> = React.memo(({ applicatio
                 removeStorageItem(cacheKey + '_ts');
             }
 
+            // Abort a stalled request after 5s so a slow/unresponsive server
+            // doesn't leave the fetch hanging indefinitely.
+            const timeoutId = setTimeout(() => controller.abort(), 5000);
             try {
                 const cleanName = universityName.split('(')[0].trim();
                 const response = await fetch(`https://universities.hipolabs.com/search?name=${encodeURIComponent(cleanName)}`, { signal: controller.signal });
@@ -87,6 +90,8 @@ const ApplicationCard: React.FC<ApplicationCardProps> = React.memo(({ applicatio
                 }
             } catch (e) {
                 if (!cancelled && !(e instanceof DOMException && e.name === 'AbortError')) console.error("Failed to fetch logo", e);
+            } finally {
+                clearTimeout(timeoutId);
             }
         };
 
@@ -120,6 +125,8 @@ const ApplicationCard: React.FC<ApplicationCardProps> = React.memo(({ applicatio
 
     // Celebration confetti on acceptance
     useEffect(() => {
+        let frameId: number | null = null;
+        let burstTimeout: ReturnType<typeof setTimeout> | undefined;
         if (prevStatusRef.current !== ApplicationStatus.Accepted && status === ApplicationStatus.Accepted) {
             const end = Date.now() + (3 * 1000);
             const colors = ['#FFD700', '#FFA500', '#FF8C00'];
@@ -141,11 +148,11 @@ const ApplicationCard: React.FC<ApplicationCardProps> = React.memo(({ applicatio
                 });
 
                 if (Date.now() < end) {
-                    requestAnimationFrame(frame);
+                    frameId = requestAnimationFrame(frame);
                 }
             }());
 
-            setTimeout(() => {
+            burstTimeout = setTimeout(() => {
                 confetti({
                     particleCount: 100,
                     spread: 70,
@@ -155,6 +162,11 @@ const ApplicationCard: React.FC<ApplicationCardProps> = React.memo(({ applicatio
             }, 500);
         }
         prevStatusRef.current = status;
+        // Stop the animation loop / pending burst if the card unmounts mid-celebration.
+        return () => {
+            if (frameId !== null) cancelAnimationFrame(frameId);
+            if (burstTimeout !== undefined) clearTimeout(burstTimeout);
+        };
     }, [status]);
 
     const deadlineDate = deadline ? new Date(deadline + 'T00:00:00') : null;
