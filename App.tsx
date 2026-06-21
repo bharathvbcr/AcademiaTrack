@@ -408,12 +408,23 @@ const App: React.FC = () => {
           ];
           appUpdates.tags = newTags;
         }
-        updateApplication({ ...app, ...appUpdates });
+        const mergedApp = { ...app, ...appUpdates };
+        // Bulk status changes must fire status_changed automation rules, the same
+        // as single-app edits (handleBulkStatusChange / updateApplicationWithAutomation).
+        if (appUpdates.status !== undefined && appUpdates.status !== app.status) {
+          const autoUpdates = executeRules(mergedApp, 'status_changed', {
+            newStatus: mergedApp.status,
+            oldStatus: app.status,
+          });
+          updateApplication(autoUpdates ? { ...mergedApp, ...autoUpdates } : mergedApp);
+        } else {
+          updateApplication(mergedApp);
+        }
       }
     });
     clearSelection();
     setIsBulkOperationsOpen(false);
-  }, [applications, updateApplication, clearSelection]);
+  }, [applications, updateApplication, clearSelection, executeRules]);
 
   const handleImport = React.useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];

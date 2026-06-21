@@ -94,16 +94,46 @@ export const parseCSV = (csvText: string): Partial<Application>[] => {
       isR1: false,
     };
 
+    // Per-document status columns exported by exportToCSV (e.g. "CV Status").
+    // These MUST be matched exactly and before the generic application-status
+    // handling, otherwise their values overwrite the main application status.
+    const docStatusHeaders: Record<string, keyof typeof app.documents> = {
+      'cv status': 'cv',
+      'sop status': 'statementOfPurpose',
+      'transcripts status': 'transcripts',
+      'lor 1 status': 'lor1',
+      'lor 2 status': 'lor2',
+      'lor 3 status': 'lor3',
+      'writing sample status': 'writingSample',
+    };
+
     headers.forEach((header, index) => {
       const value = values[index]?.trim();
       if (!value) return;
 
-      if (header.includes('university') || header === 'name') {
+      // Document statuses (exact match, checked first).
+      const docKey = docStatusHeaders[header];
+      if (docKey) {
+        app.documents[docKey].status = value;
+        return;
+      }
+
+      if (header === 'gre status') {
+        app.gre = { ...(app.gre || {}), status: value };
+      } else if (header === 'english test type') {
+        app.englishTest = { ...(app.englishTest || {}), type: value };
+      } else if (header === 'english test status') {
+        app.englishTest = { ...(app.englishTest || {}), status: value };
+      } else if (header === 'fee waiver status') {
+        app.feeWaiverStatus = value;
+      } else if (header.includes('university') || header === 'name') {
         app.universityName = value;
-      } else if (header.includes('program') && !header.includes('type')) {
+      } else if (header === 'program type') {
+        app.programType = value;
+      } else if (header.includes('program')) {
         app.programName = value;
-      } else if (header.includes('status')) {
-        // Simple mapping
+      } else if (header === 'status') {
+        // Map the primary application status only.
         const lowerVal = value.toLowerCase();
         if (lowerVal.includes('subm')) app.status = 'Submitted';
         else if (lowerVal.includes('accept')) app.status = 'Accepted';
@@ -111,12 +141,22 @@ export const parseCSV = (csvText: string): Partial<Application>[] => {
         else if (lowerVal.includes('wait')) app.status = 'Waitlisted';
         else if (lowerVal.includes('start')) app.status = 'In Progress';
         else app.status = 'Not Started';
+      } else if (header === 'department') {
+        app.department = value;
+      } else if (header === 'location') {
+        app.location = value;
       } else if (header.includes('deadline')) {
-        app.deadline = value;
+        if (header.includes('preferred')) app.preferredDeadline = value;
+        else if (header.includes('decision')) app.decisionDeadline = value;
+        else app.deadline = value;
       } else if (header.includes('fee') && !header.includes('waiver')) {
         app.applicationFee = parseFloat(value.replace(/[^0-9.]/g, '')) || 0;
       } else if (header.includes('link') || header.includes('portal')) {
         app.portalLink = sanitizeURL(value);
+      } else if (header === 'tags') {
+        app.tags = value.split(',').map((t: string) => t.trim()).filter(Boolean);
+      } else if (header === 'preferred faculty') {
+        app.preferredFaculty = value;
       } else if (header.includes('note')) {
         app.notes = value;
       }

@@ -72,11 +72,13 @@ export const useAutomation = () => {
     actions.forEach(action => {
       switch (action.type) {
         case 'create_reminder':
-          const reminderDate = action.params.date 
+          const reminderDate = action.params.date
             ? new Date(action.params.date)
             : new Date(Date.now() + (action.params.daysOffset || 0) * 24 * 60 * 60 * 1000);
+          // Accumulate onto already-applied updates so multiple reminder actions
+          // (within or across rules) all take effect instead of overwriting.
           updates.reminders = [
-            ...(app.reminders || []),
+            ...(updates.reminders ?? app.reminders ?? []),
             {
               id: crypto.randomUUID(),
               text: action.params.text || 'Reminder',
@@ -100,13 +102,18 @@ export const useAutomation = () => {
 
         case 'add_tag':
           if (action.params.tag) {
-            updates.tags = [...(app.tags || []), action.params.tag];
+            // Build on accumulated tags so prior add/remove actions are kept,
+            // and avoid adding a duplicate tag.
+            const current = updates.tags ?? app.tags ?? [];
+            updates.tags = current.includes(action.params.tag)
+              ? current
+              : [...current, action.params.tag];
           }
           break;
 
         case 'remove_tag':
           if (action.params.tag) {
-            updates.tags = (app.tags || []).filter(t => t !== action.params.tag);
+            updates.tags = (updates.tags ?? app.tags ?? []).filter(t => t !== action.params.tag);
           }
           break;
       }
