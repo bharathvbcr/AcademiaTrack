@@ -23,8 +23,9 @@ const QuickCaptureModal: React.FC<QuickCaptureModalProps> = ({ isOpen, onClose, 
 
     useEffect(() => {
         if (isOpen) {
-            setTimeout(() => inputRef.current?.focus(), 100);
+            const focusId = setTimeout(() => inputRef.current?.focus(), 100);
             setInput(initialText || '');
+            return () => clearTimeout(focusId);
         }
     }, [isOpen, initialText]);
 

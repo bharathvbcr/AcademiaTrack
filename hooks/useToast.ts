@@ -37,12 +37,9 @@ export const useToast = (): UseToastReturn => {
 
     setToasts(prev => [...prev, newToast]);
 
-    // Auto-dismiss if duration is set
-    if (duration > 0) {
-      setTimeout(() => {
-        setToasts(prev => prev.filter(toast => toast.id !== id));
-      }, duration);
-    }
+    // Auto-dismiss is owned by the rendered <Toast> component, which schedules
+    // (and cleans up) its own timer in a useEffect keyed by duration. Scheduling
+    // a second timer here would be a redundant, uncleaned leak.
   }, []);
 
   const removeToast = useCallback((id: string) => {

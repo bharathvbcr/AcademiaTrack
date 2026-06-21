@@ -43,6 +43,16 @@ const ProgramDetailsSection: React.FC<ProgramDetailsSectionProps> = ({
         } as React.ChangeEvent<HTMLInputElement>);
     };
 
+    // Delay hiding the location suggestions on blur so a click on a suggestion
+    // registers first; track the timer so it can't fire after unmount.
+    const locationBlurTimer = React.useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+    React.useEffect(() => () => {
+        if (locationBlurTimer.current !== undefined) clearTimeout(locationBlurTimer.current);
+    }, []);
+    const handleLocationBlur = () => {
+        locationBlurTimer.current = setTimeout(() => setShowLocationSuggestions(false), 200);
+    };
+
     return (
         <FieldSet legend="Program Details">
             <div className="relative">
@@ -105,7 +115,7 @@ const ProgramDetailsSection: React.FC<ProgramDetailsSectionProps> = ({
                     onChange={handleLocationChange}
                     autoComplete="off"
                     onFocus={() => appData.location.length >= 3 && setShowLocationSuggestions(true)}
-                    onBlur={() => setTimeout(() => setShowLocationSuggestions(false), 200)}
+                    onBlur={handleLocationBlur}
                 />
                 {showLocationSuggestions && locationSuggestions.length > 0 && (
                     <div className="absolute z-10 w-full mt-1 liquid-glass-modal-content rounded-lg max-h-60 overflow-y-auto">
