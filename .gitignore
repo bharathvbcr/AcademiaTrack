@@ -40,6 +40,11 @@ gha-creds-*.json
 /*notes*.md
 .gitnexus
 
+# Scratch files agents/tools may drop at the repo root
+/test_*.ts
+/test_*.tsx
+/scratch_*.ts
+
 # Local agent/tool settings and caches
 .claude/
 .codex/
