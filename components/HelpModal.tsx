@@ -47,6 +47,7 @@ const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
                     </h2>
                     <button
                         onClick={onClose}
+                        aria-label="Close help modal"
                         className="p-2 text-[#E8B4B8] hover:text-[#F5D7DA] rounded-full hover:bg-[rgba(192,48,80,0.25)] transition-colors"
                     >
                         <span className="material-symbols-outlined">close</span>

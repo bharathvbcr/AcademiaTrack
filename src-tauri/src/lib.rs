@@ -258,6 +258,11 @@ fn copy_document_impl(
 
   let safe_app_id = sanitize_path_segment(app_id);
   let safe_doc_type = sanitize_path_segment(doc_type);
+  // Reject identifiers that sanitize to nothing: an empty app_id would collapse
+  // the per-app subdirectory and let documents from different apps collide.
+  if safe_app_id.is_empty() || safe_doc_type.is_empty() {
+    return Err("Invalid document identifier".to_string());
+  }
   let app_doc_dir = documents_dir.join(safe_app_id);
   fs::create_dir_all(&app_doc_dir).map_err(|error| error.to_string())?;
 

@@ -87,6 +87,11 @@ const Tooltip: React.FC<TooltipProps> = ({
                 setIsVisible(true);
             }}
             onMouseLeave={() => setIsVisible(false)}
+            onFocus={() => {
+                updatePosition();
+                setIsVisible(true);
+            }}
+            onBlur={() => setIsVisible(false)}
         >
             {children}
             {isVisible && createPortal(

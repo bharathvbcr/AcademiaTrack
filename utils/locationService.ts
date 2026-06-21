@@ -48,11 +48,19 @@ export const searchLocation = async (query: string): Promise<LocationDetails[]> 
             limit: '5',
         });
 
-        const response = await fetch(`${NOMINATIM_BASE_URL}?${params.toString()}`, {
-            headers: {
-                'User-Agent': 'AcademiaTrack/1.0'
-            }
-        });
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000);
+        let response: Response;
+        try {
+            response = await fetch(`${NOMINATIM_BASE_URL}?${params.toString()}`, {
+                headers: {
+                    'User-Agent': 'AcademiaTrack/1.0'
+                },
+                signal: controller.signal,
+            });
+        } finally {
+            clearTimeout(timeoutId);
+        }
         if (!response.ok) {
             throw new Error('Failed to fetch location suggestions');
         }
@@ -69,12 +77,18 @@ export const searchLocation = async (query: string): Promise<LocationDetails[]> 
             // Skip if we can't find a meaningful name
             if (!city && !state && !country) return null;
 
+            const latitude = parseFloat(result.lat);
+            const longitude = parseFloat(result.lon);
+            // Skip results with unparseable coordinates so NaN can't propagate
+            // into downstream timezone lookups / distance math.
+            if (Number.isNaN(latitude) || Number.isNaN(longitude)) return null;
+
             return {
                 city: city || state || country, // Fallback
                 state,
                 country,
-                latitude: parseFloat(result.lat),
-                longitude: parseFloat(result.lon),
+                latitude,
+                longitude,
                 timezone: '', // To be fetched
                 utcOffset: 0, // To be fetched
             };
@@ -93,7 +107,14 @@ export const getLocationTimezone = async (latitude: number, longitude: number): 
             longitude: longitude.toString(),
         });
 
-        const response = await fetch(`${TIMEAPI_BASE_URL}?${params.toString()}`);
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000);
+        let response: Response;
+        try {
+            response = await fetch(`${TIMEAPI_BASE_URL}?${params.toString()}`, { signal: controller.signal });
+        } finally {
+            clearTimeout(timeoutId);
+        }
         if (!response.ok) {
             throw new Error('Failed to fetch timezone info');
         }

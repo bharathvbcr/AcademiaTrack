@@ -24,7 +24,12 @@ export function parseLocalDate(value: string | null | undefined): Date | null {
     const year = Number(match[1]);
     const month = Number(match[2]);
     const day = Number(match[3]);
+    // Reject out-of-range parts up front: the Date constructor would otherwise
+    // silently roll them over (e.g. 2026-13-45 -> 2027-02-14).
+    if (month < 1 || month > 12 || day < 1 || day > 31) return null;
     const date = new Date(year, month - 1, day);
+    // Guard against rollover within a month (e.g. 2026-02-31 -> Mar 3).
+    if (date.getMonth() !== month - 1 || date.getDate() !== day) return null;
     return Number.isNaN(date.getTime()) ? null : date;
   }
 

@@ -49,17 +49,18 @@ export const useApplications = (showToast?: (type: ToastType, message: string, t
           if (window.desktop) {
             const rawData = await window.desktop.loadData();
             if (rawData && isMounted) {
-              // Migrate data from any version to current version
+              // Migrate data from any version to current version, then normalize
+              // so legacy/partial records can't crash the UI on first render.
               const migratedData = migrateData(rawData);
-              reset(migratedData.applications);
+              reset(migratedData.applications.map(ensureApplicationDefaults));
             }
           } else {
             // Fallback for web-only dev
             const saved = readJsonFromStorage<unknown>('phd-applications');
             if (saved !== null && isMounted) {
-              // Migrate data from any version to current version
+              // Migrate data from any version to current version, then normalize.
               const migratedData = migrateData(saved);
-              reset(migratedData.applications);
+              reset(migratedData.applications.map(ensureApplicationDefaults));
             }
           }
           if (isMounted) setIsLoaded(true);
@@ -85,6 +86,8 @@ export const useApplications = (showToast?: (type: ToastType, message: string, t
   useEffect(() => {
     if (!isLoaded) return;
     if (debouncedApplications !== applications) return;
+
+    let retryTimeoutId: ReturnType<typeof setTimeout> | undefined;
 
     const saveData = async () => {
       try {
@@ -114,7 +117,7 @@ export const useApplications = (showToast?: (type: ToastType, message: string, t
       } catch (error) {
         console.error('Failed to save applications:', error);
         // Retry once after a short delay
-        setTimeout(() => {
+        retryTimeoutId = setTimeout(() => {
           try {
             const dataToSave = wrapInSchema(debouncedApplications);
             if (window.desktop) {
@@ -144,6 +147,12 @@ export const useApplications = (showToast?: (type: ToastType, message: string, t
     };
 
     saveData();
+
+    // Clear a pending retry if deps change or the component unmounts, so the
+    // retry can't fire against stale data after this effect is torn down.
+    return () => {
+      if (retryTimeoutId !== undefined) clearTimeout(retryTimeoutId);
+    };
   }, [applications, debouncedApplications, isLoaded, showToast]);
 
   // Periodic deadline check
