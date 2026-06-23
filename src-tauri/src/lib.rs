@@ -254,8 +254,8 @@ fn copy_document_impl(
 
   // Validate the source before copying. Canonicalizing resolves symlinks and
   // `..` segments so a malicious/dangling path cannot read arbitrary files into
-  // the documents directory, and the regular-file + extension checks mirror the
-  // Electron implementation's security model (no executables/scripts).
+  // the documents directory, and the regular-file + extension checks enforce the
+  // app's security model (no executables/scripts).
   let canonical_source =
     fs::canonicalize(source_path).map_err(|_| "Source file not found".to_string())?;
   let metadata =

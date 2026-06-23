@@ -16,10 +16,7 @@ export const isTauriRuntime = () =>
 export const isDesktopRuntime = () => {
   if (typeof window === "undefined") return false;
 
-  const isElectron =
-    typeof navigator !== "undefined" && navigator.userAgent.toLowerCase().includes("electron");
-
-  return Boolean(window.desktop?.windowControls || isTauriRuntime() || isElectron);
+  return Boolean(window.desktop?.windowControls || isTauriRuntime());
 };
 
 const announceDesktopBridgeReady = () => {
@@ -88,8 +85,8 @@ const installTauriBridge = () => {
   announceDesktopBridgeReady();
 };
 
-// With Electron, the desktop API is injected via contextBridge in preload.ts.
-// We keep this function for backwards compatibility with the existing application flow.
+// Installs the Tauri-backed desktop API on `window.desktop`. No-ops in a plain
+// browser renderer and when a bridge has already been installed.
 export function installDesktopBridge() {
   if (typeof window !== "undefined" && window.desktop) {
     announceDesktopBridgeReady();

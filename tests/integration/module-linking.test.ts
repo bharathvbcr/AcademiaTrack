@@ -25,23 +25,26 @@ describe('Module Linking & Dependency Integrity', () => {
         });
 
         expect(packageJson.devDependencies['@tauri-apps/cli']).toBeDefined();
-        expect(packageJson.devDependencies.electron).toBeDefined();
     });
 
-    it('should make Tauri the primary desktop build path and keep Electron legacy-only', () => {
+    it('should make Tauri the only desktop build path with no Electron remnants', () => {
         expect(packageJson.scripts['package']).toBe('npm run build:tauri');
         expect(packageJson.scripts['dev:desktop']).toBe('npm run dev:tauri');
         expect(packageJson.scripts['build:desktop']).toBe('npm run build:tauri');
         expect(packageJson.scripts['dev:tauri']).toBe('tauri dev');
         expect(packageJson.scripts['build:tauri']).toBe('tauri build');
         expect(packageJson.scripts['typecheck']).toBe('tsgo -p tsconfig.json --noEmit');
-        expect(packageJson.scripts['typecheck:electron']).toBe('tsgo -p electron/tsconfig.json --noEmit');
-        expect(packageJson.scripts['legacy:electron:package']).toBe('npm run legacy:electron:build');
-        expect(packageJson.scripts['legacy:electron:dev']).toContain('npm-run-all --parallel dev legacy:electron:start');
-        expect(packageJson.scripts['legacy:electron:build']).toContain('electron-builder');
-        expect(packageJson.scripts['package:electron']).toContain('DEPRECATED');
-        expect(packageJson.scripts['dev:electron']).toContain('DEPRECATED');
-        expect(packageJson.scripts['build:electron']).toContain('DEPRECATED');
+
+        // No Electron scripts, deps, or electron-builder config should survive.
+        const electronScripts = Object.keys(packageJson.scripts).filter(name =>
+            name.toLowerCase().includes('electron')
+        );
+        expect(electronScripts).toEqual([]);
+        expect(packageJson.dependencies['electron-updater']).toBeUndefined();
+        expect(packageJson.devDependencies.electron).toBeUndefined();
+        expect(packageJson.devDependencies['electron-builder']).toBeUndefined();
+        expect(packageJson.build).toBeUndefined();
+        expect(packageJson.main).toBeUndefined();
     });
 
     it('should resolve key native modules', async () => {
@@ -62,16 +65,14 @@ describe('Module Linking & Dependency Integrity', () => {
         }
     });
 
-    it('should verify vite, tauri, and electron config existence', () => {
+    it('should verify vite and tauri config existence with no electron dir', () => {
         const viteConfig = path.join(__dirname, '../../vite.config.ts');
         const tauriConfig = path.join(__dirname, '../../src-tauri/tauri.conf.json');
         const tauriMain = path.join(__dirname, '../../src-tauri/src/lib.rs');
-        const electronMain = path.join(__dirname, '../../electron/main.ts');
-        const electronPreload = path.join(__dirname, '../../electron/preload.ts');
+        const electronDir = path.join(__dirname, '../../electron');
         expect(fs.existsSync(viteConfig)).toBe(true);
         expect(fs.existsSync(tauriConfig)).toBe(true);
         expect(fs.existsSync(tauriMain)).toBe(true);
-        expect(fs.existsSync(electronMain)).toBe(true);
-        expect(fs.existsSync(electronPreload)).toBe(true);
+        expect(fs.existsSync(electronDir)).toBe(false);
     });
 });
