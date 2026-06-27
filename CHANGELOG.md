@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [5.5.1] - 2026-06-27
+
+### Fixed
+- **Toolbar Icons Showing as Text:** The Material Symbols icon font is now self-hosted and bundled into the app (alongside Inter) instead of being loaded from the Google Fonts CDN. In packaged builds Tauri's stricter Content-Security-Policy (`font-src 'self'`) blocked the CDN font, so navigation icons rendered as raw ligature text (`view_kanban`, `attach_money`, `more_vert`, etc.). Icons now load reliably and work fully offline.
+
 ## [5.5.0] - 2026-06-26
 
 ### Added
