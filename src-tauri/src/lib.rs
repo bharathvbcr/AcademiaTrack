@@ -530,6 +530,21 @@ pub fn run() {
             .build(),
         )?;
       }
+
+      // The window is created hidden (`"visible": false`) so we can finish
+      // styling it before the first paint, avoiding a flash of the wrong frame.
+      //
+      // macOS keeps native decorations with a transparent title bar
+      // (`titleBarStyle: "Transparent"` + `hiddenTitle`), so the native traffic
+      // lights render inset over our custom title bar. Windows and Linux get a
+      // borderless window driven by the in-app window controls instead.
+      let window = app
+        .get_webview_window("main")
+        .expect("main window is defined in tauri.conf.json");
+      #[cfg(not(target_os = "macos"))]
+      window.set_decorations(false)?;
+      window.show()?;
+
       Ok(())
     })
     .invoke_handler(tauri::generate_handler![

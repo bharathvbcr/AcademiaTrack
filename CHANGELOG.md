@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## [5.5.0] - 2026-06-26
+
+### Added
+- **macOS Desktop Build:** The release pipeline now builds and ships a universal (Apple Silicon + Intel) macOS `.dmg`/`.app` alongside the Windows installers. Previously releases were Windows-only.
+- **Code-Signing Pipeline:** Wired Developer ID signing and Apple notarization into the macOS release build (`scripts/import-apple-cert.sh` + secret-driven env). Builds stay ad-hoc signed when no certificate is configured, and a new `SIGNING.md` documents exactly which secrets to add to eliminate the macOS Gatekeeper and Chrome "unverified developer / may be dangerous" download warnings.
+
+### Changed
+- **CI Coverage:** Continuous-integration verification now runs on macOS as well as Windows so the Mac build is checked on every push and pull request.
+
 ## [5.4.0] - 2026-06-20
 
 ### Added

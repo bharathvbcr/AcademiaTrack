@@ -1,7 +1,7 @@
 {
   "name": "academia-track",
   "private": true,
-  "version": "5.4.0",
+  "version": "5.5.0",
   "description": "Academic Application Tracker - Track universities, programs, deadlines, and submissions",
   "author": "BHARATH CHANDRA VADDARAM <bharath.vbcr@gmail.com>",
   "homepage": "https://github.com/bharathvbcr/AcademiaTrack",
@@ -33,7 +33,8 @@
     "build:desktop": "npm run build:tauri",
     "tauri": "tauri",
     "dev:tauri": "tauri dev",
-    "build:tauri": "tauri build"
+    "build:tauri": "tauri build",
+    "build:mac": "tauri build --target universal-apple-darwin"
   },
   "dependencies": {
     "@hello-pangea/dnd": "^18.0.1",
@@ -49,6 +50,7 @@
   },
   "devDependencies": {
     "@playwright/test": "^1.57.0",
+    "@tailwindcss/vite": "^4.1.18",
     "@tauri-apps/cli": "^2.11.1",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.1",
