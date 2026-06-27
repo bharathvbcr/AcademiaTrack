@@ -25,6 +25,7 @@
     "test:ui": "vitest --ui",
     "test:run": "vitest run",
     "typecheck": "tsgo -p tsconfig.json --noEmit",
+    "check:version": "node scripts/check-version-consistency.cjs",
     "dev": "vite",
     "build": "vite build",
     "package": "npm run build:tauri",

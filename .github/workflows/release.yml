@@ -35,6 +35,10 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Check Version Consistency
+        shell: bash
+        run: node scripts/check-version-consistency.cjs
+
       - name: Validate tag and derive release metadata
         id: release_meta
         env:
