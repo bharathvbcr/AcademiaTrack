@@ -1,6 +1,6 @@
 [package]
 name = "academia-track"
-version = "5.5.0"
+version = "5.5.1"
 description = "Academic Application Tracker"
 authors = ["BHARATH CHANDRA VADDARAM <bharath.vbcr@gmail.com>"]
 license = ""
