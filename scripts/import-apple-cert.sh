@@ -25,6 +25,10 @@ if [[ -z "${APPLE_CERTIFICATE:-}" ]]; then
   echo "APPLE_CERTIFICATE secret is not set; building without a Developer ID identity."
   echo "The bundle will be ad-hoc signed and will trip Gatekeeper / Chrome warnings."
   echo "See SIGNING.md to enable signed, notarized builds."
+  # IMPORTANT: do NOT export an empty APPLE_SIGNING_IDENTITY. Tauri treats an
+  # empty-but-present identity as "sign with identity ''", which fails codesign
+  # ("item could not be found in the keychain"). Leaving the var unset makes
+  # Tauri fall back to ad-hoc signing, which builds successfully.
   exit 0
 fi
 
@@ -56,6 +60,19 @@ security list-keychains -d user -s "${KEYCHAIN_PATH}" login.keychain-db
 
 echo "Available signing identities:"
 security find-identity -v -p codesigning "${KEYCHAIN_PATH}"
+
+# Export the signing + notarization credentials to later steps ONLY now that a
+# real certificate is present. Tauri reads these from the environment to sign
+# (APPLE_SIGNING_IDENTITY) and notarize (APPLE_ID / APPLE_PASSWORD /
+# APPLE_TEAM_ID). They are deliberately not set when no cert is configured.
+if [[ -n "${GITHUB_ENV:-}" ]]; then
+  {
+    [[ -n "${APPLE_SIGNING_IDENTITY:-}" ]] && echo "APPLE_SIGNING_IDENTITY=${APPLE_SIGNING_IDENTITY}"
+    [[ -n "${APPLE_ID:-}" ]] && echo "APPLE_ID=${APPLE_ID}"
+    [[ -n "${APPLE_PASSWORD:-}" ]] && echo "APPLE_PASSWORD=${APPLE_PASSWORD}"
+    [[ -n "${APPLE_TEAM_ID:-}" ]] && echo "APPLE_TEAM_ID=${APPLE_TEAM_ID}"
+  } >> "${GITHUB_ENV}"
+fi
 
 rm -f "${CERT_PATH}"
 echo "Certificate import complete."
