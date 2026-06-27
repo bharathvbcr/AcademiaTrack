@@ -247,23 +247,24 @@ jobs:
       # Imports the Developer ID Application certificate into a throwaway keychain
       # so the macOS bundle can be signed. No-ops (and the build stays ad-hoc
       # signed) when the APPLE_CERTIFICATE secret is absent — see SIGNING.md.
+      # On macOS this imports the Developer ID cert and exports the signing +
+      # notarization env vars to $GITHUB_ENV — but ONLY when a certificate is
+      # configured. When no cert is present the vars stay unset so Tauri falls
+      # back to ad-hoc signing (an empty APPLE_SIGNING_IDENTITY would make
+      # codesign fail). See scripts/import-apple-cert.sh and SIGNING.md.
       - name: Import Apple code-signing certificate
         if: runner.os == 'macOS'
         env:
           APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
           APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
-          KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
-        run: bash scripts/import-apple-cert.sh
-
-      # Tauri signs with APPLE_SIGNING_IDENTITY and notarizes when the Apple
-      # account credentials are present; otherwise it produces an unsigned
-      # universal bundle. Empty secrets are passed through harmlessly.
-      - name: Build Desktop App
-        env:
           APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
           APPLE_ID: ${{ secrets.APPLE_ID }}
           APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
+        run: bash scripts/import-apple-cert.sh
+
+      - name: Build Desktop App
         run: ${{ matrix.build_cmd }}
 
       - name: Upload Artifacts
