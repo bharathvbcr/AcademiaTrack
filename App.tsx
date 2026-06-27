@@ -33,8 +33,10 @@ import { ToastContainer } from './components/Toast';
 import { BulkSelectionProvider } from './contexts/BulkSelectionContext';
 import { ApplicationActionsProvider } from './contexts/ApplicationActionsContext';
 import { useAppCommands } from './hooks/useAppCommands';
+import { useAI } from './hooks/useAI';
 
 const ApplicationModal = lazy(() => import('./components/ApplicationModal'));
+const AIAssistantModal = lazy(() => import('./components/AIAssistantModal'));
 const FacultyContactModal = lazy(() => import('./components/FacultyContactModal'));
 const HelpModal = lazy(() => import('./components/HelpModal'));
 const ComparisonModal = lazy(() => import('./components/ComparisonModal'));
@@ -95,6 +97,8 @@ const App: React.FC = () => {
   const [isQuickCaptureOpen, setIsQuickCaptureOpen] = React.useState(false);
   const [quickCaptureText, setQuickCaptureText] = React.useState<string>('');
   const [settingsOpen, setSettingsOpen] = React.useState(false);
+  const [isAIOpen, setIsAIOpen] = React.useState(false);
+  const ai = useAI();
   const [advancedSearchState, setAdvancedSearchState] = React.useState<{
     active: boolean;
     results: Application[];
@@ -104,7 +108,7 @@ const App: React.FC = () => {
   const [isColumnConfigOpen, setIsColumnConfigOpen] = React.useState(false);
   const [isViewPresetOpen, setIsViewPresetOpen] = React.useState(false);
   const [isAutomationRulesOpen, setIsAutomationRulesOpen] = React.useState(false);
-  const [settingsTab, setSettingsTab] = React.useState<'shortcuts' | 'views' | 'general' | 'fields' | 'kanban' | 'automation'>('shortcuts');
+  const [settingsTab, setSettingsTab] = React.useState<'shortcuts' | 'views' | 'general' | 'fields' | 'kanban' | 'automation' | 'ai'>('shortcuts');
 
   // Lock scroll when advanced filter (inline modal) is open
   useLockBodyScroll(isAdvancedFilterOpen);
@@ -603,6 +607,13 @@ const App: React.FC = () => {
   const handleCloseComparison = useCallback(() => setIsComparisonOpen(false), []);
   const handleCloseBulkOps = useCallback(() => setIsBulkOperationsOpen(false), []);
   const handleCloseSettings = useCallback(() => setSettingsOpen(false), []);
+  const handleOpenAI = useCallback(() => setIsAIOpen(true), []);
+  const handleCloseAI = useCallback(() => setIsAIOpen(false), []);
+  const handleOpenAISettings = useCallback(() => {
+    setIsAIOpen(false);
+    setSettingsTab('ai');
+    setSettingsOpen(true);
+  }, []);
   const handleOpenKanbanConfig = useCallback(() => setIsKanbanConfigOpen(true), []);
   const handleOpenColumnConfig = useCallback(() => setIsColumnConfigOpen(true), []);
   const handleOpenAutomationRules = useCallback(() => setIsAutomationRulesOpen(true), []);
@@ -632,7 +643,9 @@ const App: React.FC = () => {
           viewMode={viewMode}
           onViewChange={setViewMode}
           onShowHelp={handleShowHelp}
+          onOpenSettings={openSettings}
           onQuickCapture={handleQuickCapture}
+          onOpenAI={handleOpenAI}
           applications={applications}
           onSearch={handleAdvancedSearch}
         />
@@ -666,6 +679,8 @@ const App: React.FC = () => {
               onBulkStatusChange={handleBulkStatusChange}
               onBulkDelete={handleBulkDelete}
               onBulkCompare={handleBulkCompare}
+              ai={ai}
+              onConfigureAI={handleOpenAISettings}
             />
           </ApplicationActionsProvider>
         </BulkSelectionProvider>
@@ -741,6 +756,19 @@ const App: React.FC = () => {
             onOpenAutomationRules={handleOpenAutomationRules}
             onOpenViewPresets={handleOpenViewPresets}
             initialTab={settingsTab}
+            ai={ai}
+          />
+        )}
+      </Suspense>
+
+      <Suspense fallback={null}>
+        {isAIOpen && (
+          <AIAssistantModal
+            isOpen={true}
+            onClose={handleCloseAI}
+            applications={applications}
+            ai={ai}
+            onOpenSettings={handleOpenAISettings}
           />
         )}
       </Suspense>

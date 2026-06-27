@@ -19,7 +19,9 @@ interface HeaderProps {
   viewMode: ViewMode;
   onViewChange: (mode: ViewMode) => void;
   onShowHelp?: () => void;
+  onOpenSettings?: () => void;
   onQuickCapture?: (text: string) => void;
+  onOpenAI?: () => void;
   applications: Application[];
   onSearch: (results: Application[], query: string) => void;
 }
@@ -71,7 +73,9 @@ const Header: React.FC<HeaderProps> = ({
   viewMode,
   onViewChange,
   onShowHelp,
+  onOpenSettings,
   onQuickCapture,
+  onOpenAI,
   applications,
   onSearch,
 }) => {
@@ -333,6 +337,17 @@ const Header: React.FC<HeaderProps> = ({
                   <span>Help & Documentation</span>
                 </button>
 
+                {/* Settings */}
+                {onOpenSettings && (
+                  <button
+                    onClick={() => { onOpenSettings(); setShowMoreMenu(false); }}
+                    className="w-full text-left px-4 py-2.5 text-sm text-[#f4f4f5] hover:bg-[#27272a] flex items-center gap-3"
+                  >
+                    <MaterialIcon name="settings" className="text-lg text-[#a1a1aa]" />
+                    <span>Settings</span>
+                  </button>
+                )}
+
                 <hr className="my-2 border-[#27272a]" />
 
                 {/* Export submenu */}
@@ -386,6 +401,17 @@ const Header: React.FC<HeaderProps> = ({
           />
 
           {/* Primary Actions - Always visible on top */}
+          {onOpenAI && (
+            <Tooltip content="AI Assistant">
+              <button
+                onClick={onOpenAI}
+                className="flex items-center justify-center w-10 h-10 border border-[#27272a] rounded-xl text-[#a1a1aa] hover:text-[#f4f4f5] hover:bg-[#27272a] transition-colors"
+                aria-label="Open AI assistant"
+              >
+                <MaterialIcon name="neurology" className="text-lg" />
+              </button>
+            </Tooltip>
+          )}
           <Tooltip content="Add New Faculty Contact">
             <button
               onClick={onAddFaculty}

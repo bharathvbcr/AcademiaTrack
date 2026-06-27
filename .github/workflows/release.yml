@@ -194,8 +194,13 @@ jobs:
     if: needs.resolve.outputs.should_release == 'true'
     runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
-        os: [windows-latest]
+        include:
+          - os: windows-latest
+            build_cmd: npm run build:tauri
+          - os: macos-latest
+            build_cmd: npm run build:mac
 
     steps:
       - name: Checkout Code
@@ -225,6 +230,8 @@ jobs:
 
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ runner.os == 'macOS' && 'x86_64-apple-darwin,aarch64-apple-darwin' || '' }}
 
       - name: Cache Rust
         uses: Swatinem/rust-cache@v2
@@ -237,22 +244,41 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y libwebkit2gtk-4.1-dev build-essential curl wget file libxdo-dev libssl-dev libayatana-appindicator3-dev librsvg2-dev patchelf libfuse2
 
+      # Imports the Developer ID Application certificate into a throwaway keychain
+      # so the macOS bundle can be signed. No-ops (and the build stays ad-hoc
+      # signed) when the APPLE_CERTIFICATE secret is absent — see SIGNING.md.
+      - name: Import Apple code-signing certificate
+        if: runner.os == 'macOS'
+        env:
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
+        run: bash scripts/import-apple-cert.sh
+
+      # Tauri signs with APPLE_SIGNING_IDENTITY and notarizes when the Apple
+      # account credentials are present; otherwise it produces an unsigned
+      # universal bundle. Empty secrets are passed through harmlessly.
       - name: Build Desktop App
-        run: npm run build:tauri
+        env:
+          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: ${{ matrix.build_cmd }}
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
           name: release-${{ needs.resolve.outputs.tag }}-${{ matrix.os }}
           path: |
-            src-tauri/target/release/bundle/**/*.exe
-            src-tauri/target/release/bundle/**/*.msi
-            src-tauri/target/release/bundle/**/*.dmg
-            src-tauri/target/release/bundle/**/*.app.tar.gz
-            src-tauri/target/release/bundle/**/*.AppImage
-            src-tauri/target/release/bundle/**/*.deb
-            src-tauri/target/release/bundle/**/*.rpm
-            src-tauri/target/release/bundle/**/*.sig
+            src-tauri/target/**/release/bundle/**/*.exe
+            src-tauri/target/**/release/bundle/**/*.msi
+            src-tauri/target/**/release/bundle/**/*.dmg
+            src-tauri/target/**/release/bundle/**/*.app.tar.gz
+            src-tauri/target/**/release/bundle/**/*.AppImage
+            src-tauri/target/**/release/bundle/**/*.deb
+            src-tauri/target/**/release/bundle/**/*.rpm
+            src-tauri/target/**/release/bundle/**/*.sig
           if-no-files-found: error
           retention-days: 7
 
@@ -263,7 +289,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        os: [windows-latest]
+        os: [windows-latest, macos-latest]
       fail-fast: false
     permissions:
       contents: read

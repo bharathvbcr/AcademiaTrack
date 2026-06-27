@@ -13,6 +13,11 @@ declare global {
 export const isTauriRuntime = () =>
   typeof window !== "undefined" && window.__TAURI_INTERNALS__ !== undefined;
 
+// macOS draws native traffic-light controls inset over a transparent title bar,
+// so the renderer hides its custom window buttons and indents content there.
+export const isMacOS = () =>
+  typeof navigator !== "undefined" && /Mac/i.test(navigator.userAgent);
+
 export const isDesktopRuntime = () => {
   if (typeof window === "undefined") return false;
 

@@ -13,10 +13,12 @@ import DataValidationPanel from './DataValidationPanel';
 import AdvancedAnalyticsPanel from './AdvancedAnalyticsPanel';
 import { getStorageItem } from '../utils/browserStorage';
 import { ViewMode } from '../hooks/useViewState';
+import { UseAIReturn } from '../hooks/useAI';
 import { useBulkSelectionContext } from '../contexts/BulkSelectionContext';
 import { useApplicationActionsContext } from '../contexts/ApplicationActionsContext';
 
 const DashboardSummary = lazy(() => import('./DashboardSummary'));
+const DashboardAIBriefing = lazy(() => import('./DashboardAIBriefing'));
 const KanbanBoard = lazy(() => import('./KanbanBoard'));
 const CalendarView = lazy(() => import('./CalendarView'));
 const BudgetView = lazy(() => import('./BudgetView'));
@@ -42,6 +44,10 @@ interface MainContentProps {
     onBulkStatusChange: (status: ApplicationStatus) => void;
     onBulkDelete: () => void;
     onBulkCompare: () => void;
+    /** Local-first AI subsystem, used by the dashboard briefing card. */
+    ai: UseAIReturn;
+    /** Opens Settings on the AI tab so the user can configure a local model. */
+    onConfigureAI: () => void;
 }
 
 const LoadingFallback: React.FC<{ text?: string }> = ({ text }) => (
@@ -74,6 +80,8 @@ const MainContent: React.FC<MainContentProps> = ({
     onBulkStatusChange,
     onBulkDelete,
     onBulkCompare,
+    ai,
+    onConfigureAI,
 }) => {
     const { isSelectionMode, selectedIds, onToggleSelection, onEnterSelectionMode } = useBulkSelectionContext();
     const { openModal, requestDelete, updateApplication, duplicateApplication } = useApplicationActionsContext();
@@ -210,6 +218,16 @@ const MainContent: React.FC<MainContentProps> = ({
             <Suspense fallback={<LoadingFallback />}>
                 <DashboardSummary applications={applications} viewMode={viewMode} />
             </Suspense>
+
+            {applications.length > 0 && (
+                <Suspense fallback={null}>
+                    <DashboardAIBriefing
+                        applications={applications}
+                        ai={ai}
+                        onConfigureAI={onConfigureAI}
+                    />
+                </Suspense>
+            )}
 
             <DataValidationPanel applications={applications} />
             <AdvancedAnalyticsPanel applications={applications} />

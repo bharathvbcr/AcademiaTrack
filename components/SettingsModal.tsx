@@ -9,6 +9,8 @@ import { useCustomFields } from '../hooks/useCustomFields';
 import { useTemplates } from '../hooks/useTemplates';
 import { useThemeCustomization } from '../hooks/useThemeCustomization';
 import { BackupInfo, CustomFieldDefinition } from '../types';
+import AISettingsPanel from './AISettingsPanel';
+import { UseAIReturn } from '../hooks/useAI';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -17,7 +19,8 @@ interface SettingsModalProps {
   onOpenColumnConfig?: () => void;
   onOpenAutomationRules?: () => void;
   onOpenViewPresets?: () => void;
-  initialTab?: 'shortcuts' | 'views' | 'general' | 'fields' | 'kanban' | 'automation';
+  initialTab?: 'shortcuts' | 'views' | 'general' | 'fields' | 'kanban' | 'automation' | 'ai';
+  ai?: UseAIReturn;
 }
 
 const MaterialIcon: React.FC<{ name: string; className?: string }> = ({ name, className }) => (
@@ -32,6 +35,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
   onOpenAutomationRules,
   onOpenViewPresets,
   initialTab,
+  ai,
 }) => {
   useLockBodyScroll(isOpen);
   useEscapeKey(isOpen, onClose);
@@ -64,7 +68,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
 
   // Custom Fields
   const { customFields, addField, updateField, deleteField, reorderFields, toggleFieldVisibility } = useCustomFields();
-  const [activeTab, setActiveTab] = useState<'shortcuts' | 'views' | 'general' | 'fields' | 'kanban' | 'automation'>(initialTab ?? 'shortcuts');
+  const [activeTab, setActiveTab] = useState<'shortcuts' | 'views' | 'general' | 'fields' | 'kanban' | 'automation' | 'ai'>(initialTab ?? 'shortcuts');
   const [isAddingField, setIsAddingField] = useState(false);
   const [newField, setNewField] = useState<Partial<CustomFieldDefinition>>({ type: 'text', visible: true });
 
@@ -212,7 +216,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
 
         {/* Tabs */}
         <div className="flex border-b border-[#27272a] overflow-x-auto">
-          {(['shortcuts', 'views', 'general', 'fields', 'kanban', 'automation'] as const).map(tab => (
+          {(['shortcuts', 'views', 'general', 'fields', 'kanban', 'automation', 'ai'] as const).map(tab => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
@@ -221,7 +225,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                 : 'text-[#a1a1aa] hover:text-[#f4f4f5]'
                 }`}
             >
-              {tab}
+              {tab === 'ai' ? 'AI' : tab}
             </button>
           ))}
         </div>
@@ -767,6 +771,14 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                 Manage Automation Rules
               </button>
             </div>
+          )}
+
+          {activeTab === 'ai' && (
+            ai ? (
+              <AISettingsPanel ai={ai} />
+            ) : (
+              <p className="text-sm text-[#a1a1aa]">AI settings are unavailable.</p>
+            )
           )}
 
         </div>

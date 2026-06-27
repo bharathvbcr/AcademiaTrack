@@ -1,0 +1,88 @@
+@import "tailwindcss";
+
+/*
+ * Scoped Markdown styling for the AI assistant.
+ *
+ * The project uses Tailwind v4 without the typography plugin, so the `prose`
+ * utility classes are no-ops and Tailwind's preflight strips list markers and
+ * heading sizes. These rules restore readable formatting for streamed LLM
+ * responses (lists, headings, code, tables) without pulling in a new dependency.
+ */
+.ai-markdown {
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: #F5D7DA;
+  word-break: break-word;
+}
+.ai-markdown > :first-child { margin-top: 0; }
+.ai-markdown > :last-child { margin-bottom: 0; }
+.ai-markdown p { margin: 0.5rem 0; }
+.ai-markdown h1,
+.ai-markdown h2,
+.ai-markdown h3,
+.ai-markdown h4 {
+  font-weight: 600;
+  line-height: 1.3;
+  margin: 0.85rem 0 0.4rem;
+  color: #f4f4f5;
+}
+.ai-markdown h1 { font-size: 1.15rem; }
+.ai-markdown h2 { font-size: 1.05rem; }
+.ai-markdown h3 { font-size: 0.95rem; }
+.ai-markdown ul,
+.ai-markdown ol {
+  margin: 0.4rem 0;
+  padding-left: 1.4rem;
+}
+.ai-markdown ul { list-style: disc; }
+.ai-markdown ol { list-style: decimal; }
+.ai-markdown li { margin: 0.2rem 0; }
+.ai-markdown li::marker { color: #C03050; }
+.ai-markdown a {
+  color: #E8B4B8;
+  text-decoration: underline;
+}
+.ai-markdown strong { font-weight: 600; color: #f4f4f5; }
+.ai-markdown code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.8em;
+  background: #27272a;
+  padding: 0.1rem 0.3rem;
+  border-radius: 0.25rem;
+}
+.ai-markdown pre {
+  background: #09090b;
+  border: 1px solid #27272a;
+  border-radius: 0.5rem;
+  padding: 0.75rem;
+  overflow-x: auto;
+  margin: 0.6rem 0;
+}
+.ai-markdown pre code {
+  background: transparent;
+  padding: 0;
+  font-size: 0.8rem;
+}
+.ai-markdown blockquote {
+  border-left: 3px solid #C03050;
+  padding-left: 0.75rem;
+  margin: 0.6rem 0;
+  color: #E8B4B8;
+}
+.ai-markdown hr {
+  border: none;
+  border-top: 1px solid #27272a;
+  margin: 0.75rem 0;
+}
+.ai-markdown table {
+  border-collapse: collapse;
+  margin: 0.6rem 0;
+  width: 100%;
+}
+.ai-markdown th,
+.ai-markdown td {
+  border: 1px solid #27272a;
+  padding: 0.3rem 0.5rem;
+  text-align: left;
+}
+.ai-markdown th { background: #18181b; font-weight: 600; }

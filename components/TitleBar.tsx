@@ -1,11 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import type { WindowControls } from '../types/interfaces';
-import { DESKTOP_BRIDGE_READY_EVENT, isDesktopRuntime } from '../lib/desktopBridge';
+import { DESKTOP_BRIDGE_READY_EVENT, isDesktopRuntime, isMacOS } from '../lib/desktopBridge';
 
 const getWindowControls = (): WindowControls | null =>
   typeof window === 'undefined' ? null : window.desktop?.windowControls ?? null;
 
 const TitleBar: React.FC = () => {
+  // On macOS the OS draws native traffic lights over the transparent title bar,
+  // so we suppress our own min/maximize/close buttons and inset the title clear
+  // of the traffic-light cluster.
+  const isMac = isMacOS();
   const [isMaximized, setIsMaximized] = useState(false);
   const [controls, setControls] = useState<WindowControls | null>(() => getWindowControls());
 
@@ -78,7 +82,10 @@ const TitleBar: React.FC = () => {
       onDoubleClick={handleDoubleClick}
     >
       {/* App Logo and Title */}
-      <div data-tauri-drag-region className="flex items-center gap-2 pl-3 min-w-0">
+      <div
+        data-tauri-drag-region
+        className={`flex items-center gap-2 min-w-0 ${isMac ? 'pl-[80px]' : 'pl-3'}`}
+      >
         <img
           data-tauri-drag-region
           src="./AcademiaTrack.png"
@@ -90,7 +97,8 @@ const TitleBar: React.FC = () => {
         </span>
       </div>
 
-      {/* Window Controls */}
+      {/* Window Controls — hidden on macOS, where native traffic lights apply */}
+      {!isMac && (
       <div
         className="flex h-full"
         style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}
@@ -140,6 +148,7 @@ const TitleBar: React.FC = () => {
           </svg>
         </button>
       </div>
+      )}
     </div>
   );
 };
