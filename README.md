@@ -224,6 +224,29 @@ npm run build:tauri
 
 Tauri writes packaged artifacts under `src-tauri/target/release/bundle/`. Legacy Electron scripts remain available under `legacy:electron:*` and deprecated `*:electron` aliases, but they are not the mainstream build path.
 
+## Installing a Release
+
+Each [GitHub Release](https://github.com/bharathvbcr/AcademiaTrack/releases) ships
+a universal macOS `.dmg` (Apple Silicon + Intel) and Windows `.exe`/`.msi`
+installers.
+
+Until the project is distributed with a paid Developer ID / Authenticode
+certificate, the installers are **ad-hoc signed**, so the OS and browsers show a
+trust warning on first download/launch. The app is safe; the warning is only
+about signature reputation. To open it:
+
+- **macOS** — if you see *"AcademiaTrack can't be opened because Apple cannot
+  check it"*, right-click (or Control-click) the app in Finder and choose
+  **Open**, then confirm. If it reports the app is *"damaged"*, clear the
+  download quarantine flag: `xattr -dr com.apple.quarantine /Applications/AcademiaTrack.app`.
+- **Chrome / Edge** — if the download is flagged *"may be dangerous"*, click the
+  `⋯` menu next to it and choose **Keep**.
+- **Windows** — on the SmartScreen *"Windows protected your PC"* dialog, click
+  **More info → Run anyway**.
+
+To eliminate these warnings entirely, configure code signing and notarization as
+described in [SIGNING.md](SIGNING.md).
+
 ## Verification
 
 Typecheck the primary Tauri renderer path:
