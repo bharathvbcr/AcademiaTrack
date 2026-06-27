@@ -33,6 +33,7 @@ const DashboardAIBriefing: React.FC<DashboardAIBriefingProps> = ({
     const [briefing, setBriefing] = useState('');
     const [error, setError] = useState<string | null>(null);
     const [hasRun, setHasRun] = useState(false);
+    const [minimized, setMinimized] = useState(false);
 
     const providerLabel = settings.provider === 'ollama' ? 'Ollama' : 'Local model';
 
@@ -69,86 +70,106 @@ const DashboardAIBriefing: React.FC<DashboardAIBriefingProps> = ({
                     )}
                 </h3>
 
-                {isConfigured && (
-                    <div className="flex items-center gap-2 shrink-0">
-                        {isGenerating ? (
-                            <button
-                                onClick={stop}
-                                className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-[#27272a] text-[#f4f4f5] hover:bg-[#3f3f46] flex items-center gap-1.5 transition-colors"
-                            >
-                                <MaterialIcon name="stop" className="text-sm" /> Stop
-                            </button>
-                        ) : (
-                            <button
-                                onClick={generate}
-                                className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-[#C03050] text-white hover:bg-[#a02845] flex items-center gap-1.5 transition-colors"
-                            >
-                                <MaterialIcon name={hasRun ? 'refresh' : 'auto_awesome'} className="text-sm" />
-                                {hasRun ? 'Regenerate' : 'Generate briefing'}
-                            </button>
-                        )}
-                    </div>
-                )}
-            </div>
-
-            {!isConfigured ? (
-                <div className="mt-3 flex flex-wrap items-center gap-3 text-xs text-[#a1a1aa]">
-                    <p className="max-w-md">
-                        Get an at-a-glance read of your portfolio — what needs attention, where you’re
-                        behind, deadline risks — generated entirely on your machine by a local model.
-                    </p>
+                <div className="flex items-center gap-2 shrink-0">
+                    {isConfigured && !minimized && (
+                        <>
+                            {isGenerating ? (
+                                <button
+                                    onClick={stop}
+                                    className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-[#27272a] text-[#f4f4f5] hover:bg-[#3f3f46] flex items-center gap-1.5 transition-colors"
+                                >
+                                    <MaterialIcon name="stop" className="text-sm" /> Stop
+                                </button>
+                            ) : (
+                                <button
+                                    onClick={generate}
+                                    className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-[#C03050] text-white hover:bg-[#a02845] flex items-center gap-1.5 transition-colors"
+                                >
+                                    <MaterialIcon name={hasRun ? 'refresh' : 'auto_awesome'} className="text-sm" />
+                                    {hasRun ? 'Regenerate' : 'Generate briefing'}
+                                </button>
+                            )}
+                        </>
+                    )}
                     <button
-                        onClick={onConfigureAI}
-                        className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-[#C03050] text-white hover:bg-[#a02845] transition-colors shrink-0"
+                        onClick={() => setMinimized((m) => !m)}
+                        className="p-1 rounded-md text-[#a1a1aa] hover:text-[#f4f4f5] hover:bg-[#27272a] transition-colors"
+                        title={minimized ? 'Expand' : 'Minimize'}
                     >
-                        Set up a local model
+                        <MaterialIcon name={minimized ? 'expand_more' : 'expand_less'} className="text-base" />
                     </button>
                 </div>
-            ) : (
-                <>
-                    <AnimatePresence initial={false}>
-                        {(briefing || isGenerating) && (
-                            <motion.div
-                                initial={{ opacity: 0, height: 0 }}
-                                animate={{ opacity: 1, height: 'auto' }}
-                                exit={{ opacity: 0, height: 0 }}
-                                className="mt-3 overflow-hidden"
-                            >
-                                {briefing ? (
-                                    <div className="prose prose-invert prose-sm max-w-none prose-p:my-1.5 prose-headings:mt-2 prose-headings:mb-1 prose-ul:my-1 prose-li:my-0.5 text-[#F5D7DA]">
-                                        <ReactMarkdown remarkPlugins={[remarkGfm]}>{briefing}</ReactMarkdown>
-                                    </div>
-                                ) : (
-                                    <span className="inline-flex items-center gap-2 text-[#E8B4B8]/70 text-sm">
-                                        <span className="material-symbols-outlined animate-spin text-sm">progress_activity</span>
-                                        Reading your portfolio…
-                                    </span>
+            </div>
+
+            <AnimatePresence initial={false}>
+                {!minimized && (
+                    <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0 }}
+                        className="overflow-hidden"
+                    >
+                        {!isConfigured ? (
+                            <div className="mt-3 flex flex-wrap items-center gap-3 text-xs text-[#a1a1aa]">
+                                <p className="max-w-md">
+                                    Get an at-a-glance read of your portfolio — what needs attention, where you're
+                                    behind, deadline risks — generated entirely on your machine by a local model.
+                                </p>
+                                <button
+                                    onClick={onConfigureAI}
+                                    className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-[#C03050] text-white hover:bg-[#a02845] transition-colors shrink-0"
+                                >
+                                    Set up a local model
+                                </button>
+                            </div>
+                        ) : (
+                            <>
+                                <AnimatePresence initial={false}>
+                                    {(briefing || isGenerating) && (
+                                        <motion.div
+                                            initial={{ opacity: 0, height: 0 }}
+                                            animate={{ opacity: 1, height: 'auto' }}
+                                            exit={{ opacity: 0, height: 0 }}
+                                            className="mt-3 overflow-hidden"
+                                        >
+                                            {briefing ? (
+                                                <div className="prose prose-invert prose-sm max-w-none prose-p:my-1.5 prose-headings:mt-2 prose-headings:mb-1 prose-ul:my-1 prose-li:my-0.5 text-[#F5D7DA]">
+                                                    <ReactMarkdown remarkPlugins={[remarkGfm]}>{briefing}</ReactMarkdown>
+                                                </div>
+                                            ) : (
+                                                <span className="inline-flex items-center gap-2 text-[#E8B4B8]/70 text-sm">
+                                                    <span className="material-symbols-outlined animate-spin text-sm">progress_activity</span>
+                                                    Reading your portfolio…
+                                                </span>
+                                            )}
+                                        </motion.div>
+                                    )}
+                                </AnimatePresence>
+
+                                {!hasRun && !isGenerating && (
+                                    <p className="mt-2 text-xs text-[#a1a1aa]">
+                                        Generate a private, grounded summary of all {applications.length} application(s).
+                                    </p>
                                 )}
-                            </motion.div>
+
+                                {(briefing || hasRun) && !isGenerating && (
+                                    <p className="mt-2 text-[10px] text-[#E8B4B8]/50 flex items-center gap-1">
+                                        <MaterialIcon name="lock" className="text-xs" />
+                                        Generated by your local model — your data stayed on your machine.
+                                    </p>
+                                )}
+                            </>
                         )}
-                    </AnimatePresence>
 
-                    {!hasRun && !isGenerating && (
-                        <p className="mt-2 text-xs text-[#a1a1aa]">
-                            Generate a private, grounded summary of all {applications.length} application(s).
-                        </p>
-                    )}
-
-                    {(briefing || hasRun) && !isGenerating && (
-                        <p className="mt-2 text-[10px] text-[#E8B4B8]/50 flex items-center gap-1">
-                            <MaterialIcon name="lock" className="text-xs" />
-                            Generated by your local model — your data stayed on your machine.
-                        </p>
-                    )}
-                </>
-            )}
-
-            {error && (
-                <div className="mt-3 rounded-lg border border-red-500/40 bg-red-500/10 px-3 py-2 text-xs text-red-300 flex items-start gap-2">
-                    <MaterialIcon name="error" className="text-sm mt-0.5" />
-                    <span>{error}</span>
-                </div>
-            )}
+                        {error && (
+                            <div className="mt-3 rounded-lg border border-red-500/40 bg-red-500/10 px-3 py-2 text-xs text-red-300 flex items-start gap-2">
+                                <MaterialIcon name="error" className="text-sm mt-0.5" />
+                                <span>{error}</span>
+                            </div>
+                        )}
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </section>
     );
 };
