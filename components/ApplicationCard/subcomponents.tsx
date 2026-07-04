@@ -1,20 +1,7 @@
 import React from 'react';
 import { Application, ApplicationStatus, DocumentStatus } from '../../types';
 import { STATUS_OPTIONS, STATUS_COLORS, DOCUMENT_LABELS, DOCUMENT_STATUS_COLORS, DOCUMENT_STATUS_OPTIONS } from '../../constants';
-
-interface MaterialIconProps {
-    name: string;
-    className?: string;
-    'aria-hidden'?: boolean | 'true' | 'false';
-}
-
-const MaterialIcon: React.FC<MaterialIconProps> = ({ name, className, 'aria-hidden': ariaHidden }) => (
-    <span className={`material-symbols-outlined ${className}`} aria-hidden={ariaHidden}>{name}</span>
-);
-
-// ============================================================================
-// Card Header Component
-// ============================================================================
+import { MaterialIcon } from '../ApplicationFormUI';
 
 interface CardHeaderProps {
     universityName: string;
@@ -49,20 +36,20 @@ export const CardHeader: React.FC<CardHeaderProps> = ({
                     <img
                         src={logoUrl}
                         alt={`${universityName} logo`}
-                        className="w-10 h-10 object-contain rounded-md bg-white p-0.5 shadow-sm"
+                        className="w-10 h-10 object-contain rounded-md bg-[#27272a] p-0.5"
                         onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
                     />
                 )}
                 <div>
                     {portalLink ? (
                         <a href={sanitizeURL(portalLink)} target="_blank" rel="noopener noreferrer" className="group inline-flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
-                            <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100 group-hover:text-red-600 dark:group-hover:text-red-400 transition-colors">{universityName}</h3>
-                            <MaterialIcon name="open_in_new" className="text-sm text-slate-400 group-hover:text-red-500" />
+                            <h3 className="text-lg font-bold text-[#f4f4f5] group-hover:text-red-400 transition-colors">{universityName}</h3>
+                            <MaterialIcon name="open_in_new" className="text-sm text-[#a1a1aa] group-hover:text-red-500" />
                         </a>
                     ) : (
-                        <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100">{universityName}</h3>
+                        <h3 className="text-lg font-bold text-[#f4f4f5]">{universityName}</h3>
                     )}
-                    <p className="text-sm text-slate-600 dark:text-slate-300">{programName}</p>
+                    <p className="text-sm text-[#a1a1aa]">{programName}</p>
                 </div>
             </div>
             <div className="flex items-center gap-2 shrink-0">
@@ -79,10 +66,10 @@ export const CardHeader: React.FC<CardHeaderProps> = ({
                     <select
                         value={status}
                         onChange={handleStatusChange}
-                        className={`rounded-full pl-3 pr-8 py-1 text-xs font-semibold appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-offset-1 dark:focus:ring-offset-slate-800 focus:ring-red-500 ${STATUS_COLORS[status]}`}
+                        className={`rounded-full pl-3 pr-8 py-1 text-xs font-semibold appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-offset-[#09090b] focus:ring-red-500 ${STATUS_COLORS[status]}`}
                         aria-label="Change application status"
                     >
-                        {STATUS_OPTIONS.map(opt => <option key={opt} value={opt} className="bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-white">{opt}</option>)}
+                        {STATUS_OPTIONS.map(opt => <option key={opt} value={opt} className="bg-[#18181b] text-[#f4f4f5]">{opt}</option>)}
                     </select>
                     <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2 text-inherit opacity-70">
                         <MaterialIcon name="unfold_more" className="text-sm" />
@@ -120,7 +107,7 @@ export const DocumentChecklist: React.FC<DocumentChecklistProps> = ({
 
                 return (
                     <div key={key} className="flex items-center justify-between p-1" onClick={e => e.stopPropagation()}>
-                        <span className="text-slate-600 dark:text-slate-300 flex-grow">{DOCUMENT_LABELS[docKey]}</span>
+                        <span className="text-[#a1a1aa] flex-grow">{DOCUMENT_LABELS[docKey]}</span>
                         <div className="flex items-center gap-2">
                             <select
                                 value={doc.status}
@@ -128,10 +115,10 @@ export const DocumentChecklist: React.FC<DocumentChecklistProps> = ({
                                 className={`rounded-md px-2 py-0.5 text-xs font-semibold appearance-none cursor-pointer focus:outline-none focus:ring-1 focus:ring-offset-0 border-0 ${DOCUMENT_STATUS_COLORS[doc.status]}`}
                                 aria-label={`Change ${DOCUMENT_LABELS[docKey]} status`}
                             >
-                                {DOCUMENT_STATUS_OPTIONS.map(opt => <option key={opt} value={opt} className="bg-white dark:bg-slate-800 text-slate-800 dark:text-white">{opt}</option>)}
+                                {DOCUMENT_STATUS_OPTIONS.map(opt => <option key={opt} value={opt} className="bg-[#18181b] text-[#f4f4f5]">{opt}</option>)}
                             </select>
                             {doc.submitted && (
-                                <span className="text-xs font-medium text-slate-500 dark:text-slate-400 min-w-[70px] text-right">
+                                <span className="text-xs font-medium text-[#a1a1aa] min-w-[70px] text-right">
                                     {new Date(doc.submitted + 'T00:00:00').toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
                                 </span>
                             )}
@@ -167,7 +154,7 @@ export const FacultyOutreachList: React.FC<FacultyOutreachListProps> = ({
                 <div key={f.id} className="text-sm" title={`${f.name} - ${f.contactStatus}`}>
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
-                            <span className={`truncate ${f.contactStatus === FacultyContactStatus.FollowUpRequired ? 'text-cyan-600 dark:text-cyan-400 font-semibold' : 'text-slate-600 dark:text-slate-300'}`}>
+                            <span className={`truncate ${f.contactStatus === FacultyContactStatus.FollowUpRequired ? 'text-cyan-600 text-cyan-400 font-semibold' : 'text-[#a1a1aa]'}`}>
                                 {f.name}
                             </span>
                             {f.contactStatus === FacultyContactStatus.FollowUpRequired && (
@@ -175,12 +162,12 @@ export const FacultyOutreachList: React.FC<FacultyOutreachListProps> = ({
                             )}
                         </div>
                         <div className="flex items-center gap-2">
-                            <span className="text-slate-500 dark:text-slate-400">{f.contactStatus}</span>
+                            <span className="text-[#a1a1aa]">{f.contactStatus}</span>
                             <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: FACULTY_CHART_COLORS[f.contactStatus] }}></div>
                         </div>
                     </div>
                     {f.interviewDate && (
-                        <div className="flex items-center gap-2 mt-1 text-xs text-slate-500 dark:text-slate-400">
+                        <div className="flex items-center gap-2 mt-1 text-xs text-[#a1a1aa]">
                             <MaterialIcon name="event" className="text-sm" />
                             <span>Interview: {new Date(f.interviewDate + 'T00:00:00').toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</span>
                         </div>
@@ -209,11 +196,11 @@ export const CardFooter: React.FC<CardFooterProps> = ({
     onDelete,
 }) => {
     return (
-        <div className="flex justify-between items-center mt-5 pt-4 border-t border-slate-200/50 dark:border-slate-700/50">
+        <div className="flex justify-between items-center mt-5 pt-4 border-t border-[#27272a]">
             <button
                 type="button"
                 onClick={(e) => { e.stopPropagation(); onToggleExpand(); }}
-                className="flex items-center gap-1 text-sm font-medium text-red-600 dark:text-red-400 select-none p-2 -m-2 rounded-full hover:bg-red-500/10 transition-colors"
+                className="flex items-center gap-1 text-sm font-medium text-red-400 select-none p-2 -m-2 rounded-full hover:bg-red-500/10 transition-colors"
             >
                 <span>{isExpanded ? 'Hide' : 'Show'} Details</span>
                 <MaterialIcon name="expand_more" className={`transition-transform transform ${isExpanded ? 'rotate-180' : ''}`} />
@@ -221,14 +208,14 @@ export const CardFooter: React.FC<CardFooterProps> = ({
             <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
                 <button
                     onClick={onEdit}
-                    className="p-2 text-slate-500 hover:text-red-600 dark:hover:text-red-400 transition-colors rounded-full hover:bg-slate-100 dark:hover:bg-slate-700/50"
+                    className="p-2 text-[#a1a1aa] hover:text-red-400 transition-colors rounded-full hover:bg-[#27272a]"
                     aria-label="Edit Application"
                 >
                     <MaterialIcon name="edit" className="text-xl" />
                 </button>
                 <button
                     onClick={onDelete}
-                    className="p-2 text-slate-500 hover:text-red-600 dark:hover:text-red-400 transition-colors rounded-full hover:bg-slate-100 dark:hover:bg-slate-700/50"
+                    className="p-2 text-[#a1a1aa] hover:text-red-400 transition-colors rounded-full hover:bg-[#27272a]"
                     aria-label="Delete Application"
                 >
                     <MaterialIcon name="delete" className="text-xl" />

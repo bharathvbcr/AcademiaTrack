@@ -5,6 +5,7 @@ import remarkGfm from 'remark-gfm';
 import { Application } from '../types';
 import { UseAIReturn } from '../hooks/useAI';
 import { AIError, buildPortfolioInsightsMessages } from '../services/ai';
+import { MaterialIcon } from './ApplicationFormUI';
 
 interface DashboardAIBriefingProps {
     applications: Application[];
@@ -13,9 +14,7 @@ interface DashboardAIBriefingProps {
     onConfigureAI: () => void;
 }
 
-const MaterialIcon: React.FC<{ name: string; className?: string }> = ({ name, className }) => (
-    <span className={`material-symbols-outlined ${className ?? ''}`}>{name}</span>
-);
+const AI_BRIEFING_OWNER = 'dashboard-ai-briefing';
 
 /**
  * On-demand portfolio briefing rendered on the dashboard. Brings the local-first
@@ -45,7 +44,7 @@ const DashboardAIBriefing: React.FC<DashboardAIBriefingProps> = ({
         try {
             await chat(buildPortfolioInsightsMessages(applications), (delta) => {
                 setBriefing((prev) => prev + delta);
-            });
+            }, AI_BRIEFING_OWNER);
         } catch (e) {
             if ((e as Error)?.name === 'AbortError') return; // user pressed Stop
             const msg = e instanceof AIError ? e.message : (e as Error)?.message ?? 'Something went wrong.';
@@ -54,16 +53,18 @@ const DashboardAIBriefing: React.FC<DashboardAIBriefingProps> = ({
     };
 
     return (
-        <section className="my-6 rounded-xl border border-[#27272a] bg-[#18181b]/80 p-4 text-[#f4f4f5]">
+        <section className="my-6 rounded-xl border border-[#27272a] bg-[#18181b]/80 overflow-hidden text-[#f4f4f5]">
+            <div className="h-0.5 bg-gradient-to-r from-[#dc2626]/60 via-[#dc2626]/40 to-transparent" />
+            <div className="p-4">
             <div className="flex items-center justify-between gap-3">
-                <h3 className="text-sm font-semibold flex items-center gap-2">
-                    <MaterialIcon name="neurology" className="text-[#C03050]" />
+                <h3 className="text-sm font-semibold flex items-center gap-2 flex-wrap">
+                    <MaterialIcon name="neurology" className="text-[#dc2626]" />
                     AI Briefing
                     <span className="text-[10px] uppercase tracking-wide bg-emerald-500/15 text-emerald-300 px-1.5 py-0.5 rounded">
                         local
                     </span>
                     {isConfigured && (
-                        <span className="text-xs font-normal text-[#a1a1aa]">
+                        <span className="text-xs font-normal text-[#a1a1aa] hidden sm:inline">
                             {providerLabel}
                             {settings.model ? ` · ${settings.model}` : ''}
                         </span>
@@ -75,7 +76,7 @@ const DashboardAIBriefing: React.FC<DashboardAIBriefingProps> = ({
                         <>
                             {isGenerating ? (
                                 <button
-                                    onClick={stop}
+                                    onClick={() => stop(AI_BRIEFING_OWNER)}
                                     className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-[#27272a] text-[#f4f4f5] hover:bg-[#3f3f46] flex items-center gap-1.5 transition-colors"
                                 >
                                     <MaterialIcon name="stop" className="text-sm" /> Stop
@@ -83,7 +84,7 @@ const DashboardAIBriefing: React.FC<DashboardAIBriefingProps> = ({
                             ) : (
                                 <button
                                     onClick={generate}
-                                    className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-[#C03050] text-white hover:bg-[#a02845] flex items-center gap-1.5 transition-colors"
+                                    className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-[#dc2626] text-white hover:bg-[#b91c1c] flex items-center gap-1.5 transition-colors"
                                 >
                                     <MaterialIcon name={hasRun ? 'refresh' : 'auto_awesome'} className="text-sm" />
                                     {hasRun ? 'Regenerate' : 'Generate briefing'}
@@ -117,7 +118,7 @@ const DashboardAIBriefing: React.FC<DashboardAIBriefingProps> = ({
                                 </p>
                                 <button
                                     onClick={onConfigureAI}
-                                    className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-[#C03050] text-white hover:bg-[#a02845] transition-colors shrink-0"
+                                    className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-[#dc2626] text-white hover:bg-[#b91c1c] transition-colors shrink-0"
                                 >
                                     Set up a local model
                                 </button>
@@ -133,11 +134,14 @@ const DashboardAIBriefing: React.FC<DashboardAIBriefingProps> = ({
                                             className="mt-3 overflow-hidden"
                                         >
                                             {briefing ? (
-                                                <div className="prose prose-invert prose-sm max-w-none prose-p:my-1.5 prose-headings:mt-2 prose-headings:mb-1 prose-ul:my-1 prose-li:my-0.5 text-[#F5D7DA]">
+                                                <div className="ai-markdown">
                                                     <ReactMarkdown remarkPlugins={[remarkGfm]}>{briefing}</ReactMarkdown>
+                                                    {isGenerating && (
+                                                        <span className="inline-block w-1.5 h-4 ml-0.5 bg-[#dc2626] animate-pulse rounded-sm align-middle" aria-hidden="true" />
+                                                    )}
                                                 </div>
                                             ) : (
-                                                <span className="inline-flex items-center gap-2 text-[#E8B4B8]/70 text-sm">
+                                                <span className="inline-flex items-center gap-2 text-[#a1a1aa]/70 text-sm">
                                                     <span className="material-symbols-outlined animate-spin text-sm">progress_activity</span>
                                                     Reading your portfolio…
                                                 </span>
@@ -153,7 +157,7 @@ const DashboardAIBriefing: React.FC<DashboardAIBriefingProps> = ({
                                 )}
 
                                 {(briefing || hasRun) && !isGenerating && (
-                                    <p className="mt-2 text-[10px] text-[#E8B4B8]/50 flex items-center gap-1">
+                                    <p className="mt-2 text-[10px] text-[#a1a1aa]/50 flex items-center gap-1">
                                         <MaterialIcon name="lock" className="text-xs" />
                                         Generated by your local model — your data stayed on your machine.
                                     </p>
@@ -170,6 +174,7 @@ const DashboardAIBriefing: React.FC<DashboardAIBriefingProps> = ({
                     </motion.div>
                 )}
             </AnimatePresence>
+            </div>
         </section>
     );
 };

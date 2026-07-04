@@ -99,7 +99,7 @@ const Tooltip: React.FC<TooltipProps> = ({
                     initial={{ opacity: 0, scale: 0.8, ...getMotionPosition() }}
                     animate={{ opacity: 1, scale: 1, ...getMotionPosition() }}
                     transition={{ duration: 0.15, delay }}
-                    className="fixed z-[9999] px-2 py-1 text-xs font-medium text-white bg-slate-800 dark:bg-slate-700 rounded shadow-lg whitespace-nowrap pointer-events-none"
+                    className="fixed z-[9999] px-2 py-1 text-xs font-medium text-[#f4f4f5] bg-[#27272a] border border-[#3f3f46] rounded shadow-lg whitespace-nowrap pointer-events-none"
                     style={{
                         top: coords.top,
                         left: coords.left
@@ -107,7 +107,7 @@ const Tooltip: React.FC<TooltipProps> = ({
                 >
                     {content}
                     <div
-                        className={`absolute w-2 h-2 bg-slate-800 dark:bg-slate-700 transform rotate-45 ${getArrowClass()}`}
+                        className={`absolute w-2 h-2 bg-[#27272a] border border-[#3f3f46] transform rotate-45 ${getArrowClass()}`}
                     />
                 </motion.div>,
                 document.body

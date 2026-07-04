@@ -22,14 +22,14 @@ const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
     return (
         <div className={`flex flex-col items-center justify-center gap-3 ${className}`}>
             <motion.div
-                className={`${sizeClasses[size]} border-3 border-slate-200 dark:border-slate-700 border-t-red-500 dark:border-t-red-400 rounded-full`}
+                className={`${sizeClasses[size]} border-3 border-[#27272a] border-t-[#dc2626] rounded-full`}
                 variants={spinnerVariants}
                 animate="animate"
                 style={{ borderWidth: size === 'sm' ? 2 : 3 }}
             />
             {text && (
                 <motion.p
-                    className="text-sm text-slate-500 dark:text-slate-400"
+                    className="text-sm text-[#a1a1aa]"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ delay: 0.2 }}

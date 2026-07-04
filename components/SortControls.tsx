@@ -1,4 +1,5 @@
 import React from 'react';
+import { MaterialIcon } from './ApplicationFormUI';
 
 type SortKey = 'deadline' | 'universityName' | 'status';
 
@@ -14,10 +15,6 @@ interface ListControlsProps {
   onSearchChange: (query: string) => void;
 }
 
-const MaterialIcon: React.FC<{ name: string; className?: string; 'aria-hidden'?: boolean | 'true' | 'false' }> = ({ name, className, 'aria-hidden': ariaHidden }) => (
-  <span className={`material-symbols-outlined ${className}`} aria-hidden={ariaHidden}>{name}</span>
-);
-
 const SortChip: React.FC<{
   label: string;
   sortKey: SortKey;
@@ -25,10 +22,10 @@ const SortChip: React.FC<{
   requestSort: (key: SortKey) => void;
 }> = ({ label, sortKey, sortConfig, requestSort }) => {
   const isActive = sortConfig.key === sortKey;
-  const buttonClasses = `flex items-center gap-1.5 px-4 py-2 text-sm font-medium rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 focus:ring-offset-white dark:focus:ring-offset-slate-800 ${
+  const buttonClasses = `flex items-center gap-1.5 px-3.5 py-1.5 text-sm font-medium rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#dc2626] focus:ring-offset-2 focus:ring-offset-[#09090b] ${
     isActive
-      ? 'bg-red-100 dark:bg-red-500/20 text-red-700 dark:text-red-200'
-      : 'bg-slate-100 dark:bg-slate-700/50 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
+      ? 'bg-[#dc2626]/20 text-[#fca5a5] border border-[#dc2626]/30'
+      : 'bg-[#18181b] text-[#a1a1aa] border border-[#27272a] hover:bg-[#27272a] hover:text-[#f4f4f5]'
   }`;
 
   return (
@@ -47,9 +44,9 @@ const SortChip: React.FC<{
 
 const ListControls: React.FC<ListControlsProps> = ({ sortConfig, requestSort, searchQuery, onSearchChange }) => {
   return (
-    <div className="mb-8 p-4 bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl rounded-3xl shadow-lg border border-slate-200/50 dark:border-slate-700/50 flex items-center justify-between flex-wrap gap-4">
-        <div className="flex items-center flex-wrap gap-4">
-            <span className="text-sm font-semibold text-slate-600 dark:text-slate-300">Sort by:</span>
+    <div className="mb-6 p-3.5 liquid-glass-card rounded-2xl flex items-center justify-between flex-wrap gap-3">
+        <div className="flex items-center flex-wrap gap-3">
+            <span className="text-sm font-medium text-[#a1a1aa]">Sort by</span>
             <div className="flex items-center gap-2">
                 <SortChip label="Deadline" sortKey="deadline" sortConfig={sortConfig} requestSort={requestSort} />
                 <SortChip label="University" sortKey="universityName" sortConfig={sortConfig} requestSort={requestSort} />
@@ -58,15 +55,15 @@ const ListControls: React.FC<ListControlsProps> = ({ sortConfig, requestSort, se
         </div>
         <div className="relative">
           <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-              <MaterialIcon name="search" className="text-slate-400" />
+              <MaterialIcon name="search" className="text-[#a1a1aa] text-base" />
           </div>
           <input
             type="text"
-            placeholder="Search..."
+            placeholder="Filter list…"
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
-            className="block w-full sm:w-64 rounded-full border-slate-300 dark:border-slate-600 bg-slate-100 dark:bg-slate-700/50 py-2 pl-10 pr-3 text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 focus:ring-offset-white dark:focus:ring-offset-slate-800"
-            aria-label="Search applications"
+            className="block w-full sm:w-56 rounded-xl border border-[#27272a] bg-[#09090b] py-2 pl-9 pr-3 text-sm text-[#f4f4f5] placeholder:text-[#a1a1aa]/50 focus:outline-none focus:ring-2 focus:ring-[#dc2626]"
+            aria-label="Filter applications in list"
           />
         </div>
     </div>

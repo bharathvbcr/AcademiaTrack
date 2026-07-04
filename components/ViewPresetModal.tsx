@@ -6,6 +6,7 @@ import { useEscapeKey } from '../hooks/useEscapeKey';
 import { useViewState, ViewPreset, ViewMode } from '../hooks/useViewState';
 import { useConfirmation } from '../hooks/useConfirmation';
 import ConfirmationModal from './ConfirmationModal';
+import { MaterialIcon, formInputClass, formInputSmClass, formPrimaryBtnClass } from './ApplicationFormUI';
 
 interface ViewPresetModalProps {
   isOpen: boolean;
@@ -13,10 +14,6 @@ interface ViewPresetModalProps {
   viewMode: ViewMode;
   currentState: any; // ViewState from useViewState
 }
-
-const MaterialIcon: React.FC<{ name: string; className?: string }> = ({ name, className }) => (
-  <span className={`material-symbols-outlined ${className}`}>{name}</span>
-);
 
 const ViewPresetModal: React.FC<ViewPresetModalProps> = ({ isOpen, onClose, viewMode, currentState }) => {
   useLockBodyScroll(isOpen);
@@ -92,12 +89,12 @@ const ViewPresetModal: React.FC<ViewPresetModalProps> = ({ isOpen, onClose, view
           exit="exit"
           onClick={(e) => e.stopPropagation()}
         >
-          <div className="p-6 border-b border-[#E8B4B8]/30">
+          <div className="p-6 border-b border-[#27272a]">
             <div className="flex items-center justify-between">
-              <h2 className="text-2xl font-bold text-[#F5D7DA]">View Presets</h2>
+              <h2 className="text-2xl font-bold text-[#f4f4f5]">View Presets</h2>
               <button
                 onClick={onClose}
-                className="p-2 hover:bg-[rgba(192,48,80,0.25)] rounded-lg text-[#E8B4B8] hover:text-[#F5D7DA]"
+                className="p-2 rounded-lg text-[#a1a1aa] hover:text-[#f4f4f5] hover:bg-[#27272a] focus:outline-none focus:ring-2 focus:ring-[#dc2626] focus:ring-offset-2 focus:ring-offset-[#09090b]"
                 aria-label="Close view presets modal"
                 title="Close view presets modal"
               >
@@ -108,8 +105,8 @@ const ViewPresetModal: React.FC<ViewPresetModalProps> = ({ isOpen, onClose, view
 
           <div className="flex-1 overflow-y-auto p-6 space-y-4">
             {/* Save Current View */}
-            <div className="liquid-glass rounded-lg p-4">
-              <h3 className="text-sm font-semibold text-[#F5D7DA] mb-3">Save Current View</h3>
+            <div className="rounded-lg border border-[#27272a] bg-[#18181b] p-4">
+              <h3 className="text-sm font-semibold text-[#f4f4f5] mb-3">Save Current View</h3>
               <div className="flex gap-2">
                 <input
                   type="text"
@@ -117,12 +114,12 @@ const ViewPresetModal: React.FC<ViewPresetModalProps> = ({ isOpen, onClose, view
                   onChange={(e) => setPresetName(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleSavePreset()}
                   placeholder="Enter preset name..."
-                  className="flex-1 px-4 py-2 border border-[#E8B4B8]/30 rounded-lg liquid-glass text-[#F5D7DA] placeholder:text-[#E8B4B8]/50"
+                  className={`flex-1 ${formInputClass}`}
                 />
                 <button
                   onClick={handleSavePreset}
                   disabled={!presetName.trim() || isSaving}
-                  className="px-4 py-2 bg-[#C03050] text-white rounded-lg hover:bg-[#E03030] disabled:opacity-50 disabled:cursor-not-allowed"
+                  className={formPrimaryBtnClass}
                 >
                   Save
                 </button>
@@ -131,15 +128,15 @@ const ViewPresetModal: React.FC<ViewPresetModalProps> = ({ isOpen, onClose, view
 
             {/* Existing Presets */}
             <div>
-              <h3 className="text-sm font-semibold text-[#F5D7DA] mb-3">Saved Presets</h3>
+              <h3 className="text-sm font-semibold text-[#f4f4f5] mb-3">Saved Presets</h3>
               {presets.length === 0 ? (
-                <p className="text-center text-[#E8B4B8]/70 py-8">No presets saved yet.</p>
+                <p className="text-center text-[#a1a1aa] py-8">No presets saved yet.</p>
               ) : (
                 <div className="space-y-2">
                   {presets.map(preset => (
                     <div
                       key={preset.id}
-                      className="flex items-center justify-between p-3 liquid-glass-card rounded-lg hover:bg-[rgba(139,0,0,0.5)]"
+                      className="flex items-center justify-between p-3 rounded-lg border border-[#27272a] bg-[#18181b] hover:bg-[#27272a]"
                     >
                       {editingId === preset.id ? (
                         <div className="flex items-center gap-2 flex-1">
@@ -156,14 +153,14 @@ const ViewPresetModal: React.FC<ViewPresetModalProps> = ({ isOpen, onClose, view
                                 setEditingName('');
                               }
                             }}
-                            className="flex-1 px-2 py-1 border border-[#E8B4B8]/30 rounded text-sm liquid-glass text-[#F5D7DA]"
+                            className={`flex-1 ${formInputSmClass}`}
                             autoFocus
                             aria-label={`Edit preset name for "${preset.name}"`}
                             title={`Edit preset name for "${preset.name}"`}
                           />
                           <button
                             onClick={() => handleSaveEdit(preset.id)}
-                            className="p-1 text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 rounded"
+                            className="p-1 rounded text-[#86efac] hover:bg-green-500/10 focus:outline-none focus:ring-2 focus:ring-[#dc2626] focus:ring-offset-2 focus:ring-offset-[#09090b]"
                             aria-label={`Save changes to preset "${preset.name}"`}
                             title={`Save changes to preset "${preset.name}"`}
                           >
@@ -174,7 +171,7 @@ const ViewPresetModal: React.FC<ViewPresetModalProps> = ({ isOpen, onClose, view
                               setEditingId(null);
                               setEditingName('');
                             }}
-                            className="p-1 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 rounded"
+                            className="p-1 rounded text-[#a1a1aa] hover:bg-[#27272a] focus:outline-none focus:ring-2 focus:ring-[#dc2626] focus:ring-offset-2 focus:ring-offset-[#09090b]"
                             aria-label={`Cancel editing preset "${preset.name}"`}
                             title={`Cancel editing preset "${preset.name}"`}
                           >
@@ -184,30 +181,33 @@ const ViewPresetModal: React.FC<ViewPresetModalProps> = ({ isOpen, onClose, view
                       ) : (
                         <>
                           <div className="flex-1">
-                            <div className="font-medium text-[#F5D7DA]">{preset.name}</div>
-                            <div className="text-xs text-[#E8B4B8]/70">
+                            <div className="font-medium text-[#f4f4f5]">{preset.name}</div>
+                            <div className="text-xs text-[#a1a1aa]">
                               {new Date(preset.updatedAt).toLocaleDateString()}
                             </div>
                           </div>
                           <div className="flex items-center gap-2">
                             <button
                               onClick={() => handleLoadPreset(preset.id)}
-                              className="p-2 text-[#C03050] hover:bg-[rgba(192,48,80,0.25)] rounded"
+                              className="p-2 rounded text-[#fca5a5] hover:bg-[#dc2626]/10 focus:outline-none focus:ring-2 focus:ring-[#dc2626] focus:ring-offset-2 focus:ring-offset-[#09090b]"
                               title="Load preset"
+                              aria-label={`Load preset "${preset.name}"`}
                             >
                               <MaterialIcon name="play_arrow" className="text-lg" />
                             </button>
                             <button
                               onClick={() => handleStartEdit(preset)}
-                              className="p-2 text-[#E8B4B8] hover:bg-[rgba(192,48,80,0.25)] rounded"
+                              className="p-2 rounded text-[#a1a1aa] hover:bg-[#27272a] focus:outline-none focus:ring-2 focus:ring-[#dc2626] focus:ring-offset-2 focus:ring-offset-[#09090b]"
                               title="Rename preset"
+                              aria-label={`Rename preset "${preset.name}"`}
                             >
                               <MaterialIcon name="edit" className="text-lg" />
                             </button>
                             <button
                               onClick={() => handleDeletePreset(preset.id)}
-                              className="p-2 text-[#E03030] hover:bg-[rgba(224,48,48,0.25)] rounded"
+                              className="p-2 rounded text-[#fca5a5] hover:bg-[#dc2626]/10 focus:outline-none focus:ring-2 focus:ring-[#dc2626] focus:ring-offset-2 focus:ring-offset-[#09090b]"
                               title="Delete preset"
+                              aria-label={`Delete preset "${preset.name}"`}
                             >
                               <MaterialIcon name="delete" className="text-lg" />
                             </button>

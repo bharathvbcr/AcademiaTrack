@@ -1,7 +1,7 @@
 import React from 'react';
 import { Application, DocumentStatus } from '../types';
 import { DOCUMENT_LABELS, DOCUMENT_STATUS_COLORS, DOCUMENT_STATUS_OPTIONS } from '../constants';
-import { FieldSet, MaterialIcon } from './ApplicationFormUI';
+import { FieldSet, MaterialIcon, formCheckboxClass } from './ApplicationFormUI';
 
 interface DocumentsSectionProps {
     appData: Omit<Application, 'id'>;
@@ -26,16 +26,16 @@ const DocumentsSection: React.FC<DocumentsSectionProps> = ({
                     const doc = appData.documents[docKey];
 
                     return (
-                        <div key={key} className="grid grid-cols-1 sm:grid-cols-[1.5fr,1fr,auto] gap-3 items-center p-3 liquid-glass-depth rounded-lg">
+                        <div key={key} className="grid grid-cols-1 sm:grid-cols-[1.5fr,1fr,auto] gap-3 items-center p-3 bg-[#18181b] border border-[#27272a] rounded-lg">
                             <div className="flex items-center gap-3">
                                 <input
                                     id={`${key}-required`}
                                     type="checkbox"
                                     checked={doc.required}
                                     onChange={e => handleDocumentChange(docKey, 'required', e.target.checked)}
-                                    className="h-4 w-4 rounded border-slate-400 text-red-600 focus:ring-red-500"
+                                    className={formCheckboxClass}
                                 />
-                                <label htmlFor={`${key}-status`} className={`font-medium ${!doc.required ? 'text-slate-400 dark:text-slate-500' : 'text-slate-800 dark:text-slate-200'}`}>
+                                <label htmlFor={`${key}-status`} className={`font-medium ${!doc.required ? 'text-[#71717a]' : 'text-[#f4f4f5]'}`}>
                                     {DOCUMENT_LABELS[docKey]}
                                 </label>
                             </div>
@@ -45,11 +45,11 @@ const DocumentsSection: React.FC<DocumentsSectionProps> = ({
                                 value={doc.status}
                                 onChange={e => handleDocumentChange(docKey, 'status', e.target.value)}
                                 disabled={!doc.required}
-                                className={`w-full px-2 py-1.5 text-xs font-medium rounded-md border border-slate-300 dark:border-slate-600 shadow-sm focus:outline-none focus:ring-1 focus:ring-red-500 focus:border-red-500 transition ${DOCUMENT_STATUS_COLORS[doc.status]}`}
+                                className={`w-full px-2 py-1.5 text-xs font-medium rounded-md border border-[#27272a] shadow-sm focus:outline-none focus:ring-1 focus:ring-[#dc2626] focus:border-[#dc2626] transition ${DOCUMENT_STATUS_COLORS[doc.status]}`}
                                 aria-label={`${DOCUMENT_LABELS[docKey]} status`}
                             >
                                 {DOCUMENT_STATUS_OPTIONS.map(status => (
-                                    <option key={status} value={status} className="bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200">
+                                    <option key={status} value={status} className="bg-[#18181b] text-[#f4f4f5]">
                                         {status}
                                     </option>
                                 ))}
@@ -71,7 +71,7 @@ const DocumentsSection: React.FC<DocumentsSectionProps> = ({
                                         <button
                                             type="button"
                                             onClick={() => handleOpenFile(doc.filePath!)}
-                                            className="p-1.5 text-slate-500 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-full transition-colors"
+                                            className="p-1.5 text-[#a1a1aa] hover:text-blue-400 hover:bg-blue-500/10 rounded-full transition-colors"
                                             title={`Open ${doc.filePath}`}
                                         >
                                             <MaterialIcon name="visibility" className="text-lg" />
@@ -79,7 +79,7 @@ const DocumentsSection: React.FC<DocumentsSectionProps> = ({
                                         <button
                                             type="button"
                                             onClick={() => handleRemoveFile(docKey)}
-                                            className="p-1.5 text-slate-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-full transition-colors"
+                                            className="p-1.5 text-[#a1a1aa] hover:text-red-400 hover:bg-red-500/10 rounded-full transition-colors"
                                             title="Remove attachment"
                                         >
                                             <MaterialIcon name="close" className="text-lg" />
@@ -89,7 +89,7 @@ const DocumentsSection: React.FC<DocumentsSectionProps> = ({
                                     <button
                                         type="button"
                                         onClick={() => handleAttachFile(docKey)}
-                                        className="p-1.5 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-full transition-colors"
+                                        className="p-1.5 text-[#a1a1aa] hover:text-[#a1a1aa] hover:text-[#f4f4f5] hover:bg-[#27272a] rounded-full transition-colors"
                                         title="Attach file"
                                     >
                                         <MaterialIcon name="attach_file" className="text-lg" />

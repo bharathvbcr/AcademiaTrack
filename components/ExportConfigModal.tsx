@@ -5,6 +5,7 @@ import { useLockBodyScroll } from '../hooks/useLockBodyScroll';
 import { useEscapeKey } from '../hooks/useEscapeKey';
 import { Application } from '../types';
 import { useLocalStorage } from '../hooks/useLocalStorage';
+import { MaterialIcon, formInputSmClass, formSecondaryBtnClass, formPrimaryBtnClass, formIconBtnClass, formMutedTextClass, formCheckboxClass } from './ApplicationFormUI';
 
 interface ExportConfigModalProps {
   isOpen: boolean;
@@ -12,10 +13,6 @@ interface ExportConfigModalProps {
   applications: Application[];
   onExport: (format: 'csv' | 'markdown' | 'pdf' | 'json', selectedFields: string[]) => void;
 }
-
-const MaterialIcon: React.FC<{ name: string; className?: string }> = ({ name, className }) => (
-  <span className={`material-symbols-outlined ${className}`}>{name}</span>
-);
 
 // Available export fields with categories
 const EXPORT_FIELDS = [
@@ -147,19 +144,19 @@ const ExportConfigModal: React.FC<ExportConfigModalProps> = ({ isOpen, onClose, 
           exit="exit"
           onClick={(e) => e.stopPropagation()}
         >
-          <div className="p-6 border-b border-[#E8B4B8]/30">
+          <div className="p-6 border-b border-[#27272a]">
             <div className="flex items-center justify-between">
-              <h2 className="text-2xl font-bold text-[#F5D7DA]">Export Configuration</h2>
+              <h2 className="text-2xl font-bold text-[#f4f4f5]">Export Configuration</h2>
               <button
                 onClick={onClose}
-                className="p-2 hover:bg-[rgba(192,48,80,0.25)] rounded-lg text-[#E8B4B8] hover:text-[#F5D7DA]"
+                className={formIconBtnClass}
                 aria-label="Close export configuration modal"
                 title="Close"
               >
                 <MaterialIcon name="close" className="text-xl" />
               </button>
             </div>
-            <p className="text-sm text-[#E8B4B8]/70 mt-2">
+            <p className={`text-sm ${formMutedTextClass} mt-2`}>
               Exporting {applications.length} application{applications.length !== 1 ? 's' : ''}
             </p>
           </div>
@@ -167,7 +164,7 @@ const ExportConfigModal: React.FC<ExportConfigModalProps> = ({ isOpen, onClose, 
           <div className="flex-1 overflow-y-auto p-6 space-y-6">
             {/* Format Selection */}
             <div>
-              <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
+              <label className="block text-sm font-semibold text-[#a1a1aa] mb-2">
                 Export Format
               </label>
               <div className="grid grid-cols-4 gap-2">
@@ -177,8 +174,8 @@ const ExportConfigModal: React.FC<ExportConfigModalProps> = ({ isOpen, onClose, 
                     onClick={() => setExportFormat(format)}
                     className={`px-4 py-2 rounded-lg border-2 transition-all ${
                       exportFormat === format
-                        ? 'border-blue-600 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400'
-                        : 'border-slate-300 dark:border-slate-600 hover:border-slate-400 dark:hover:border-slate-500'
+                        ? 'border-[#dc2626] bg-[#dc2626]/10 text-[#fca5a5]'
+                        : 'border-[#27272a] hover:border-[#3f3f46] text-[#a1a1aa]'
                     }`}
                   >
                     {format.toUpperCase()}
@@ -190,19 +187,19 @@ const ExportConfigModal: React.FC<ExportConfigModalProps> = ({ isOpen, onClose, 
             {/* Field Selection */}
             <div>
               <div className="flex items-center justify-between mb-4">
-                <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300">
+                <label className="block text-sm font-semibold text-[#a1a1aa]">
                   Select Fields to Export
                 </label>
                 <div className="flex gap-2">
                   <button
                     onClick={handleSelectAll}
-                    className="text-xs px-2 py-1 border rounded hover:bg-slate-50 dark:hover:bg-slate-700"
+                    className={`${formSecondaryBtnClass} px-2 py-1 text-xs`}
                   >
                     Select All
                   </button>
                   <button
                     onClick={handleDeselectAll}
-                    className="text-xs px-2 py-1 border rounded hover:bg-slate-50 dark:hover:bg-slate-700"
+                    className={`${formSecondaryBtnClass} px-2 py-1 text-xs`}
                   >
                     Deselect All
                   </button>
@@ -215,12 +212,12 @@ const ExportConfigModal: React.FC<ExportConfigModalProps> = ({ isOpen, onClose, 
                   const someSelected = fields.some(f => selectedFields.includes(f.id));
 
                   return (
-                    <div key={category} className="border border-slate-200 dark:border-slate-700 rounded-lg p-4">
+                    <div key={category} className="border border-[#27272a] rounded-lg p-4">
                       <div className="flex items-center justify-between mb-3">
-                        <h3 className="text-sm font-semibold text-slate-800 dark:text-white">{category}</h3>
+                        <h3 className="text-sm font-semibold text-[#f4f4f5]">{category}</h3>
                         <button
                           onClick={() => handleSelectCategory(category, !allSelected)}
-                          className="text-xs px-2 py-1 border rounded hover:bg-slate-50 dark:hover:bg-slate-700"
+                          className={`${formSecondaryBtnClass} px-2 py-1 text-xs`}
                         >
                           {allSelected ? 'Deselect All' : 'Select All'}
                         </button>
@@ -229,15 +226,15 @@ const ExportConfigModal: React.FC<ExportConfigModalProps> = ({ isOpen, onClose, 
                         {fields.map(field => (
                           <label
                             key={field.id}
-                            className="flex items-center gap-2 p-2 hover:bg-slate-50 dark:hover:bg-slate-700/50 rounded cursor-pointer"
+                            className="flex items-center gap-2 p-2 hover:bg-[#27272a]/50 rounded cursor-pointer"
                           >
                             <input
                               type="checkbox"
                               checked={selectedFields.includes(field.id)}
                               onChange={() => handleToggleField(field.id)}
-                              className="w-4 h-4"
+                              className={formCheckboxClass}
                             />
-                            <span className="text-sm text-slate-700 dark:text-slate-300">{field.label}</span>
+                            <span className="text-sm text-[#a1a1aa]">{field.label}</span>
                           </label>
                         ))}
                       </div>
@@ -250,24 +247,24 @@ const ExportConfigModal: React.FC<ExportConfigModalProps> = ({ isOpen, onClose, 
             {/* Presets */}
             {savedPresets.length > 0 && (
               <div>
-                <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
+                <label className="block text-sm font-semibold text-[#a1a1aa] mb-2">
                   Saved Presets
                 </label>
                 <div className="flex flex-wrap gap-2">
                   {savedPresets.map((preset, index) => (
                     <div
                       key={index}
-                      className="flex items-center gap-2 px-3 py-1.5 bg-slate-100 dark:bg-slate-700 rounded-lg"
+                      className="flex items-center gap-2 px-3 py-1.5 bg-[#27272a] rounded-lg"
                     >
                       <button
                         onClick={() => handleLoadPreset(preset)}
-                        className="text-sm text-blue-600 dark:text-blue-400 hover:underline"
+                        className="text-sm text-[#dc2626] hover:underline"
                       >
                         {preset.name}
                       </button>
                       <button
                         onClick={() => handleDeletePreset(index)}
-                        className="text-red-600 hover:text-red-700"
+                        className="text-red-400 hover:text-red-300"
                         aria-label={`Delete preset ${preset.name}`}
                         title="Delete preset"
                       >
@@ -286,29 +283,29 @@ const ExportConfigModal: React.FC<ExportConfigModalProps> = ({ isOpen, onClose, 
                 value={presetName}
                 onChange={(e) => setPresetName(e.target.value)}
                 placeholder="Save current selection as preset..."
-                className="flex-1 px-3 py-2 border border-[#E8B4B8]/30 rounded-lg text-sm liquid-glass text-[#F5D7DA] placeholder:text-[#E8B4B8]/50"
+                className={`${formInputSmClass} flex-1`}
               />
               <button
                 onClick={handleSavePreset}
                 disabled={!presetName.trim()}
-                className="px-4 py-2 bg-slate-600 text-white rounded-lg hover:bg-slate-700 disabled:opacity-50"
+                className="px-4 py-2 bg-[#27272a] text-[#f4f4f5] rounded-lg hover:bg-[#3f3f46] disabled:opacity-50"
               >
                 Save Preset
               </button>
             </div>
           </div>
 
-          <div className="p-6 border-t border-[#E8B4B8]/30 flex justify-end gap-2">
+          <div className="p-6 border-t border-[#27272a] flex justify-end gap-2">
             <button
               onClick={onClose}
-              className="px-4 py-2 border border-[#E8B4B8]/30 rounded-lg hover:bg-[rgba(192,48,80,0.25)] text-[#F5D7DA]"
+              className={formSecondaryBtnClass}
             >
               Cancel
             </button>
             <button
               onClick={handleExport}
               disabled={selectedFields.length === 0}
-              className="px-4 py-2 bg-[#C03050] text-white rounded-lg hover:bg-[#E03030] disabled:opacity-50"
+              className={`${formPrimaryBtnClass} disabled:opacity-50`}
             >
               Export ({selectedFields.length} fields)
             </button>

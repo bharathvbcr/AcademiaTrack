@@ -1,4 +1,4 @@
-import { ApplicationStatus, ApplicationFeeWaiverStatus, TestStatus, FacultyContactStatus, ProgramType, DocumentStatus, RecommenderStatus } from './types';
+import { ApplicationStatus, ApplicationFeeWaiverStatus, TestStatus, FacultyContactStatus, ProgramType, DocumentStatus, RecommenderStatus, ScholarshipStatus } from './types';
 import { Application } from './types';
 import { getDaysUntil } from './utils/dateUtils';
 
@@ -19,11 +19,19 @@ export const DOCUMENT_STATUS_OPTIONS: DocumentStatus[] = [
 ];
 
 export const DOCUMENT_STATUS_COLORS: { [key in DocumentStatus]: string } = {
-  [DocumentStatus.NotStarted]: 'bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-200',
-  [DocumentStatus.Drafting]: 'bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-200',
-  [DocumentStatus.Reviewing]: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-200',
-  [DocumentStatus.ReadyToSubmit]: 'bg-purple-100 text-purple-800 dark:bg-purple-900/50 dark:text-purple-200',
-  [DocumentStatus.Submitted]: 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-200',
+  [DocumentStatus.NotStarted]: 'bg-zinc-500/15 text-zinc-300',
+  [DocumentStatus.Drafting]: 'bg-blue-500/15 text-blue-300',
+  [DocumentStatus.Reviewing]: 'bg-yellow-500/15 text-yellow-300',
+  [DocumentStatus.ReadyToSubmit]: 'bg-purple-500/15 text-purple-300',
+  [DocumentStatus.Submitted]: 'bg-green-500/15 text-green-300',
+};
+
+export type EssayStatus = 'Not Started' | 'Drafting' | 'Finalized';
+
+export const ESSAY_STATUS_COLORS: { [key in EssayStatus]: string } = {
+  'Not Started': 'bg-zinc-500/15 text-zinc-300 border-zinc-500/30',
+  'Drafting': 'bg-blue-500/15 text-blue-300 border-blue-500/30',
+  'Finalized': 'bg-green-500/15 text-green-300 border-green-500/30',
 };
 
 export const ADMISSION_TERM_OPTIONS: ('Spring' | 'Fall' | 'Summer')[] = [
@@ -72,18 +80,22 @@ export const FACULTY_CONTACT_STATUS_OPTIONS: FacultyContactStatus[] = [
   FacultyContactStatus.MeetingScheduled,
 ];
 
+// Status pill styling. Each hue is deliberately distinct and matches the same
+// status's colour in CHART_COLORS below, so a status reads identically whether
+// it appears as a badge or in an analytics chart. Dark-only app, so single-mode
+// zinc-friendly classes (translucent fill + subtle border).
 export const STATUS_COLORS: { [key in ApplicationStatus]: string } = {
-  [ApplicationStatus.NotStarted]: 'bg-[rgba(232,180,184,0.2)] text-[#E8B4B8] border-[#E8B4B8]/30 backdrop-blur-sm',
-  [ApplicationStatus.Pursuing]: 'bg-[rgba(192,48,80,0.25)] text-[#F5D7DA] border-[#E8B4B8]/40 backdrop-blur-sm',
-  [ApplicationStatus.InProgress]: 'bg-[rgba(224,48,48,0.25)] text-[#F5D7DA] border-[#E03030]/40 backdrop-blur-sm',
-  [ApplicationStatus.Skipping]: 'bg-[rgba(232,180,184,0.15)] text-[#E8B4B8] border-[#E8B4B8]/20 backdrop-blur-sm',
-  [ApplicationStatus.Submitted]: 'bg-[rgba(192,48,80,0.3)] text-[#F5D7DA] border-[#C03050]/40 backdrop-blur-sm',
-  [ApplicationStatus.Interview]: 'bg-[rgba(224,48,48,0.3)] text-[#F5D7DA] border-[#E03030]/40 backdrop-blur-sm',
-  [ApplicationStatus.Accepted]: 'bg-[rgba(76,175,80,0.3)] text-[#C8E6C9] border-[#4CAF50]/40 backdrop-blur-sm',
-  [ApplicationStatus.Attending]: 'bg-[rgba(76,175,80,0.35)] text-[#C8E6C9] border-[#4CAF50]/50 backdrop-blur-sm',
-  [ApplicationStatus.Rejected]: 'bg-[rgba(192,48,80,0.4)] text-[#FFCDD2] border-[#C03050]/50 backdrop-blur-sm',
-  [ApplicationStatus.Waitlisted]: 'bg-[rgba(255,193,7,0.3)] text-[#FFF9C4] border-[#FFC107]/40 backdrop-blur-sm',
-  [ApplicationStatus.Withdrawn]: 'bg-[rgba(232,180,184,0.15)] text-[#E8B4B8] border-[#E8B4B8]/20 backdrop-blur-sm',
+  [ApplicationStatus.NotStarted]: 'bg-zinc-500/15 text-zinc-300 border border-zinc-500/30',
+  [ApplicationStatus.Pursuing]: 'bg-sky-500/15 text-sky-300 border border-sky-500/30',
+  [ApplicationStatus.InProgress]: 'bg-blue-500/15 text-blue-300 border border-blue-500/30',
+  [ApplicationStatus.Skipping]: 'bg-stone-500/15 text-stone-300 border border-stone-500/30',
+  [ApplicationStatus.Submitted]: 'bg-indigo-500/15 text-indigo-300 border border-indigo-500/30',
+  [ApplicationStatus.Interview]: 'bg-purple-500/15 text-purple-300 border border-purple-500/30',
+  [ApplicationStatus.Accepted]: 'bg-green-500/15 text-green-300 border border-green-500/30',
+  [ApplicationStatus.Attending]: 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/30',
+  [ApplicationStatus.Rejected]: 'bg-red-500/15 text-red-300 border border-red-500/30',
+  [ApplicationStatus.Waitlisted]: 'bg-amber-500/15 text-amber-300 border border-amber-500/30',
+  [ApplicationStatus.Withdrawn]: 'bg-zinc-500/15 text-zinc-400 border border-zinc-500/30',
 };
 
 export const STATUS_LABELS: { [key in ApplicationStatus]: string } = {
@@ -101,35 +113,35 @@ export const STATUS_LABELS: { [key in ApplicationStatus]: string } = {
 };
 
 export const FEE_WAIVER_STATUS_COLORS: { [key in ApplicationFeeWaiverStatus]: string } = {
-  [ApplicationFeeWaiverStatus.NotRequested]: 'bg-slate-200 text-slate-700 dark:bg-slate-600 dark:text-slate-200',
-  [ApplicationFeeWaiverStatus.Requested]: 'bg-blue-100 text-blue-800 dark:bg-blue-500/20 dark:text-blue-200',
-  [ApplicationFeeWaiverStatus.Granted]: 'bg-green-100 text-green-800 dark:bg-green-500/20 dark:text-green-200',
-  [ApplicationFeeWaiverStatus.Denied]: 'bg-red-100 text-red-800 dark:bg-red-500/20 dark:text-red-200',
+  [ApplicationFeeWaiverStatus.NotRequested]: 'bg-zinc-500/15 text-zinc-300 border border-zinc-500/30',
+  [ApplicationFeeWaiverStatus.Requested]: 'bg-blue-500/15 text-blue-300 border border-blue-500/30',
+  [ApplicationFeeWaiverStatus.Granted]: 'bg-green-500/15 text-green-300 border border-green-500/30',
+  [ApplicationFeeWaiverStatus.Denied]: 'bg-red-500/15 text-red-300 border border-red-500/30',
 };
 
 export const TEST_STATUS_COLORS: { [key in TestStatus]: string } = {
-  [TestStatus.NotApplicable]: 'bg-slate-200 text-slate-700 dark:bg-slate-600 dark:text-slate-200',
-  [TestStatus.Waived]: 'bg-purple-100 text-purple-800 dark:bg-purple-500/20 dark:text-purple-200',
-  [TestStatus.Required]: 'bg-amber-100 text-amber-800 dark:bg-amber-500/20 dark:text-amber-200',
-  [TestStatus.Taken]: 'bg-blue-100 text-blue-800 dark:bg-blue-500/20 dark:text-blue-200',
-  [TestStatus.Sent]: 'bg-green-100 text-green-800 dark:bg-green-500/20 dark:text-green-200',
+  [TestStatus.NotApplicable]: 'bg-zinc-500/15 text-zinc-300 border border-zinc-500/30',
+  [TestStatus.Waived]: 'bg-purple-500/15 text-purple-300 border border-purple-500/30',
+  [TestStatus.Required]: 'bg-amber-500/15 text-amber-300 border border-amber-500/30',
+  [TestStatus.Taken]: 'bg-blue-500/15 text-blue-300 border border-blue-500/30',
+  [TestStatus.Sent]: 'bg-green-500/15 text-green-300 border border-green-500/30',
 };
 
 export const FACULTY_CONTACT_STATUS_COLORS: { [key in FacultyContactStatus]: string } = {
-  [FacultyContactStatus.NotContacted]: 'bg-slate-200 text-slate-700 border-slate-300 dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600',
-  [FacultyContactStatus.Emailed]: 'bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-500/20 dark:text-blue-200 dark:border-blue-500/30',
-  [FacultyContactStatus.Replied]: 'bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-500/20 dark:text-gray-200 dark:border-gray-500/30',
-  [FacultyContactStatus.PositiveReply]: 'bg-green-100 text-green-800 border-green-200 dark:bg-green-500/20 dark:text-green-200 dark:border-green-500/30',
-  [FacultyContactStatus.NegativeReply]: 'bg-red-100 text-red-800 border-red-200 dark:bg-red-500/20 dark:text-red-200 dark:border-red-500/30',
-  [FacultyContactStatus.PendingReview]: 'bg-yellow-100 text-yellow-800 border-yellow-200 dark:bg-yellow-500/20 dark:text-yellow-200 dark:border-yellow-500/30',
-  [FacultyContactStatus.FollowUpRequired]: 'bg-cyan-100 text-cyan-800 border-cyan-200 dark:bg-cyan-500/20 dark:text-cyan-200 dark:border-cyan-500/30',
-  [FacultyContactStatus.MeetingScheduled]: 'bg-purple-100 text-purple-800 border-purple-200 dark:bg-purple-500/20 dark:text-purple-200 dark:border-purple-500/30',
+  [FacultyContactStatus.NotContacted]: 'bg-zinc-500/15 text-zinc-300 border border-zinc-500/30',
+  [FacultyContactStatus.Emailed]: 'bg-blue-500/15 text-blue-300 border border-blue-500/30',
+  [FacultyContactStatus.Replied]: 'bg-zinc-500/15 text-zinc-300 border border-zinc-500/30',
+  [FacultyContactStatus.PositiveReply]: 'bg-green-500/15 text-green-300 border border-green-500/30',
+  [FacultyContactStatus.NegativeReply]: 'bg-red-500/15 text-red-300 border border-red-500/30',
+  [FacultyContactStatus.PendingReview]: 'bg-yellow-500/15 text-yellow-300 border border-yellow-500/30',
+  [FacultyContactStatus.FollowUpRequired]: 'bg-cyan-500/15 text-cyan-300 border border-cyan-500/30',
+  [FacultyContactStatus.MeetingScheduled]: 'bg-purple-500/15 text-purple-300 border border-purple-500/30',
 };
 
 export const FACULTY_CHART_COLORS: { [key in FacultyContactStatus]: string } = {
-  [FacultyContactStatus.NotContacted]: '#94a3b8', // slate-400
+  [FacultyContactStatus.NotContacted]: '#a1a1aa', // zinc-400
   [FacultyContactStatus.Emailed]: '#60a5fa', // blue-400
-  [FacultyContactStatus.Replied]: '#9ca3af', // gray-400
+  [FacultyContactStatus.Replied]: '#a1a1aa', // zinc-400
   [FacultyContactStatus.PositiveReply]: '#4ade80', // green-400
   [FacultyContactStatus.NegativeReply]: '#f87171', // red-400
   [FacultyContactStatus.PendingReview]: '#facc15', // yellow-400
@@ -138,7 +150,7 @@ export const FACULTY_CHART_COLORS: { [key in FacultyContactStatus]: string } = {
 };
 
 export const CHART_COLORS: { [key in ApplicationStatus]: string } = {
-  [ApplicationStatus.NotStarted]: '#94a3b8', // slate-400
+  [ApplicationStatus.NotStarted]: '#a1a1aa', // zinc-400
   [ApplicationStatus.Pursuing]: '#38bdf8', // sky-400
   [ApplicationStatus.InProgress]: '#60a5fa', // blue-400
   [ApplicationStatus.Skipping]: '#a8a29e', // stone-400
@@ -223,14 +235,14 @@ export interface TagPreset {
 }
 
 export const TAG_PRESETS: TagPreset[] = [
-  { name: 'Dream School', color: '#ec4899', bgClass: 'bg-pink-100 text-pink-800 dark:bg-pink-900/30 dark:text-pink-300', icon: 'star' },
-  { name: 'Target', color: '#8b5cf6', bgClass: 'bg-violet-100 text-violet-800 dark:bg-violet-900/30 dark:text-violet-300', icon: 'gps_fixed' },
-  { name: 'Safety', color: '#22c55e', bgClass: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300', icon: 'shield' },
-  { name: 'Funded', color: '#f59e0b', bgClass: 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300', icon: 'payments' },
-  { name: 'Top Choice', color: '#ef4444', bgClass: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300', icon: 'favorite' },
-  { name: 'Research Fit', color: '#06b6d4', bgClass: 'bg-cyan-100 text-cyan-800 dark:bg-cyan-900/30 dark:text-cyan-300', icon: 'science' },
-  { name: 'Location', color: '#0ea5e9', bgClass: 'bg-sky-100 text-sky-800 dark:bg-sky-900/30 dark:text-sky-300', icon: 'location_on' },
-  { name: 'Deadline Soon', color: '#f97316', bgClass: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300', icon: 'schedule' },
+  { name: 'Dream School', color: '#ec4899', bgClass: 'bg-pink-500/15 text-pink-300', icon: 'star' },
+  { name: 'Target', color: '#8b5cf6', bgClass: 'bg-violet-500/15 text-violet-300', icon: 'gps_fixed' },
+  { name: 'Safety', color: '#22c55e', bgClass: 'bg-green-500/15 text-green-300', icon: 'shield' },
+  { name: 'Funded', color: '#f59e0b', bgClass: 'bg-amber-500/15 text-amber-300', icon: 'payments' },
+  { name: 'Top Choice', color: '#ef4444', bgClass: 'bg-red-500/15 text-red-300', icon: 'favorite' },
+  { name: 'Research Fit', color: '#06b6d4', bgClass: 'bg-cyan-500/15 text-cyan-300', icon: 'science' },
+  { name: 'Location', color: '#0ea5e9', bgClass: 'bg-sky-500/15 text-sky-300', icon: 'location_on' },
+  { name: 'Deadline Soon', color: '#f97316', bgClass: 'bg-orange-500/15 text-orange-300', icon: 'schedule' },
 ];
 
 // Get deadline countdown info
@@ -244,19 +256,26 @@ export function getDeadlineInfo(deadline: string | null): {
   if (daysLeft === null) return { daysLeft: null, label: '', colorClass: '', urgency: 'none' };
 
   if (daysLeft < 0) {
-    return { daysLeft, label: 'Past', colorClass: 'bg-slate-200 text-slate-600 dark:bg-slate-700 dark:text-slate-400', urgency: 'past' };
+    return { daysLeft, label: 'Past', colorClass: 'bg-zinc-500/15 text-zinc-400', urgency: 'past' };
   } else if (daysLeft === 0) {
     return { daysLeft: 0, label: 'Today!', colorClass: 'bg-red-500 text-white', urgency: 'urgent' };
   } else if (daysLeft <= 7) {
-    return { daysLeft, label: `${daysLeft}d`, colorClass: 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300', urgency: 'urgent' };
+    return { daysLeft, label: `${daysLeft}d`, colorClass: 'bg-red-500/15 text-red-300', urgency: 'urgent' };
   } else if (daysLeft <= 30) {
-    return { daysLeft, label: `${daysLeft}d`, colorClass: 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300', urgency: 'soon' };
+    return { daysLeft, label: `${daysLeft}d`, colorClass: 'bg-amber-500/15 text-amber-300', urgency: 'soon' };
   } else {
-    return { daysLeft, label: `${daysLeft}d`, colorClass: 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300', urgency: 'normal' };
+    return { daysLeft, label: `${daysLeft}d`, colorClass: 'bg-green-500/15 text-green-300', urgency: 'normal' };
   }
 }
 
 export const TAG_REMOVE_PREFIX = '__remove__';
+
+export const SCHOLARSHIP_STATUS_COLORS: { [key in ScholarshipStatus]: string } = {
+  [ScholarshipStatus.Applied]: 'bg-blue-500/15 text-blue-300',
+  [ScholarshipStatus.Pending]: 'bg-amber-500/15 text-amber-300',
+  [ScholarshipStatus.Awarded]: 'bg-green-500/15 text-green-300',
+  [ScholarshipStatus.Rejected]: 'bg-red-500/15 text-red-300',
+};
 
 export const RECOMMENDER_STATUS_OPTIONS: RecommenderStatus[] = [
   RecommenderStatus.NotStarted,
@@ -266,8 +285,8 @@ export const RECOMMENDER_STATUS_OPTIONS: RecommenderStatus[] = [
 ];
 
 export const RECOMMENDER_STATUS_COLORS: { [key in RecommenderStatus]: string } = {
-  [RecommenderStatus.NotStarted]: 'bg-slate-200 text-slate-700 border-slate-300 dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600',
-  [RecommenderStatus.Requested]: 'bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-500/20 dark:text-blue-200 dark:border-blue-500/30',
-  [RecommenderStatus.Reminded]: 'bg-yellow-100 text-yellow-800 border-yellow-200 dark:bg-yellow-500/20 dark:text-yellow-200 dark:border-yellow-500/30',
-  [RecommenderStatus.Submitted]: 'bg-green-100 text-green-800 border-green-200 dark:bg-green-500/20 dark:text-green-200 dark:border-green-500/30',
+  [RecommenderStatus.NotStarted]: 'bg-zinc-500/15 text-zinc-300 border border-zinc-500/30',
+  [RecommenderStatus.Requested]: 'bg-blue-500/15 text-blue-300 border border-blue-500/30',
+  [RecommenderStatus.Reminded]: 'bg-yellow-500/15 text-yellow-300 border border-yellow-500/30',
+  [RecommenderStatus.Submitted]: 'bg-green-500/15 text-green-300 border border-green-500/30',
 };

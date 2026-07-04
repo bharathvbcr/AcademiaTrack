@@ -6,6 +6,7 @@ import Tooltip from './Tooltip';
 import { useClickOutside } from '../hooks/useClickOutside';
 import AdvancedSearchBar from './AdvancedSearchBar';
 import { ViewMode } from '../hooks/useViewState';
+import { MaterialIcon } from './ApplicationFormUI';
 
 type ViewSection = 'apps' | 'schedule' | 'resources';
 
@@ -25,10 +26,6 @@ interface HeaderProps {
   applications: Application[];
   onSearch: (results: Application[], query: string) => void;
 }
-
-const MaterialIcon: React.FC<{ name: string; className?: string }> = ({ name, className }) => (
-  <span className={`material-symbols-outlined ${className}`}>{name}</span>
-);
 
 interface ViewIconButtonProps {
   mode: ViewMode;
@@ -322,7 +319,7 @@ const Header: React.FC<HeaderProps> = ({
                     onChange={(e) => onSetDefaultProgramType(e.target.value as ProgramType)}
                     className="w-full text-sm rounded-lg border-[#27272a] bg-[#09090b] py-1.5 pl-3 pr-8 text-[#f4f4f5] focus:outline-none focus:ring-2 focus:ring-[#dc2626]"
                   >
-                    {PROGRAM_TYPE_OPTIONS.map(type => <option key={type} value={type} className="bg-[#1a0a0f]">{type}</option>)}
+                    {PROGRAM_TYPE_OPTIONS.map(type => <option key={type} value={type} className="bg-[#18181b]">{type}</option>)}
                   </select>
                 </div>
 
@@ -360,7 +357,7 @@ const Header: React.FC<HeaderProps> = ({
                       <MaterialIcon name="download" className="text-lg text-[#a1a1aa]" />
                       <span>Export</span>
                     </span>
-                    <MaterialIcon name={showExportMenu ? 'expand_less' : 'expand_more'} className="text-sm text-[#E8B4B8]" />
+                    <MaterialIcon name={showExportMenu ? 'expand_less' : 'expand_more'} className="text-sm text-[#a1a1aa]" />
                   </button>
                   {showExportMenu && (
                     <div className="pl-10 bg-[#18181b]">
@@ -421,6 +418,23 @@ const Header: React.FC<HeaderProps> = ({
               <span className="hidden lg:inline">Faculty</span>
             </button>
           </Tooltip>
+
+          {/* Quick Capture — visible on touch / small screens; hover expand on desktop */}
+          {onQuickCapture && (
+            <Tooltip content="Quick Capture (Ctrl+Shift+C)">
+              <button
+                type="button"
+                onClick={() => {
+                  setIsAddNewHovered(true);
+                  requestAnimationFrame(() => quickInputRef.current?.focus());
+                }}
+                className="flex items-center justify-center w-10 h-10 border border-[#27272a] rounded-xl text-[#a1a1aa] hover:text-[#f4f4f5] hover:bg-[#27272a] transition-colors sm:hidden"
+                aria-label="Quick capture application"
+              >
+                <MaterialIcon name="bolt" className="text-lg" />
+              </button>
+            </Tooltip>
+          )}
 
           {/* Expandable Add New Button with Quick Capture */}
           <div

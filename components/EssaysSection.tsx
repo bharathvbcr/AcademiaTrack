@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Application, Essay, EssayDraft } from '../types';
-import { FieldSet, MaterialIcon } from './ApplicationFormUI';
+import { ESSAY_STATUS_COLORS } from '../constants';
+import { FieldSet, MaterialIcon, formInputSmClass, formPrimaryBtnClass, formActionBtnClass } from './ApplicationFormUI';
 
 interface EssaysSectionProps {
     appData: Omit<Application, 'id'>;
@@ -59,13 +60,13 @@ const EssaysSection: React.FC<EssaysSectionProps> = ({
         <FieldSet legend="SOP & Essays">
             <div className="md:col-span-2 space-y-4">
                 {appData.essays?.map((essay) => (
-                    <div key={essay.id} className="bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
-                        <div className="flex items-center justify-between p-3 bg-slate-100 dark:bg-slate-700/50 cursor-pointer" onClick={() => toggleEssay(essay.id)}>
+                    <div key={essay.id} className="bg-[#09090b] rounded-xl border border-[#27272a] overflow-hidden">
+                        <div className="flex items-center justify-between p-3 bg-[#09090b] cursor-pointer" onClick={() => toggleEssay(essay.id)}>
                             <div className="flex items-center gap-3">
                                 <MaterialIcon name="expand_more" className={`transition-transform transform ${openEssays[essay.id] ? 'rotate-180' : ''}`} />
                                 <div>
-                                    <h4 className="font-semibold text-slate-800 dark:text-slate-200">{essay.name}</h4>
-                                    <span className="text-xs text-slate-500 dark:text-slate-400">{essay.type}</span>
+                                    <h4 className="font-semibold text-[#f4f4f5]">{essay.name}</h4>
+                                    <span className="text-xs text-[#a1a1aa]">{essay.type}</span>
                                 </div>
                             </div>
                             <div className="flex items-center gap-3">
@@ -74,10 +75,7 @@ const EssaysSection: React.FC<EssaysSectionProps> = ({
                                     onChange={(e) => updateEssayStatus(essay.id, e.target.value as any)}
                                     onClick={(e) => e.stopPropagation()}
                                     aria-label={`Status for ${essay.name}`}
-                                    className={`text-xs font-medium px-2 py-1 rounded-full border ${essay.status === 'Finalized' ? 'bg-green-100 text-green-700 border-green-200' :
-                                        essay.status === 'Drafting' ? 'bg-blue-100 text-blue-700 border-blue-200' :
-                                            'bg-slate-100 text-slate-700 border-slate-200'
-                                        }`}
+                                    className={`text-xs font-medium px-2 py-1 rounded-full border ${ESSAY_STATUS_COLORS[essay.status]}`}
                                 >
                                     <option value="Not Started">Not Started</option>
                                     <option value="Drafting">Drafting</option>
@@ -87,7 +85,7 @@ const EssaysSection: React.FC<EssaysSectionProps> = ({
                                     type="button"
                                     onClick={(e) => { e.stopPropagation(); removeEssay(essay.id); }}
                                     aria-label={`Remove ${essay.name}`}
-                                    className="text-slate-400 hover:text-red-500 transition-colors"
+                                    className="text-[#a1a1aa] hover:text-red-500 transition-colors"
                                 >
                                     <MaterialIcon name="delete" />
                                 </button>
@@ -99,8 +97,8 @@ const EssaysSection: React.FC<EssaysSectionProps> = ({
                                 {/* Drafts List */}
                                 {essay.drafts.length > 0 ? (
                                     <div className="overflow-x-auto">
-                                        <table className="w-full text-sm text-left text-slate-500 dark:text-slate-400">
-                                            <thead className="text-xs text-slate-700 uppercase bg-slate-50 dark:bg-slate-700 dark:text-slate-400">
+                                        <table className="w-full text-sm text-left text-[#a1a1aa]">
+                                            <thead className="text-xs text-[#a1a1aa] uppercase bg-[#27272a]">
                                                 <tr>
                                                     <th className="px-4 py-2">Ver</th>
                                                     <th className="px-4 py-2">Date</th>
@@ -112,8 +110,8 @@ const EssaysSection: React.FC<EssaysSectionProps> = ({
                                             </thead>
                                             <tbody>
                                                 {essay.drafts.map((draft) => (
-                                                    <tr key={draft.id} className="bg-white dark:bg-slate-800 border-b dark:border-slate-700">
-                                                        <td className="px-4 py-2 font-medium text-slate-900 dark:text-white">v{draft.version}</td>
+                                                    <tr key={draft.id} className="bg-[#18181b] border-b border-[#27272a]">
+                                                        <td className="px-4 py-2 font-medium text-[#f4f4f5]">v{draft.version}</td>
                                                         <td className="px-4 py-2">{draft.date}</td>
                                                         <td className="px-4 py-2">{draft.wordCount}</td>
                                                         <td className="px-4 py-2 truncate max-w-xs">{draft.notes}</td>
@@ -124,7 +122,8 @@ const EssaysSection: React.FC<EssaysSectionProps> = ({
                                                                         <button
                                                                             type="button"
                                                                             onClick={() => handleOpenEssayDraftFile(draft.filePath!)}
-                                                                            className="p-1 text-blue-500 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded transition-colors"
+                                                                            className={`${formActionBtnClass} p-1`}
+                                                                            aria-label={`Open draft file version ${draft.version}`}
                                                                             title="Open file"
                                                                         >
                                                                             <MaterialIcon name="visibility" className="text-base" />
@@ -132,8 +131,8 @@ const EssaysSection: React.FC<EssaysSectionProps> = ({
                                                                         <button
                                                                             type="button"
                                                                             onClick={() => handleRemoveEssayDraftFile(essay.id, draft.id, draft.filePath!)}
-                                                                            className="p-1 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 rounded transition-colors"
-                                                                            title="Remove file"
+                                                                            className="p-1 text-[#a1a1aa] hover:text-red-400 hover:bg-red-500/10 rounded transition-colors"
+                                                                            aria-label={`Remove file from draft version ${draft.version}`}
                                                                         >
                                                                             <MaterialIcon name="close" className="text-base" />
                                                                         </button>
@@ -142,7 +141,8 @@ const EssaysSection: React.FC<EssaysSectionProps> = ({
                                                                     <button
                                                                         type="button"
                                                                         onClick={() => handleAttachEssayDraftFile(essay.id, draft.id)}
-                                                                        className="p-1 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 rounded transition-colors"
+                                                                        className="p-1 text-[#a1a1aa] hover:text-[#a1a1aa] hover:text-[#f4f4f5] hover:bg-[#27272a] rounded transition-colors"
+                                                                        aria-label={`Attach file to draft version ${draft.version}`}
                                                                         title="Attach file"
                                                                     >
                                                                         <MaterialIcon name="attach_file" className="text-base" />
@@ -155,7 +155,7 @@ const EssaysSection: React.FC<EssaysSectionProps> = ({
                                                                 type="button"
                                                                 onClick={() => removeEssayDraft(essay.id, draft.id)}
                                                                 aria-label={`Remove draft version ${draft.version}`}
-                                                                className="text-red-500 hover:text-red-700"
+                                                                className="text-red-400 hover:text-red-300"
                                                             >
                                                                 <MaterialIcon name="delete" className="text-base" />
                                                             </button>
@@ -166,46 +166,46 @@ const EssaysSection: React.FC<EssaysSectionProps> = ({
                                         </table>
                                     </div>
                                 ) : (
-                                    <p className="text-sm text-slate-500 italic text-center py-2">No drafts yet.</p>
+                                    <p className="text-sm text-[#a1a1aa] italic text-center py-2">No drafts yet.</p>
                                 )}
 
                                 {/* Add Draft Form */}
-                                <div className="bg-slate-100 dark:bg-slate-700/30 p-3 rounded-lg border border-dashed border-slate-300 dark:border-slate-600">
-                                    <h5 className="text-xs font-semibold uppercase text-slate-500 mb-2">Add New Draft</h5>
+                                <div className="bg-[#09090b] p-3 rounded-lg border border-dashed border-[#27272a]">
+                                    <h5 className="text-xs font-semibold uppercase text-[#a1a1aa] mb-2">Add New Draft</h5>
                                     <div className="grid grid-cols-1 sm:grid-cols-4 gap-2">
                                         <input
                                             type="number"
                                             placeholder="Ver #"
                                             value={newDrafts[essay.id]?.version || (essay.drafts.length + 1)}
                                             onChange={(e) => handleNewDraftChange(essay.id, 'version', parseInt(e.target.value))}
-                                            className="px-2 py-1.5 text-sm rounded border border-[#E8B4B8]/30 liquid-glass text-[#F5D7DA] placeholder:text-[#E8B4B8]/50"
+                                            className={formInputSmClass}
                                         />
                                         <input
                                             type="date"
                                             value={newDrafts[essay.id]?.date || new Date().toISOString().split('T')[0]}
                                             onChange={(e) => handleNewDraftChange(essay.id, 'date', e.target.value)}
                                             aria-label="Draft date"
-                                            className="px-2 py-1.5 text-sm rounded border border-[#E8B4B8]/30 liquid-glass text-[#F5D7DA] placeholder:text-[#E8B4B8]/50"
+                                            className={formInputSmClass}
                                         />
                                         <input
                                             type="number"
                                             placeholder="Word Count"
                                             value={newDrafts[essay.id]?.wordCount || ''}
                                             onChange={(e) => handleNewDraftChange(essay.id, 'wordCount', parseInt(e.target.value))}
-                                            className="px-2 py-1.5 text-sm rounded border border-[#E8B4B8]/30 liquid-glass text-[#F5D7DA] placeholder:text-[#E8B4B8]/50"
+                                            className={formInputSmClass}
                                         />
                                         <input
                                             type="text"
                                             placeholder="Notes"
                                             value={newDrafts[essay.id]?.notes || ''}
                                             onChange={(e) => handleNewDraftChange(essay.id, 'notes', e.target.value)}
-                                            className="px-2 py-1.5 text-sm rounded border border-[#E8B4B8]/30 liquid-glass text-[#F5D7DA] placeholder:text-[#E8B4B8]/50"
+                                            className={formInputSmClass}
                                         />
                                     </div>
                                     <button
                                         type="button"
                                         onClick={() => handleAddDraft(essay.id)}
-                                        className="mt-2 w-full py-1.5 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+                                        className={`mt-2 w-full py-1.5 text-sm ${formPrimaryBtnClass}`}
                                     >
                                         Add Draft
                                     </button>
@@ -220,21 +220,21 @@ const EssaysSection: React.FC<EssaysSectionProps> = ({
                     <button
                         type="button"
                         onClick={() => addEssay('SOP', 'Statement of Purpose')}
-                        className="flex-1 py-2 text-sm font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg border border-blue-200 transition-colors"
+                        className="flex-1 py-2 text-sm font-medium text-blue-300 bg-blue-500/10 hover:bg-blue-500/20 rounded-lg border border-blue-500/30 transition-colors"
                     >
                         + Add SOP
                     </button>
                     <button
                         type="button"
                         onClick={() => addEssay('Personal History', 'Personal History Statement')}
-                        className="flex-1 py-2 text-sm font-medium text-purple-600 bg-purple-50 hover:bg-purple-100 rounded-lg border border-purple-200 transition-colors"
+                        className="flex-1 py-2 text-sm font-medium text-purple-300 bg-purple-500/10 hover:bg-purple-500/20 rounded-lg border border-purple-500/30 transition-colors"
                     >
                         + Add Personal History
                     </button>
                     <button
                         type="button"
                         onClick={() => addEssay('Diversity Statement', 'Diversity Statement')}
-                        className="flex-1 py-2 text-sm font-medium text-pink-600 bg-pink-50 hover:bg-pink-100 rounded-lg border border-pink-200 transition-colors"
+                        className="flex-1 py-2 text-sm font-medium text-pink-300 bg-pink-500/10 hover:bg-pink-500/20 rounded-lg border border-pink-500/30 transition-colors"
                     >
                         + Add Diversity Stmt
                     </button>

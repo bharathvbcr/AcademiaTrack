@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { readJsonFromStorage, writeJsonToStorage } from '../utils/browserStorage';
+import { readJsonFromStorage, writeJsonToStorageOrThrow } from '../utils/browserStorage';
 
 export function useLocalStorage<T>(key: string, initialValue: T): [T, React.Dispatch<React.SetStateAction<T>>] {
   const [storedValue, setStoredValue] = useState<T>(() => {
@@ -11,7 +11,7 @@ export function useLocalStorage<T>(key: string, initialValue: T): [T, React.Disp
     setStoredValue(prev => {
       const nextValue = value instanceof Function ? value(prev) : value;
       try {
-        writeJsonToStorage(key, nextValue);
+        writeJsonToStorageOrThrow(key, nextValue);
       } catch (e) {
         if (e instanceof DOMException && e.name === 'QuotaExceededError') {
           console.error('Storage quota exceeded when saving setting:', key);

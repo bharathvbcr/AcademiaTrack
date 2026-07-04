@@ -17,6 +17,7 @@ import {
     buildEssayFeedbackMessages,
     summarizeApplication,
 } from '../services/ai';
+import { MaterialIcon } from './ApplicationFormUI';
 
 interface AIAssistantModalProps {
     isOpen: boolean;
@@ -34,9 +35,7 @@ interface UIMessage {
     label?: string;
 }
 
-const MaterialIcon: React.FC<{ name: string; className?: string }> = ({ name, className }) => (
-    <span className={`material-symbols-outlined ${className ?? ''}`}>{name}</span>
-);
+const AI_ASSISTANT_OWNER = 'ai-assistant-modal';
 
 const AIAssistantModal: React.FC<AIAssistantModalProps> = ({
     isOpen,
@@ -79,7 +78,7 @@ const AIAssistantModal: React.FC<AIAssistantModalProps> = ({
     // hook's streaming callback stops writing to this unmounted component, and
     // clear any pending "Copied" reset timer.
     useEffect(() => () => {
-        stop();
+        stop(AI_ASSISTANT_OWNER);
         if (copyTimerRef.current) clearTimeout(copyTimerRef.current);
     }, [stop]);
 
@@ -105,7 +104,7 @@ const AIAssistantModal: React.FC<AIAssistantModalProps> = ({
                     }
                     return next;
                 });
-            });
+            }, AI_ASSISTANT_OWNER);
         } catch (e) {
             if ((e as Error)?.name === 'AbortError') return; // user pressed Stop
             const msg = e instanceof AIError ? e.message : (e as Error)?.message ?? 'Something went wrong.';
@@ -179,7 +178,7 @@ const AIAssistantModal: React.FC<AIAssistantModalProps> = ({
     };
 
     const handleClear = () => {
-        if (isGenerating) stop();
+        if (isGenerating) stop(AI_ASSISTANT_OWNER);
         setMessages([]);
         setError(null);
     };
@@ -196,9 +195,9 @@ const AIAssistantModal: React.FC<AIAssistantModalProps> = ({
     };
 
     const selectClass =
-        'text-sm rounded-lg border border-[#27272a] bg-[#09090b] py-1.5 pl-3 pr-8 text-[#f4f4f5] focus:outline-none focus:ring-2 focus:ring-[#C03050]';
+        'text-sm rounded-lg border border-[#27272a] bg-[#09090b] py-1.5 pl-3 pr-8 text-[#f4f4f5] focus:outline-none focus:ring-2 focus:ring-[#dc2626]';
     const chipClass =
-        'flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full border border-[#E8B4B8]/30 text-[#F5D7DA] hover:bg-[#27272a] disabled:opacity-40 disabled:cursor-not-allowed transition-colors';
+        'flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full border border-[#27272a] text-[#f4f4f5] hover:bg-[#27272a] disabled:opacity-40 disabled:cursor-not-allowed transition-colors';
 
     return (
         <AnimatePresence>
@@ -225,10 +224,10 @@ const AIAssistantModal: React.FC<AIAssistantModalProps> = ({
 
                             {/* Header */}
                             <div className="px-6 pt-5 pb-3 flex items-center justify-between">
-                                <h3 className="text-lg font-semibold text-[#F5D7DA] flex items-center gap-2">
-                                    <MaterialIcon name="neurology" className="text-[#C03050]" />
+                                <h3 className="text-lg font-semibold text-[#f4f4f5] flex items-center gap-2">
+                                    <MaterialIcon name="neurology" className="text-[#dc2626]" />
                                     AI Assistant
-                                    <span className="text-xs font-normal text-[#E8B4B8]/60 ml-1">
+                                    <span className="text-xs font-normal text-[#a1a1aa]/60 ml-1">
                                         {settings.provider === 'ollama' ? 'Ollama' : 'Local model'}
                                         {settings.model ? ` · ${settings.model}` : ''}
                                     </span>
@@ -253,7 +252,7 @@ const AIAssistantModal: React.FC<AIAssistantModalProps> = ({
                             </div>
 
                             {!isConfigured && (
-                                <div className="mx-6 mb-3 rounded-lg border border-[#E8B4B8]/30 bg-[#27272a]/40 px-4 py-3 text-sm text-[#F5D7DA]">
+                                <div className="mx-6 mb-3 rounded-lg border border-[#27272a] bg-[#27272a]/40 px-4 py-3 text-sm text-[#f4f4f5]">
                                     <p className="mb-2">
                                         {settings.enabled
                                             ? 'Pick a model to get started.'
@@ -261,7 +260,7 @@ const AIAssistantModal: React.FC<AIAssistantModalProps> = ({
                                     </p>
                                     <button
                                         onClick={onOpenSettings}
-                                        className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-[#C03050] text-white hover:bg-[#a02845] transition-colors"
+                                        className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-[#dc2626] text-white hover:bg-[#b91c1c] transition-colors"
                                     >
                                         Open AI settings
                                     </button>
@@ -270,7 +269,7 @@ const AIAssistantModal: React.FC<AIAssistantModalProps> = ({
 
                             {/* Context bar */}
                             <div className="px-6 pb-3 flex flex-wrap items-center gap-2 border-b border-[#27272a]">
-                                <label className="text-xs text-[#E8B4B8]/70">Context:</label>
+                                <label className="text-xs text-[#a1a1aa]/70">Context:</label>
                                 <select
                                     value={contextAppId}
                                     onChange={(e) => {
@@ -320,10 +319,10 @@ const AIAssistantModal: React.FC<AIAssistantModalProps> = ({
                             </div>
 
                             {/* Transcript */}
-                            <div ref={scrollRef} className="flex-1 overflow-y-auto px-6 py-4 space-y-4 min-h-[180px]">
+                            <div ref={scrollRef} className="flex-1 overflow-y-auto px-6 py-4 space-y-4 min-h-[180px] custom-scrollbar">
                                 {messages.length === 0 && (
-                                    <div className="h-full flex flex-col items-center justify-center text-center text-[#E8B4B8]/60 py-8">
-                                        <MaterialIcon name="auto_awesome" className="text-3xl mb-2 text-[#C03050]" />
+                                    <div className="h-full flex flex-col items-center justify-center text-center text-[#a1a1aa]/60 py-8">
+                                        <MaterialIcon name="auto_awesome" className="text-3xl mb-2 text-[#dc2626]" />
                                         <p className="text-sm max-w-sm">
                                             Ask anything about your applications, or use a quick action above. Select an
                                             application as context for grounded, specific answers.
@@ -335,8 +334,8 @@ const AIAssistantModal: React.FC<AIAssistantModalProps> = ({
                                         <div
                                             className={
                                                 m.role === 'user'
-                                                    ? 'max-w-[85%] rounded-2xl rounded-br-sm bg-[#C03050] text-white px-4 py-2.5'
-                                                    : 'max-w-[90%] rounded-2xl rounded-bl-sm bg-[#18181b] border border-[#27272a] px-4 py-2.5 text-[#F5D7DA]'
+                                                    ? 'max-w-[85%] rounded-2xl rounded-br-sm bg-[#dc2626] text-white px-4 py-2.5'
+                                                    : 'max-w-[90%] rounded-2xl rounded-bl-sm bg-[#18181b] border border-[#27272a] px-4 py-2.5 text-[#f4f4f5]'
                                             }
                                         >
                                             {m.label && (
@@ -347,11 +346,14 @@ const AIAssistantModal: React.FC<AIAssistantModalProps> = ({
                                                     <>
                                                         <div className="ai-markdown">
                                                             <ReactMarkdown remarkPlugins={[remarkGfm]}>{m.content}</ReactMarkdown>
+                                                            {isGenerating && i === messages.length - 1 && (
+                                                                <span className="inline-block w-1.5 h-4 ml-0.5 bg-[#dc2626] animate-pulse rounded-sm align-middle" aria-hidden="true" />
+                                                            )}
                                                         </div>
                                                         {!(isGenerating && i === messages.length - 1) && (
                                                             <button
                                                                 onClick={() => handleCopy(m.content, i)}
-                                                                className="mt-2 inline-flex items-center gap-1 text-[11px] text-[#E8B4B8]/70 hover:text-[#F5D7DA] transition-colors"
+                                                                className="mt-2 inline-flex items-center gap-1 text-[11px] text-[#a1a1aa]/70 hover:text-[#f4f4f5] transition-colors"
                                                                 aria-label="Copy response"
                                                             >
                                                                 <MaterialIcon name={copiedIndex === i ? 'check' : 'content_copy'} className="text-xs" />
@@ -360,7 +362,7 @@ const AIAssistantModal: React.FC<AIAssistantModalProps> = ({
                                                         )}
                                                     </>
                                                 ) : (
-                                                    <span className="inline-flex items-center gap-2 text-[#E8B4B8]/70 text-sm">
+                                                    <span className="inline-flex items-center gap-2 text-[#a1a1aa]/70 text-sm">
                                                         <span className="material-symbols-outlined animate-spin text-sm">progress_activity</span>
                                                         Thinking…
                                                     </span>
@@ -394,12 +396,12 @@ const AIAssistantModal: React.FC<AIAssistantModalProps> = ({
                                         }}
                                         rows={2}
                                         placeholder="Ask a question, or paste an essay and click Essay feedback…"
-                                        className="flex-1 resize-none rounded-xl bg-[#09090b] border border-[#27272a] px-3 py-2 text-sm text-[#F5D7DA] placeholder:text-[#E8B4B8]/40 focus:outline-none focus:ring-2 focus:ring-[#C03050]"
+                                        className="flex-1 resize-none rounded-xl bg-[#09090b] border border-[#27272a] px-3 py-2 text-sm text-[#f4f4f5] placeholder:text-[#a1a1aa]/40 focus:outline-none focus:ring-2 focus:ring-[#dc2626]"
                                     />
                                     {isGenerating ? (
                                         <button
-                                            onClick={stop}
-                                            className="h-10 px-4 rounded-xl bg-[#27272a] text-[#F5D7DA] hover:bg-[#3f3f46] flex items-center gap-1.5 transition-colors"
+                                            onClick={() => stop(AI_ASSISTANT_OWNER)}
+                                            className="h-10 px-4 rounded-xl bg-[#27272a] text-[#f4f4f5] hover:bg-[#3f3f46] flex items-center gap-1.5 transition-colors"
                                         >
                                             <MaterialIcon name="stop" className="text-lg" /> Stop
                                         </button>
@@ -407,13 +409,13 @@ const AIAssistantModal: React.FC<AIAssistantModalProps> = ({
                                         <button
                                             onClick={handleSend}
                                             disabled={!input.trim()}
-                                            className="h-10 px-4 rounded-xl bg-[#C03050] text-white hover:bg-[#a02845] disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1.5 transition-colors"
+                                            className="h-10 px-4 rounded-xl bg-[#dc2626] text-white hover:bg-[#b91c1c] disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1.5 transition-colors"
                                         >
                                             <MaterialIcon name="send" className="text-lg" /> Send
                                         </button>
                                     )}
                                 </div>
-                                <p className="mt-2 text-[10px] text-[#E8B4B8]/50 flex items-center gap-1">
+                                <p className="mt-2 text-[10px] text-[#a1a1aa]/50 flex items-center gap-1">
                                     <MaterialIcon name="lock" className="text-xs" />
                                     Runs on your configured local model — your data stays on your machine.
                                 </p>

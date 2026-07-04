@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Application, FacultyContact, ApplicationStatus, ApplicationFeeWaiverStatus, TestStatus, ProgramType, DocumentStatus } from '../types';
 import { useDebounce } from './useDebounce';
-import { migrateData, wrapInSchema, createEmptyDataSchema } from '../utils/dataMigration';
+import { migrateData, wrapInSchema } from '../utils/dataMigration';
 import { useUndoRedo } from './useUndoRedo';
-import { getStorageItem, readJsonFromStorage, writeJsonToStorage } from '../utils/browserStorage';
+import { getStorageItem, readJsonFromStorage, writeJsonToStorageOrThrow } from '../utils/browserStorage';
 import { getDaysUntil } from '../utils/dateUtils';
 import { ToastType } from './useToast';
 
@@ -37,6 +37,7 @@ const ensureApplicationDefaults = (app: Application): Application => {
 export const useApplications = (showToast?: (type: ToastType, message: string, title?: string) => void) => {
   const { state: applications, setState: setApplications, undo, redo, canUndo, canRedo, reset } = useUndoRedo<Application[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [canPersist, setCanPersist] = useState(false);
   const debouncedApplications = useDebounce(applications, 1000);
 
   // Load data on mount
@@ -63,7 +64,10 @@ export const useApplications = (showToast?: (type: ToastType, message: string, t
               reset(migratedData.applications.map(ensureApplicationDefaults));
             }
           }
-          if (isMounted) setIsLoaded(true);
+          if (isMounted) {
+            setCanPersist(true);
+            setIsLoaded(true);
+          }
           return; // Success, exit retry loop
         } catch (e) {
           console.error(`Failed to load applications (${4 - retries}/3):`, e);
@@ -85,6 +89,7 @@ export const useApplications = (showToast?: (type: ToastType, message: string, t
   // Save data whenever debounced applications change
   useEffect(() => {
     if (!isLoaded) return;
+    if (!canPersist) return;
     if (debouncedApplications !== applications) return;
 
     let retryTimeoutId: ReturnType<typeof setTimeout> | undefined;
@@ -105,7 +110,7 @@ export const useApplications = (showToast?: (type: ToastType, message: string, t
           });
         } else {
           try {
-            writeJsonToStorage('phd-applications', dataToSave);
+            writeJsonToStorageOrThrow('phd-applications', dataToSave);
           } catch (e) {
             if (e instanceof DOMException && e.name === 'QuotaExceededError') {
               showToast?.('error', 'Storage is full. Your changes could not be saved. Consider exporting your data.', 'Storage Full');
@@ -130,7 +135,7 @@ export const useApplications = (showToast?: (type: ToastType, message: string, t
                 });
             } else {
               try {
-                writeJsonToStorage('phd-applications', dataToSave);
+                writeJsonToStorageOrThrow('phd-applications', dataToSave);
               } catch (e) {
                 if (e instanceof DOMException && e.name === 'QuotaExceededError') {
                   showToast?.('error', 'Storage is full. Your changes could not be saved. Consider exporting your data.', 'Storage Full');
@@ -153,7 +158,7 @@ export const useApplications = (showToast?: (type: ToastType, message: string, t
     return () => {
       if (retryTimeoutId !== undefined) clearTimeout(retryTimeoutId);
     };
-  }, [applications, debouncedApplications, isLoaded, showToast]);
+  }, [applications, canPersist, debouncedApplications, isLoaded, showToast]);
 
   // Periodic deadline check
   // Keep a ref to applications for the interval to access the latest state without resetting
@@ -209,6 +214,7 @@ export const useApplications = (showToast?: (type: ToastType, message: string, t
 
   const addApplication = (app: Omit<Application, 'id'>) => {
     try {
+      setCanPersist(true);
       const newApplication = { ...app, id: crypto.randomUUID() };
       setApplications(apps => [...apps, newApplication]);
     } catch (error) {
@@ -219,6 +225,7 @@ export const useApplications = (showToast?: (type: ToastType, message: string, t
 
   const updateApplication = (updatedApp: Application) => {
     try {
+      setCanPersist(true);
       setApplications(apps => {
         const index = apps.findIndex(app => app.id === updatedApp.id);
         if (index === -1) {
@@ -235,6 +242,7 @@ export const useApplications = (showToast?: (type: ToastType, message: string, t
 
   const deleteApplication = (id: string) => {
     try {
+      setCanPersist(true);
       setApplications(apps => {
         const exists = apps.some(app => app.id === id);
         if (!exists) {
@@ -256,6 +264,7 @@ export const useApplications = (showToast?: (type: ToastType, message: string, t
     // Deep copy to avoid reference issues
     const newApp: Application = JSON.parse(JSON.stringify(appToDuplicate));
 
+    setCanPersist(true);
     newApp.id = crypto.randomUUID();
     newApp.universityName = `${newApp.universityName} (Copy)`;
     newApp.status = ApplicationStatus.NotStarted;
@@ -274,6 +283,7 @@ export const useApplications = (showToast?: (type: ToastType, message: string, t
   };
 
   const addFacultyContact = (contact: FacultyContact, universityName: string, isNewUniversity: boolean, defaultProgramType: ProgramType) => {
+    setCanPersist(true);
     if (isNewUniversity) {
       const newApplication: Application = {
         id: crypto.randomUUID(),
@@ -333,6 +343,7 @@ export const useApplications = (showToast?: (type: ToastType, message: string, t
 
   const importApplications = (newApps: Application[]) => {
     try {
+      setCanPersist(true);
       // Validate imported data
       if (!Array.isArray(newApps)) {
         throw new Error('Imported data must be an array of applications');
@@ -359,6 +370,7 @@ export const useApplications = (showToast?: (type: ToastType, message: string, t
 
   const mergeApplications = (newApps: Application[]) => {
     try {
+      setCanPersist(true);
       if (!Array.isArray(newApps)) {
         throw new Error('Merged data must be an array of applications');
       }

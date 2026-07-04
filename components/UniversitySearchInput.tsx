@@ -108,7 +108,7 @@ const UniversitySearchInput: React.FC<UniversitySearchInputProps> = ({
                 />
                 {isNew && value.length > 0 && !showSuggestions && (
                     <div className="absolute right-3 top-[34px] pointer-events-none">
-                        <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-2 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800">
+                        <span className="text-xs font-medium text-emerald-400 bg-emerald-500/15 px-2 py-0.5 rounded-full border border-emerald-500/30">
                             New
                         </span>
                     </div>

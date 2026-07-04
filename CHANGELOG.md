@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## [5.6.0] - 2026-07-04
+
+### Changed
+- **UI Refresh:** Replaced the crimson/pink glass aesthetic with a cohesive zinc-based dark theme across the app — navigation, modals, cards, kanban, timeline, financials, dashboard, and status badges now share consistent neutral surfaces, red accent CTAs, and translucent status pills.
+- **Status & Chart Colors:** Unified application, document, essay, fee-waiver, test, faculty-contact, and tag preset colors so badges and analytics charts use matching hues.
+- **Motion & Loading:** Wrapped the app in Framer Motion's `MotionConfig` with reduced-motion support and replaced bare "Loading…" fallbacks with the shared `LoadingSpinner`.
+- **Accessibility:** Added missing `aria-label` attributes on icon-only close buttons and tightened focus/hover states on interactive controls.
+
+### Added
+- **Hook Tests:** Added unit tests for `useAI` and `useApplications` alongside expanded `useLocalStorage` coverage.
+
 ## [5.5.1] - 2026-06-27
 
 ### Fixed

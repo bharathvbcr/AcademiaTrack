@@ -4,16 +4,13 @@ import { backdropVariants, modalVariants } from '../hooks/useAnimations';
 import { useLockBodyScroll } from '../hooks/useLockBodyScroll';
 import { useEscapeKey } from '../hooks/useEscapeKey';
 import { useViewState, ViewMode } from '../hooks/useViewState';
+import { ToggleSwitch, MaterialIcon, formPrimaryBtnClass, formSecondaryBtnClass, formIconBtnClass, formCardClass, formMutedTextClass } from './ApplicationFormUI';
 
 interface ColumnConfigModalProps {
   isOpen: boolean;
   onClose: () => void;
   viewMode: ViewMode;
 }
-
-const MaterialIcon: React.FC<{ name: string; className?: string }> = ({ name, className }) => (
-  <span className={`material-symbols-outlined ${className}`}>{name}</span>
-);
 
 // Available columns for list view
 const AVAILABLE_COLUMNS = [
@@ -117,12 +114,12 @@ const ColumnConfigModal: React.FC<ColumnConfigModalProps> = ({ isOpen, onClose, 
           exit="exit"
           onClick={(e) => e.stopPropagation()}
         >
-          <div className="p-6 border-b border-[#E8B4B8]/30">
+          <div className="p-6 border-b border-[#27272a]">
             <div className="flex items-center justify-between">
-              <h2 className="text-2xl font-bold text-[#F5D7DA]">Column Configuration</h2>
+              <h2 className="text-2xl font-bold text-[#f4f4f5]">Column Configuration</h2>
               <button
                 onClick={onClose}
-                className="p-2 hover:bg-[rgba(192,48,80,0.25)] rounded-lg text-[#E8B4B8] hover:text-[#F5D7DA]"
+                className={formIconBtnClass}
                 aria-label="Close column configuration modal"
               >
                 <MaterialIcon name="close" className="text-xl" />
@@ -131,7 +128,7 @@ const ColumnConfigModal: React.FC<ColumnConfigModalProps> = ({ isOpen, onClose, 
           </div>
 
           <div className="flex-1 overflow-y-auto p-6 space-y-4">
-            <p className="text-sm text-[#E8B4B8]/70">
+            <p className={`text-sm ${formMutedTextClass}`}>
               Configure which columns are visible and their display order.
             </p>
 
@@ -144,14 +141,15 @@ const ColumnConfigModal: React.FC<ColumnConfigModalProps> = ({ isOpen, onClose, 
                 return (
                   <div
                     key={column.id}
-                    className="flex items-center gap-3 p-3 liquid-glass rounded-lg"
+                    className={`flex items-center gap-3 p-3 ${formCardClass}`}
                   >
                     <div className="flex items-center gap-2 flex-1">
                       <div className="flex flex-col gap-1">
                         <button
                           onClick={() => handleMoveColumn(column.id, 'up')}
                           disabled={!canMoveUp}
-                          className="p-1 text-[#E8B4B8] hover:text-[#F5D7DA] disabled:opacity-30"
+                          className="p-1 text-[#a1a1aa] hover:text-[#f4f4f5] disabled:opacity-30"
+                          aria-label={`Move ${column.label} up`}
                           title="Move up"
                         >
                           <MaterialIcon name="arrow_upward" className="text-sm" />
@@ -159,48 +157,44 @@ const ColumnConfigModal: React.FC<ColumnConfigModalProps> = ({ isOpen, onClose, 
                         <button
                           onClick={() => handleMoveColumn(column.id, 'down')}
                           disabled={!canMoveDown}
-                          className="p-1 text-[#E8B4B8] hover:text-[#F5D7DA] disabled:opacity-30"
+                          className="p-1 text-[#a1a1aa] hover:text-[#f4f4f5] disabled:opacity-30"
+                          aria-label={`Move ${column.label} down`}
                           title="Move down"
                         >
                           <MaterialIcon name="arrow_downward" className="text-sm" />
                         </button>
                       </div>
-                      <MaterialIcon name={column.icon} className="text-[#E8B4B8]" />
-                      <span className="font-medium text-[#F5D7DA]">{column.label}</span>
+                      <MaterialIcon name={column.icon} className="text-[#a1a1aa]" />
+                      <span className="font-medium text-[#f4f4f5]">{column.label}</span>
                     </div>
-                    <label className="relative inline-flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={isVisible}
-                        onChange={() => handleToggleColumn(column.id)}
-                        className="sr-only peer"
-                        aria-label={`Toggle visibility for ${column.label}`}
-                      />
-                      <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
-                    </label>
+                    <ToggleSwitch
+                      checked={isVisible}
+                      onChange={() => handleToggleColumn(column.id)}
+                      aria-label={`Toggle visibility for ${column.label}`}
+                    />
                   </div>
                 );
               })}
             </div>
           </div>
 
-          <div className="p-6 border-t border-[#E8B4B8]/30 flex items-center justify-between">
+          <div className="p-6 border-t border-[#27272a] flex items-center justify-between">
             <button
               onClick={handleReset}
-              className="px-4 py-2 text-sm border border-[#E8B4B8]/30 rounded-lg hover:bg-[rgba(192,48,80,0.25)] text-[#F5D7DA]"
+              className={formSecondaryBtnClass}
             >
               Reset to Defaults
             </button>
             <div className="flex gap-2">
               <button
                 onClick={onClose}
-                className="px-4 py-2 text-sm border border-[#E8B4B8]/30 rounded-lg hover:bg-[rgba(192,48,80,0.25)] text-[#F5D7DA]"
+                className={formSecondaryBtnClass}
               >
                 Cancel
               </button>
               <button
                 onClick={handleSave}
-                className="px-4 py-2 text-sm bg-[#C03050] text-white rounded-lg hover:bg-[#E03030]"
+                className={formPrimaryBtnClass}
               >
                 Save
               </button>

@@ -1,18 +1,23 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useAutomation } from '../hooks/useAutomation';
 import { AutomationRule, TriggerType, ActionType, AutomationCondition, AutomationAction } from '../types/automation';
 import { Application, ApplicationStatus } from '../types';
 import { STATUS_OPTIONS } from '../constants';
+import {
+  MaterialIcon,
+  ToggleSwitch,
+  formInputClass,
+  formInputSmClass,
+  formActionBtnClass,
+  formPrimaryBtnClass,
+  formSecondaryBtnClass,
+} from './ApplicationFormUI';
 
 interface AutomationRuleBuilderProps {
   rule?: AutomationRule;
   onSave: (rule: AutomationRule) => void;
   onCancel: () => void;
 }
-
-const MaterialIcon: React.FC<{ name: string; className?: string }> = ({ name, className }) => (
-  <span className={`material-symbols-outlined ${className}`}>{name}</span>
-);
 
 const AutomationRuleBuilder: React.FC<AutomationRuleBuilderProps> = ({ rule, onSave, onCancel }) => {
   const { addRule, updateRule } = useAutomation();
@@ -83,16 +88,16 @@ const AutomationRuleBuilder: React.FC<AutomationRuleBuilderProps> = ({ rule, onS
   };
 
   return (
-    <div className="space-y-6 p-4 bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700">
+    <div className="space-y-6 p-4 bg-[#18181b] rounded-lg border border-[#27272a]">
       <div>
-        <label htmlFor="rule-name" className="block text-sm font-medium mb-2">Rule Name</label>
+        <label htmlFor="rule-name" className="block text-sm font-medium text-[#f4f4f5] mb-2">Rule Name</label>
         <input
           id="rule-name"
           type="text"
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder="e.g., Auto-remind on submission"
-          className="w-full px-4 py-2 border rounded-lg"
+          className={formInputClass}
           aria-invalid={!!nameError}
           aria-describedby={nameError ? 'rule-name-error' : undefined}
         />
@@ -100,23 +105,22 @@ const AutomationRuleBuilder: React.FC<AutomationRuleBuilderProps> = ({ rule, onS
       </div>
 
       <div>
-        <label className="flex items-center gap-2">
-          <input
-            type="checkbox"
-            checked={enabled}
-            onChange={(e) => setEnabled(e.target.checked)}
-          />
-          <span>Enabled</span>
-        </label>
+        <ToggleSwitch
+          id="rule-enabled"
+          checked={enabled}
+          onChange={setEnabled}
+          label="Enabled"
+          aria-label="Rule enabled"
+        />
       </div>
 
       <div>
-        <label htmlFor="rule-trigger" className="block text-sm font-medium mb-2">Trigger</label>
+        <label htmlFor="rule-trigger" className="block text-sm font-medium text-[#f4f4f5] mb-2">Trigger</label>
         <select
           id="rule-trigger"
           value={trigger}
           onChange={(e) => setTrigger(e.target.value as TriggerType)}
-          className="w-full px-4 py-2 border rounded-lg"
+          className={formInputClass}
           aria-label="Select trigger type"
           title="Select trigger type"
         >
@@ -130,11 +134,11 @@ const AutomationRuleBuilder: React.FC<AutomationRuleBuilderProps> = ({ rule, onS
 
         {trigger === 'status_changed' && (
           <div className="mt-2">
-            <label className="block text-xs mb-1">When status changes to:</label>
+            <label className="block text-xs text-[#a1a1aa] mb-1">When status changes to:</label>
             <select
               value={triggerParams.status || ''}
               onChange={(e) => setTriggerParams({ ...triggerParams, status: e.target.value as ApplicationStatus })}
-              className="w-full px-3 py-1.5 border rounded text-sm"
+              className={formInputSmClass}
               aria-label="Select status for trigger"
               title="Select status for trigger"
             >
@@ -148,13 +152,13 @@ const AutomationRuleBuilder: React.FC<AutomationRuleBuilderProps> = ({ rule, onS
 
         {trigger === 'deadline_approaching' && (
           <div className="mt-2">
-            <label htmlFor="days-before-deadline" className="block text-xs mb-1">Days before deadline:</label>
+            <label htmlFor="days-before-deadline" className="block text-xs text-[#a1a1aa] mb-1">Days before deadline:</label>
             <input
               id="days-before-deadline"
               type="number"
               value={triggerParams.daysBefore || ''}
               onChange={(e) => setTriggerParams({ ...triggerParams, daysBefore: parseInt(e.target.value) || 0 })}
-              className="w-full px-3 py-1.5 border rounded text-sm"
+              className={formInputSmClass}
               placeholder="7"
             />
           </div>
@@ -163,10 +167,10 @@ const AutomationRuleBuilder: React.FC<AutomationRuleBuilderProps> = ({ rule, onS
 
       <div>
         <div className="flex items-center justify-between mb-2">
-          <label className="block text-sm font-medium">Conditions (Optional)</label>
+          <label className="block text-sm font-medium text-[#f4f4f5]">Conditions (Optional)</label>
           <button
             onClick={addCondition}
-            className="text-xs px-2 py-1 border rounded hover:bg-slate-100 dark:hover:bg-slate-700"
+            className={formActionBtnClass}
           >
             Add Condition
           </button>
@@ -176,7 +180,7 @@ const AutomationRuleBuilder: React.FC<AutomationRuleBuilderProps> = ({ rule, onS
             <select
               value={condition.field}
               onChange={(e) => updateCondition(index, { field: e.target.value as keyof Application })}
-              className="px-2 py-1 border rounded text-sm"
+              className={formInputSmClass}
               aria-label={`Condition ${index + 1} field`}
               title={`Condition ${index + 1} field`}
             >
@@ -188,7 +192,7 @@ const AutomationRuleBuilder: React.FC<AutomationRuleBuilderProps> = ({ rule, onS
             <select
               value={condition.operator}
               onChange={(e) => updateCondition(index, { operator: e.target.value as any })}
-              className="px-2 py-1 border rounded text-sm"
+              className={formInputSmClass}
               aria-label={`Condition ${index + 1} operator`}
               title={`Condition ${index + 1} operator`}
             >
@@ -212,12 +216,12 @@ const AutomationRuleBuilder: React.FC<AutomationRuleBuilderProps> = ({ rule, onS
                 else if (!isNaN(Number(newValue)) && newValue.trim() !== '') parsedValue = Number(newValue);
                 updateCondition(index, { value: parsedValue });
               }}
-              className="flex-1 px-2 py-1 border rounded text-sm"
+              className={`flex-1 ${formInputSmClass}`}
               placeholder="Value"
             />
             <button
               onClick={() => removeCondition(index)}
-              className="px-2 py-1 text-red-600 hover:bg-red-50 rounded"
+              className="px-2 py-1 text-red-400 hover:bg-red-500/10 rounded focus:outline-none focus:ring-2 focus:ring-[#dc2626] focus:ring-offset-2 focus:ring-offset-[#09090b]"
               aria-label={`Remove condition ${index + 1}`}
               title={`Remove condition ${index + 1}`}
             >
@@ -229,22 +233,22 @@ const AutomationRuleBuilder: React.FC<AutomationRuleBuilderProps> = ({ rule, onS
 
       <div>
         <div className="flex items-center justify-between mb-2">
-          <label className="block text-sm font-medium">Actions</label>
+          <label className="block text-sm font-medium text-[#f4f4f5]">Actions</label>
           <button
             onClick={() => { addAction(); setActionsError(''); }}
-            className="text-xs px-2 py-1 border rounded hover:bg-slate-100 dark:hover:bg-slate-700"
+            className={formActionBtnClass}
           >
             Add Action
           </button>
         </div>
         {actionsError && <p role="alert" className="text-red-500 text-sm mb-2">{actionsError}</p>}
         {actions.map((action, index) => (
-          <div key={index} className="mb-3 p-3 bg-slate-50 dark:bg-slate-900 rounded border">
+          <div key={index} className="mb-3 p-3 bg-[#09090b] rounded-lg border border-[#27272a]">
             <div className="flex items-center gap-2 mb-2">
               <select
                 value={action.type}
                 onChange={(e) => updateAction(index, { type: e.target.value as ActionType, params: {} })}
-                className="px-2 py-1 border rounded text-sm"
+                className={formInputSmClass}
                 aria-label={`Action ${index + 1} type`}
                 title={`Action ${index + 1} type`}
               >
@@ -256,7 +260,7 @@ const AutomationRuleBuilder: React.FC<AutomationRuleBuilderProps> = ({ rule, onS
               </select>
               <button
                 onClick={() => removeAction(index)}
-                className="px-2 py-1 text-red-600 hover:bg-red-50 rounded"
+                className="px-2 py-1 text-red-400 hover:bg-red-500/10 rounded focus:outline-none focus:ring-2 focus:ring-[#dc2626] focus:ring-offset-2 focus:ring-offset-[#09090b]"
                 aria-label={`Remove action ${index + 1}`}
                 title={`Remove action ${index + 1}`}
               >
@@ -271,7 +275,7 @@ const AutomationRuleBuilder: React.FC<AutomationRuleBuilderProps> = ({ rule, onS
                   value={action.params.text || ''}
                   onChange={(e) => updateAction(index, { params: { ...action.params, text: e.target.value } })}
                   placeholder="Reminder text"
-                  className="w-full px-2 py-1 border rounded text-sm"
+                  className={formInputSmClass}
                 />
                 <input
                   type="number"
@@ -279,7 +283,7 @@ const AutomationRuleBuilder: React.FC<AutomationRuleBuilderProps> = ({ rule, onS
                   value={action.params.daysOffset || ''}
                   onChange={(e) => updateAction(index, { params: { ...action.params, daysOffset: parseInt(e.target.value) || 0 } })}
                   placeholder="Days from trigger (0 = same day)"
-                  className="w-full px-2 py-1 border rounded text-sm"
+                  className={formInputSmClass}
                 />
               </div>
             )}
@@ -287,7 +291,7 @@ const AutomationRuleBuilder: React.FC<AutomationRuleBuilderProps> = ({ rule, onS
               <select
                 value={action.params.status || ''}
                 onChange={(e) => updateAction(index, { params: { ...action.params, status: e.target.value } })}
-                className="w-full px-2 py-1 border rounded text-sm"
+                className={formInputSmClass}
                 aria-label={`Action ${index + 1} status`}
                 title={`Action ${index + 1} status`}
               >
@@ -304,7 +308,7 @@ const AutomationRuleBuilder: React.FC<AutomationRuleBuilderProps> = ({ rule, onS
                 value={action.params.tag || ''}
                 onChange={(e) => updateAction(index, { params: { ...action.params, tag: e.target.value } })}
                 placeholder="Tag name"
-                className="w-full px-2 py-1 border rounded text-sm"
+                className={formInputSmClass}
               />
             )}
             {action.type === 'remove_tag' && (
@@ -314,7 +318,7 @@ const AutomationRuleBuilder: React.FC<AutomationRuleBuilderProps> = ({ rule, onS
                 value={action.params.tag || ''}
                 onChange={(e) => updateAction(index, { params: { ...action.params, tag: e.target.value } })}
                 placeholder="Tag name"
-                className="w-full px-2 py-1 border rounded text-sm"
+                className={formInputSmClass}
               />
             )}
             {action.type === 'update_field' && (
@@ -325,7 +329,7 @@ const AutomationRuleBuilder: React.FC<AutomationRuleBuilderProps> = ({ rule, onS
                   value={action.params.field || ''}
                   onChange={(e) => updateAction(index, { params: { ...action.params, field: e.target.value } })}
                   placeholder="Field name"
-                  className="w-full px-2 py-1 border rounded text-sm"
+                  className={formInputSmClass}
                 />
                 <input
                   type="text"
@@ -333,7 +337,7 @@ const AutomationRuleBuilder: React.FC<AutomationRuleBuilderProps> = ({ rule, onS
                   value={action.params.value != null ? String(action.params.value) : ''}
                   onChange={(e) => updateAction(index, { params: { ...action.params, value: e.target.value } })}
                   placeholder="New value"
-                  className="w-full px-2 py-1 border rounded text-sm"
+                  className={formInputSmClass}
                 />
               </div>
             )}
@@ -344,13 +348,13 @@ const AutomationRuleBuilder: React.FC<AutomationRuleBuilderProps> = ({ rule, onS
       <div className="flex gap-2 justify-end">
         <button
           onClick={onCancel}
-          className="px-4 py-2 border rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700"
+          className={formSecondaryBtnClass}
         >
           Cancel
         </button>
         <button
           onClick={handleSave}
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+          className={formPrimaryBtnClass}
         >
           Save Rule
         </button>

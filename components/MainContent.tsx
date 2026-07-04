@@ -190,6 +190,16 @@ const MainContent: React.FC<MainContentProps> = ({
         }
     };
 
+    const viewLabels: Record<ViewMode, string> = {
+        list: 'List',
+        kanban: 'Kanban',
+        budget: 'Budget',
+        timeline: 'Timeline',
+        calendar: 'Calendar',
+        faculty: 'Faculty',
+        recommenders: 'Recommenders',
+    };
+
     return (
         <main className="mt-8">
             {/* Bulk Actions Bar */}
@@ -215,11 +225,27 @@ const MainContent: React.FC<MainContentProps> = ({
                 )}
             </AnimatePresence>
 
+            {viewMode !== 'list' && applications.length > 0 && (
+                <div className="mb-4 flex flex-wrap items-center justify-between gap-2 px-3.5 py-2.5 liquid-glass-card rounded-xl text-sm">
+                    <span className="font-medium text-[#f4f4f5] flex items-center gap-2">
+                        <span className="material-symbols-outlined text-base text-[#dc2626]">view_module</span>
+                        {viewLabels[viewMode]} view
+                    </span>
+                    <span className="text-[#a1a1aa]">
+                        {filteredAndSortedApplications.length === applications.length
+                            ? `${applications.length} application${applications.length === 1 ? '' : 's'}`
+                            : `${filteredAndSortedApplications.length} of ${applications.length} shown`}
+                    </span>
+                </div>
+            )}
+
             <Suspense fallback={<LoadingFallback />}>
-                <DashboardSummary applications={applications} viewMode={viewMode} />
+                {viewMode === 'list' && (
+                    <DashboardSummary applications={applications} viewMode={viewMode} />
+                )}
             </Suspense>
 
-            {applications.length > 0 && (
+            {applications.length > 0 && viewMode === 'list' && (
                 <Suspense fallback={null}>
                     <DashboardAIBriefing
                         applications={applications}
@@ -229,8 +255,8 @@ const MainContent: React.FC<MainContentProps> = ({
                 </Suspense>
             )}
 
-            <DataValidationPanel applications={applications} />
-            <AdvancedAnalyticsPanel applications={applications} />
+            {viewMode === 'list' && <DataValidationPanel applications={applications} />}
+            {viewMode === 'list' && <AdvancedAnalyticsPanel applications={applications} />}
 
             {/* Animated View Container */}
             <AnimatePresence mode="wait">

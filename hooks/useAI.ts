@@ -30,6 +30,9 @@ export function useAI() {
     const [connection, setConnection] = useState<ConnectionState>({ status: 'idle' });
     const [isGenerating, setIsGenerating] = useState(false);
     const abortRef = useRef<AbortController | null>(null);
+    const generationOwnerRef = useRef<string | null>(null);
+    const connectionAbortRef = useRef<AbortController | null>(null);
+    const connectionRequestIdRef = useRef(0);
 
     const provider = useMemo(() => getProvider(settings.provider), [settings.provider]);
 
@@ -42,22 +45,50 @@ export function useAI() {
 
     /** Probe the configured server and fetch its available models. */
     const testConnection = useCallback(async (): Promise<string[]> => {
+        const requestId = connectionRequestIdRef.current + 1;
+        connectionRequestIdRef.current = requestId;
+        connectionAbortRef.current?.abort();
+        const controller = new AbortController();
+        connectionAbortRef.current = controller;
         setConnection({ status: 'testing' });
         try {
-            const models = await getProvider(settings.provider).listModels(settings);
+            const models = await getProvider(settings.provider).listModels(settings, controller.signal);
+            if (connectionRequestIdRef.current !== requestId) {
+                return [];
+            }
             setConnection({ status: 'ok', models });
             return models;
         } catch (e) {
+            if ((e as Error)?.name === 'AbortError') {
+                return [];
+            }
             const message = e instanceof AIError ? e.message : (e as Error)?.message ?? 'Unknown error';
-            setConnection({ status: 'error', message });
+            if (connectionRequestIdRef.current === requestId) {
+                setConnection({ status: 'error', message });
+            }
             return [];
+        } finally {
+            if (connectionAbortRef.current === controller) {
+                connectionAbortRef.current = null;
+            }
         }
     }, [settings]);
 
+    const stopTesting = useCallback(() => {
+        connectionRequestIdRef.current += 1;
+        connectionAbortRef.current?.abort();
+        connectionAbortRef.current = null;
+        setConnection((prev) => (prev.status === 'testing' ? { status: 'idle' } : prev));
+    }, []);
+
     /** Stop any in-flight generation. */
-    const stop = useCallback(() => {
+    const stop = useCallback((owner?: string) => {
+        if (owner && generationOwnerRef.current !== owner) {
+            return;
+        }
         abortRef.current?.abort();
         abortRef.current = null;
+        generationOwnerRef.current = null;
         setIsGenerating(false);
     }, []);
 
@@ -66,13 +97,18 @@ export function useAI() {
      * the promise resolves with the full text. Throws AIError on failure.
      */
     const chat = useCallback(
-        async (messages: ChatMessage[], onToken?: (delta: string) => void): Promise<string> => {
+        async (
+            messages: ChatMessage[],
+            onToken?: (delta: string) => void,
+            owner = 'shared-ai-session',
+        ): Promise<string> => {
             if (!settings.enabled) {
                 throw new AIError('AI features are turned off. Enable them in Settings → AI.');
             }
             abortRef.current?.abort();
             const controller = new AbortController();
             abortRef.current = controller;
+            generationOwnerRef.current = owner;
             setIsGenerating(true);
             try {
                 return await provider.chat(settings, {
@@ -81,8 +117,11 @@ export function useAI() {
                     onToken,
                 });
             } finally {
-                if (abortRef.current === controller) abortRef.current = null;
-                setIsGenerating(false);
+                if (abortRef.current === controller) {
+                    abortRef.current = null;
+                    generationOwnerRef.current = null;
+                    setIsGenerating(false);
+                }
             }
         },
         [provider, settings],
@@ -96,6 +135,7 @@ export function useAI() {
         connection,
         setConnection,
         testConnection,
+        stopTesting,
         chat,
         stop,
         isGenerating,
