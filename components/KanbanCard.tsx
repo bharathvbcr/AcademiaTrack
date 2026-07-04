@@ -40,25 +40,25 @@ const KanbanCard: React.FC<KanbanCardProps> = React.memo(({ application, index, 
           ref={provided.innerRef}
           {...provided.draggableProps}
           {...provided.dragHandleProps}
-          className={`group liquid-glass-card p-3 rounded-xl mb-3 transition-all ${snapshot.isDragging ? 'shadow-lg ring-2 ring-[#E8B4B8] rotate-2' : ''
-            } ${application.isPinned ? 'border-[#E8B4B8]' : ''}`}
+          className={`group liquid-glass-card p-3 rounded-xl mb-3 transition-all ${snapshot.isDragging ? 'shadow-lg ring-2 ring-[#dc2626] rotate-2' : ''
+            } ${application.isPinned ? 'border-[#27272a]' : ''}`}
           onClick={() => onEdit(application)}
           style={provided.draggableProps.style}
         >
           <div className="flex items-start justify-between">
-            <h4 className="font-bold text-[#F5D7DA] text-sm truncate flex-1">
+            <h4 className="font-bold text-[#f4f4f5] text-sm truncate flex-1">
               {application.isPinned && (
-                <span className="text-[#E8B4B8] mr-1 inline-block align-text-bottom">
+                <span className="text-[#a1a1aa] mr-1 inline-block align-text-bottom">
                   <span className="material-symbols-outlined text-sm">push_pin</span>
                 </span>
               )}
               {application.universityName}
             </h4>
-            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity">
               {onDuplicate && (
                 <button
                   onClick={(e) => { e.stopPropagation(); onDuplicate(application.id); }}
-                  className="p-1 rounded-full text-[#E8B4B8] hover:text-[#F5D7DA] hover:bg-[rgba(192,48,80,0.2)]"
+                  className="p-1 rounded-full text-[#a1a1aa] hover:text-[#f4f4f5] hover:bg-[#27272a]"
                   title="Duplicate"
                   aria-label="Duplicate application"
                 >
@@ -69,8 +69,8 @@ const KanbanCard: React.FC<KanbanCardProps> = React.memo(({ application, index, 
                 <button
                   onClick={handlePinClick}
                   className={`p-1 rounded-full transition-colors ${application.isPinned
-                    ? 'text-[#E8B4B8] opacity-100'
-                    : 'text-[#E8B4B8]/60 hover:text-[#E8B4B8] hover:bg-[rgba(192,48,80,0.2)]'
+                    ? 'text-[#a1a1aa] opacity-100'
+                    : 'text-[#a1a1aa]/60 hover:text-[#a1a1aa] hover:bg-[#27272a]'
                     }`}
                   title={application.isPinned ? 'Unpin' : 'Pin to top'}
                   aria-label={application.isPinned ? 'Unpin' : 'Pin to top'}
@@ -80,13 +80,13 @@ const KanbanCard: React.FC<KanbanCardProps> = React.memo(({ application, index, 
               )}
             </div>
           </div>
-          <p className="text-xs text-[#E8B4B8] truncate mb-2">
+          <p className="text-xs text-[#a1a1aa] truncate mb-2">
             {application.programName}
           </p>
 
           <div className="flex justify-between items-center text-xs gap-1">
             {application.tags && application.tags.length > 0 && (
-              <span className="text-xs text-[#F5D7DA]" title={application.tags.join(', ')}>
+              <span className="text-xs text-[#f4f4f5]" title={application.tags.join(', ')}>
                 <span className="material-symbols-outlined text-xs">sell</span>
               </span>
             )}
@@ -95,7 +95,7 @@ const KanbanCard: React.FC<KanbanCardProps> = React.memo(({ application, index, 
             ) : (
               <span></span>
             )}
-            <span className="material-symbols-outlined text-[#E8B4B8]/60 text-sm ml-auto">drag_indicator</span>
+            <span className="material-symbols-outlined text-[#a1a1aa]/60 text-sm ml-auto">drag_indicator</span>
           </div>
         </div>
       )}

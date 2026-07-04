@@ -1,4 +1,5 @@
 import React, { Component, ErrorInfo, ReactNode } from 'react';
+import { MaterialIcon } from './ApplicationFormUI';
 
 interface Props {
   children: ReactNode;
@@ -81,33 +82,31 @@ class ErrorBoundary extends Component<Props, State> {
       }
 
       return (
-        <div className="min-h-screen flex items-center justify-center p-4 bg-slate-50 dark:bg-slate-900">
-          <div className="max-w-2xl w-full bg-white dark:bg-slate-800 rounded-2xl shadow-xl p-8">
+        <div className="min-h-screen flex items-center justify-center p-4 bg-[#09090b]">
+          <div className="max-w-2xl w-full bg-[#18181b] rounded-2xl shadow-xl p-8">
             <div className="flex items-center gap-4 mb-6">
-              <div className="flex-shrink-0 w-12 h-12 bg-red-100 dark:bg-red-900/20 rounded-full flex items-center justify-center">
-                <span className="material-symbols-outlined text-red-600 dark:text-red-400 text-2xl">
-                  error
-                </span>
+              <div className="flex-shrink-0 w-12 h-12 bg-red-500/15 rounded-full flex items-center justify-center">
+                <MaterialIcon name="error" className="text-red-400 text-2xl" aria-hidden />
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
+                <h1 className="text-2xl font-bold text-[#f4f4f5]">
                   Something went wrong
                 </h1>
-                <p className="text-slate-600 dark:text-slate-400 mt-1">
+                <p className="text-[#a1a1aa] mt-1">
                   An unexpected error occurred in the application
                 </p>
               </div>
             </div>
 
             {this.state.error && (
-              <div className="mb-6 p-4 bg-slate-50 dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700">
-                <h2 className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
+              <div className="mb-6 p-4 bg-[#09090b] rounded-lg border border-[#27272a]">
+                <h2 className="text-sm font-semibold text-[#a1a1aa] mb-2">
                   Error Details
                 </h2>
-                <pre className="text-xs text-slate-600 dark:text-slate-400 overflow-auto max-h-40">
+                <pre className="text-xs text-[#a1a1aa] overflow-auto max-h-40">
                   {this.state.error.toString()}
                   {this.state.errorInfo?.componentStack && (
-                    <div className="mt-2 pt-2 border-t border-slate-200 dark:border-slate-700">
+                    <div className="mt-2 pt-2 border-t border-[#27272a]">
                       {this.state.errorInfo.componentStack}
                     </div>
                   )}
@@ -118,20 +117,20 @@ class ErrorBoundary extends Component<Props, State> {
             <div className="flex flex-col sm:flex-row gap-3">
               <button
                 onClick={this.handleReset}
-                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
+                className="flex-1 px-4 py-2 bg-[#dc2626] text-white rounded-lg hover:bg-[#b91c1c] focus:outline-none focus:ring-2 focus:ring-[#dc2626] focus:ring-offset-2 focus:ring-offset-[#09090b] transition-colors"
               >
                 Try Again
               </button>
               <button
                 onClick={this.handleReload}
-                className="flex-1 px-4 py-2 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-lg hover:bg-slate-300 dark:hover:bg-slate-600 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2 transition-colors"
+                className="flex-1 px-4 py-2 bg-[#27272a] text-[#a1a1aa] rounded-lg hover:bg-[#3f3f46] focus:outline-none focus:ring-2 focus:ring-zinc-500 focus:ring-offset-2 focus:ring-offset-[#09090b] transition-colors"
               >
                 Reload Page
               </button>
             </div>
 
-            <div className="mt-6 pt-6 border-t border-slate-200 dark:border-slate-700">
-              <p className="text-sm text-slate-500 dark:text-slate-400">
+            <div className="mt-6 pt-6 border-t border-[#27272a]">
+              <p className="text-sm text-[#a1a1aa]">
                 If this problem persists, please check the browser console for more details or contact support.
               </p>
             </div>

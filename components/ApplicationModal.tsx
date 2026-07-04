@@ -308,7 +308,7 @@ const ApplicationModal: React.FC<ApplicationModalProps> = ({ isOpen, onClose, ap
               </Tooltip>
             </div>
             <form onSubmit={handleSubmit}>
-              <div className="p-6 max-h-[70vh] overflow-y-auto space-y-8" onKeyDown={(e) => {
+              <div className="p-6 max-h-[70vh] overflow-y-auto custom-scrollbar space-y-8" onKeyDown={(e) => {
                 // Prevent form submission on Enter in text areas
                 if (e.key === 'Enter' && (e.target instanceof HTMLTextAreaElement)) {
                   return;

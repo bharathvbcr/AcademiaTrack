@@ -54,7 +54,11 @@ describe('DashboardAIBriefing', () => {
         fireEvent.click(screen.getByText('Generate briefing'));
 
         // It grounds the request in the full portfolio via the shared prompt builder.
-        expect(chat).toHaveBeenCalledWith(buildPortfolioInsightsMessages(apps), expect.any(Function));
+        expect(chat).toHaveBeenCalledWith(
+            buildPortfolioInsightsMessages(apps),
+            expect.any(Function),
+            'dashboard-ai-briefing',
+        );
         await waitFor(() => expect(screen.getByText(/All on track\./)).toBeInTheDocument());
         // After a run, the action becomes a regenerate.
         expect(screen.getByText('Regenerate')).toBeInTheDocument();

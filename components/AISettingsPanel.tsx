@@ -1,14 +1,11 @@
 import React, { useState } from 'react';
 import { UseAIReturn } from '../hooks/useAI';
 import { AIProviderId, PROVIDER_META } from '../services/ai';
+import { ToggleSwitch, MaterialIcon } from './ApplicationFormUI';
 
 interface AISettingsPanelProps {
     ai: UseAIReturn;
 }
-
-const MaterialIcon: React.FC<{ name: string; className?: string }> = ({ name, className }) => (
-    <span className={`material-symbols-outlined ${className ?? ''}`}>{name}</span>
-);
 
 /**
  * Settings panel for the local-first AI subsystem. Lets the user enable AI,
@@ -16,7 +13,7 @@ const MaterialIcon: React.FC<{ name: string; className?: string }> = ({ name, cl
  * connection, and pick from the models the server actually has installed.
  */
 const AISettingsPanel: React.FC<AISettingsPanelProps> = ({ ai }) => {
-    const { settings, updateSettings, connection, testConnection, setConnection } = ai;
+    const { settings, updateSettings, connection, testConnection, stopTesting } = ai;
     const [models, setModels] = useState<string[]>(
         connection.status === 'ok' ? connection.models : [],
     );
@@ -25,8 +22,8 @@ const AISettingsPanel: React.FC<AISettingsPanelProps> = ({ ai }) => {
 
     const handleProviderChange = (id: AIProviderId) => {
         const meta = PROVIDER_META.find((p) => p.id === id);
+        stopTesting();
         updateSettings({ provider: id, baseUrl: meta?.defaultBaseUrl ?? settings.baseUrl, model: '' });
-        setConnection({ status: 'idle' });
         setModels([]);
     };
 
@@ -58,15 +55,11 @@ const AISettingsPanel: React.FC<AISettingsPanelProps> = ({ ai }) => {
                         leaves your computer.
                     </p>
                 </div>
-                <label className="relative inline-flex items-center cursor-pointer shrink-0">
-                    <input
-                        type="checkbox"
-                        className="sr-only peer"
-                        checked={settings.enabled}
-                        onChange={(e) => updateSettings({ enabled: e.target.checked })}
-                    />
-                    <div className="w-11 h-6 bg-[#27272a] peer-focus:ring-2 peer-focus:ring-[#dc2626] rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#dc2626]" />
-                </label>
+                <ToggleSwitch
+                    checked={settings.enabled}
+                    onChange={(enabled) => updateSettings({ enabled })}
+                    className="shrink-0"
+                />
             </div>
 
             {settings.enabled && (
@@ -237,7 +230,7 @@ const AISettingsPanel: React.FC<AISettingsPanelProps> = ({ ai }) => {
                                 Getting started with Ollama
                             </p>
                             <p>1. Install Ollama from ollama.com</p>
-                            <p>2. Pull a model: <code className="text-[#E8B4B8]">ollama pull llama3.1</code></p>
+                            <p>2. Pull a model: <code className="text-[#a1a1aa]">ollama pull llama3.1</code></p>
                             <p>3. Make sure it’s running, then click Test connection above.</p>
                         </div>
                     )}

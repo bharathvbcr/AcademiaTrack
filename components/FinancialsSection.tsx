@@ -8,7 +8,8 @@ import {
     FinancialOffer,
     Scholarship
 } from '../types';
-import { MaterialIcon } from './ApplicationFormUI';
+import { MaterialIcon, formInputClass, formLabelUpperClass, formCheckboxClass } from './ApplicationFormUI';
+import { SCHOLARSHIP_STATUS_COLORS } from '../constants';
 
 interface FinancialsSectionProps {
     appData: Application;
@@ -50,13 +51,13 @@ const FinancialsSection: React.FC<FinancialsSectionProps> = ({
 
     return (
         <div className="space-y-6">
-            <div className="flex items-center space-x-2 text-slate-800 dark:text-slate-200 border-b border-slate-200 dark:border-slate-700 pb-2">
-                <MaterialIcon name="attach_money" className="text-2xl text-green-500" />
+            <div className="flex items-center space-x-2 text-[#f4f4f5] border-b border-[#27272a] pb-2">
+                <MaterialIcon name="attach_money" className="text-2xl text-[#a1a1aa]" />
                 <h4 className="text-lg font-semibold">Funding & Financials</h4>
             </div>
 
             {/* Financial Offer Section */}
-            <div className="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-2xl space-y-4">
+            <div className="bg-[#09090b] p-4 rounded-2xl space-y-4">
                 <div className="flex items-center space-x-3">
                     <input
                         type="checkbox"
@@ -64,9 +65,9 @@ const FinancialsSection: React.FC<FinancialsSectionProps> = ({
                         name="received"
                         checked={offer.received}
                         onChange={handleFinancialCheckboxChange}
-                        className="w-5 h-5 text-green-600 rounded focus:ring-green-500 border-gray-300"
+                        className={`${formCheckboxClass} h-5 w-5`}
                     />
-                    <label htmlFor="offerReceived" className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                    <label htmlFor="offerReceived" className="text-sm font-medium text-[#a1a1aa]">
                         Financial Offer Received
                     </label>
                 </div>
@@ -74,27 +75,27 @@ const FinancialsSection: React.FC<FinancialsSectionProps> = ({
                 {offer.received && (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-fade-in">
                         <div className="space-y-1">
-                            <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Stipend Amount</label>
+                            <label className={formLabelUpperClass}>Stipend Amount</label>
                             <div className="relative">
-                                <span className="absolute left-3 top-2.5 text-slate-400">$</span>
+                                <span className="absolute left-3 top-2.5 text-[#a1a1aa]">$</span>
                                 <input
                                     type="number"
                                     name="stipendAmount"
                                     value={offer.stipendAmount}
                                     onChange={handleFinancialNumericChange}
-                                    className="w-full pl-8 pr-4 py-2 bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition-all text-slate-800 dark:text-slate-200"
+                                    className={`${formInputClass} pl-8`}
                                     placeholder="0"
                                 />
                             </div>
                         </div>
 
                         <div className="space-y-1">
-                            <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Frequency</label>
+                            <label className={formLabelUpperClass}>Frequency</label>
                             <select
                                 name="stipendFrequency"
                                 value={offer.stipendFrequency}
                                 onChange={handleFinancialOfferChange}
-                                className="w-full px-4 py-2 bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition-all text-slate-800 dark:text-slate-200"
+                                className={formInputClass}
                             >
                                 {Object.values(StipendFrequency).map(freq => (
                                     <option key={freq} value={freq}>{freq}</option>
@@ -103,7 +104,7 @@ const FinancialsSection: React.FC<FinancialsSectionProps> = ({
                         </div>
 
                         <div className="space-y-1">
-                            <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Tuition Waiver (%)</label>
+                            <label className={formLabelUpperClass}>Tuition Waiver (%)</label>
                             <input
                                 type="number"
                                 name="tuitionWaiver"
@@ -111,17 +112,17 @@ const FinancialsSection: React.FC<FinancialsSectionProps> = ({
                                 onChange={handleFinancialNumericChange}
                                 min="0"
                                 max="100"
-                                className="w-full px-4 py-2 bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition-all text-slate-800 dark:text-slate-200"
+                                className={formInputClass}
                             />
                         </div>
 
                         <div className="space-y-1">
-                            <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Health Insurance</label>
+                            <label className={formLabelUpperClass}>Health Insurance</label>
                             <select
                                 name="healthInsurance"
                                 value={offer.healthInsurance}
                                 onChange={handleFinancialOfferChange}
-                                className="w-full px-4 py-2 bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition-all text-slate-800 dark:text-slate-200"
+                                className={formInputClass}
                             >
                                 {Object.values(HealthInsuranceCoverage).map(cov => (
                                     <option key={cov} value={cov}>{cov}</option>
@@ -130,12 +131,12 @@ const FinancialsSection: React.FC<FinancialsSectionProps> = ({
                         </div>
 
                         <div className="space-y-1">
-                            <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Assistantship Type</label>
+                            <label className={formLabelUpperClass}>Assistantship Type</label>
                             <select
                                 name="assistantship"
                                 value={offer.assistantship}
                                 onChange={handleFinancialOfferChange}
-                                className="w-full px-4 py-2 bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition-all text-slate-800 dark:text-slate-200"
+                                className={formInputClass}
                             >
                                 {Object.values(AssistantshipType).map(type => (
                                     <option key={type} value={type}>{type}</option>
@@ -145,33 +146,33 @@ const FinancialsSection: React.FC<FinancialsSectionProps> = ({
 
                         {offer.assistantship !== AssistantshipType.None && (
                             <div className="space-y-1">
-                                <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Hours / Week</label>
+                                <label className={formLabelUpperClass}>Hours / Week</label>
                                 <input
                                     type="number"
                                     name="assistantshipHours"
                                     value={offer.assistantshipHours}
                                     onChange={handleFinancialNumericChange}
-                                    className="w-full px-4 py-2 bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition-all text-slate-800 dark:text-slate-200"
+                                    className={formInputClass}
                                 />
                             </div>
                         )}
 
                         <div className="col-span-1 md:col-span-2 space-y-1">
-                            <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Offer Notes</label>
+                            <label className={formLabelUpperClass}>Offer Notes</label>
                             <textarea
                                 name="notes"
                                 value={offer.notes}
                                 onChange={handleFinancialOfferChange}
                                 rows={2}
-                                className="w-full px-4 py-2 bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition-all text-slate-800 dark:text-slate-200 resize-none"
+                                className={`${formInputClass} resize-none`}
                                 placeholder="Any additional details about the offer..."
                             />
                         </div>
 
                         {/* Decision Deadline - shown for Accepted applications */}
                         {isAccepted && handleDecisionDeadlineChange && (
-                            <div className="col-span-1 md:col-span-2 p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl space-y-2">
-                                <div className="flex items-center gap-2 text-amber-700 dark:text-amber-400">
+                            <div className="col-span-1 md:col-span-2 p-4 bg-amber-500/10 border border-amber-500/30 rounded-xl space-y-2">
+                                <div className="flex items-center gap-2 text-amber-300">
                                     <MaterialIcon name="event" className="text-lg" />
                                     <span className="text-sm font-medium">Decision Deadline</span>
                                 </div>
@@ -180,9 +181,9 @@ const FinancialsSection: React.FC<FinancialsSectionProps> = ({
                                         type="date"
                                         value={appData.decisionDeadline || ''}
                                         onChange={(e) => handleDecisionDeadlineChange(e.target.value)}
-                                        className="px-4 py-2 bg-white dark:bg-slate-800 border border-amber-300 dark:border-amber-700 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent outline-none transition-all text-slate-800 dark:text-slate-200 [color-scheme:light_dark]"
+                                        className={`${formInputClass} border-amber-500/40 focus:ring-amber-500 [color-scheme:dark]`}
                                     />
-                                    <span className="text-xs text-amber-600 dark:text-amber-400">
+                                    <span className="text-xs text-amber-400">
                                         Set when you need to respond to this offer
                                     </span>
                                 </div>
@@ -195,11 +196,11 @@ const FinancialsSection: React.FC<FinancialsSectionProps> = ({
             {/* Scholarships Section */}
             <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                    <h5 className="text-sm font-semibold text-slate-700 dark:text-slate-300">Scholarships & Grants</h5>
+                    <h5 className="text-sm font-semibold text-[#a1a1aa]">Scholarships & Grants</h5>
                     <button
                         type="button"
                         onClick={addScholarship}
-                        className="text-sm text-green-600 hover:text-green-700 font-medium flex items-center space-x-1"
+                        className="text-sm text-[#a1a1aa] hover:text-[#fca5a5] font-medium flex items-center space-x-1"
                     >
                         <MaterialIcon name="add" className="text-lg" />
                         <span>Add Scholarship</span>
@@ -208,9 +209,9 @@ const FinancialsSection: React.FC<FinancialsSectionProps> = ({
 
                 <div className="space-y-3">
                     {appData.scholarships?.map((scholarship, index) => (
-                        <div key={index} className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden">
+                        <div key={index} className="bg-[#18181b] border border-[#27272a] rounded-xl overflow-hidden">
                             <div
-                                className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-700/50 cursor-pointer"
+                                className="flex items-center justify-between p-3 bg-[#27272a]/50 cursor-pointer"
                                 onClick={() => setIsScholarshipOpen(prev => {
                                     const newState = [...prev];
                                     newState[index] = !newState[index];
@@ -218,26 +219,24 @@ const FinancialsSection: React.FC<FinancialsSectionProps> = ({
                                 })}
                             >
                                 <div className="flex items-center space-x-3">
-                                    <MaterialIcon name="school" className="text-slate-400" />
-                                    <span className="font-medium text-slate-700 dark:text-slate-200">
+                                    <MaterialIcon name="school" className="text-[#a1a1aa]" />
+                                    <span className="font-medium text-[#a1a1aa]">
                                         {scholarship.name || 'New Scholarship'}
                                     </span>
-                                    <span className={`text-xs px-2 py-0.5 rounded-full ${scholarship.status === ScholarshipStatus.Awarded ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' :
-                                        scholarship.status === ScholarshipStatus.Rejected ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' :
-                                            'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
-                                        }`}>
+                                    <span className={`text-xs px-2 py-0.5 rounded-full ${SCHOLARSHIP_STATUS_COLORS[scholarship.status]}`}>
                                         {scholarship.status}
                                     </span>
                                 </div>
                                 <div className="flex items-center space-x-2">
-                                    <MaterialIcon name={isScholarshipOpen[index] ? 'expand_less' : 'expand_more'} className="text-slate-400" />
+                                    <MaterialIcon name={isScholarshipOpen[index] ? 'expand_less' : 'expand_more'} className="text-[#a1a1aa]" />
                                     <button
                                         type="button"
                                         onClick={(e) => {
                                             e.stopPropagation();
                                             removeScholarship(index);
                                         }}
-                                        className="p-1 text-slate-400 hover:text-red-500 transition-colors"
+                                        className="p-1 text-[#a1a1aa] hover:text-red-500 transition-colors"
+                                        aria-label={`Remove scholarship ${scholarship.name || index + 1}`}
                                     >
                                         <MaterialIcon name="delete" />
                                     </button>
@@ -247,39 +246,39 @@ const FinancialsSection: React.FC<FinancialsSectionProps> = ({
                             {isScholarshipOpen[index] && (
                                 <div className="p-4 grid grid-cols-1 md:grid-cols-2 gap-4 animate-fade-in">
                                     <div className="space-y-1">
-                                        <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Name</label>
+                                        <label className={formLabelUpperClass}>Name</label>
                                         <input
                                             type="text"
                                             value={scholarship.name}
                                             onChange={(e) => handleScholarshipChange(index, e)}
                                             name="name"
-                                            className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-600 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition-all text-slate-800 dark:text-slate-200"
+                                            className={formInputClass}
                                             placeholder="Scholarship Name"
                                         />
                                     </div>
 
                                     <div className="space-y-1">
-                                        <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Amount</label>
+                                        <label className={formLabelUpperClass}>Amount</label>
                                         <div className="relative">
-                                            <span className="absolute left-3 top-2.5 text-slate-400">$</span>
+                                            <span className="absolute left-3 top-2.5 text-[#a1a1aa]">$</span>
                                             <input
                                                 type="number"
                                                 value={scholarship.amount}
                                                 onChange={(e) => handleScholarshipChange(index, e)}
                                                 name="amount"
-                                                className="w-full pl-8 pr-4 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-600 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition-all text-slate-800 dark:text-slate-200"
+                                                className={`${formInputClass} pl-8`}
                                                 placeholder="0"
                                             />
                                         </div>
                                     </div>
 
                                     <div className="space-y-1">
-                                        <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Status</label>
+                                        <label className={formLabelUpperClass}>Status</label>
                                         <select
                                             value={scholarship.status}
                                             onChange={(e) => handleScholarshipChange(index, e)}
                                             name="status"
-                                            className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-600 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition-all text-slate-800 dark:text-slate-200"
+                                            className={formInputClass}
                                         >
                                             {Object.values(ScholarshipStatus).map(status => (
                                                 <option key={status} value={status}>{status}</option>
@@ -288,48 +287,48 @@ const FinancialsSection: React.FC<FinancialsSectionProps> = ({
                                     </div>
 
                                     <div className="space-y-1">
-                                        <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Duration</label>
+                                        <label className={formLabelUpperClass}>Duration</label>
                                         <input
                                             type="text"
                                             value={scholarship.duration}
                                             onChange={(e) => handleScholarshipChange(index, e)}
                                             name="duration"
-                                            className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-600 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition-all text-slate-800 dark:text-slate-200"
+                                            className={formInputClass}
                                             placeholder="e.g. 1 Year, Renewable"
                                         />
                                     </div>
 
                                     <div className="space-y-1">
-                                        <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Link</label>
+                                        <label className={formLabelUpperClass}>Link</label>
                                         <input
                                             type="text"
                                             value={scholarship.link}
                                             onChange={(e) => handleScholarshipChange(index, e)}
                                             name="link"
-                                            className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-600 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition-all text-slate-800 dark:text-slate-200"
+                                            className={formInputClass}
                                             placeholder="https://..."
                                         />
                                     </div>
 
                                     <div className="space-y-1">
-                                        <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Deadline</label>
+                                        <label className={formLabelUpperClass}>Deadline</label>
                                         <input
                                             type="date"
                                             value={scholarship.deadline || ''}
                                             onChange={(e) => handleScholarshipChange(index, e)}
                                             name="deadline"
-                                            className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-600 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition-all text-slate-800 dark:text-slate-200"
+                                            className={`${formInputClass} [color-scheme:dark]`}
                                         />
                                     </div>
 
                                     <div className="col-span-1 md:col-span-2 space-y-1">
-                                        <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Notes</label>
+                                        <label className={formLabelUpperClass}>Notes</label>
                                         <textarea
                                             value={scholarship.notes}
                                             onChange={(e) => handleScholarshipChange(index, e)}
                                             name="notes"
                                             rows={2}
-                                            className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-600 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition-all text-slate-800 dark:text-slate-200 resize-none"
+                                            className={`${formInputClass} resize-none`}
                                             placeholder="Requirements, essays, etc."
                                         />
                                     </div>
@@ -338,7 +337,7 @@ const FinancialsSection: React.FC<FinancialsSectionProps> = ({
                         </div>
                     ))}
                     {(!appData.scholarships || appData.scholarships.length === 0) && (
-                        <div className="text-center py-6 text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-dashed border-slate-300 dark:border-slate-700">
+                        <div className="text-center py-6 text-[#a1a1aa] bg-[#09090b] rounded-xl border border-dashed border-[#27272a]">
                             No scholarships added yet.
                         </div>
                     )}

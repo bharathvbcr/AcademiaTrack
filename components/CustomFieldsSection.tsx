@@ -2,15 +2,12 @@ import React, { useMemo } from 'react';
 import { Application, CustomFieldDefinition } from '../types';
 import { useCustomFields } from '../hooks/useCustomFields';
 import { getDaysUntil } from '../utils/dateUtils';
+import { ToggleSwitch, MaterialIcon } from './ApplicationFormUI';
 
 interface CustomFieldsSectionProps {
     appData: Application;
     handleCustomFieldChange: (fieldId: string, value: string | number | boolean) => void;
 }
-
-const MaterialIcon: React.FC<{ name: string; className?: string }> = ({ name, className }) => (
-    <span className={`material-symbols-outlined ${className}`}>{name}</span>
-);
 
 // Calculate value for calculated fields
 const calculateFieldValue = (field: CustomFieldDefinition, app: Application): string | number | boolean => {
@@ -69,8 +66,8 @@ const CustomFieldsSection: React.FC<CustomFieldsSectionProps> = ({ appData, hand
     return (
         <div className="space-y-6">
             <div className="flex items-center gap-3 mb-4">
-                <h3 className="text-lg font-semibold text-slate-800 dark:text-white">Custom Fields</h3>
-                <div className="h-px flex-1 bg-slate-200 dark:bg-slate-700"></div>
+                <h3 className="text-lg font-semibold text-[#f4f4f5]">Custom Fields</h3>
+                <div className="h-px flex-1 bg-[#27272a]"></div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -87,18 +84,18 @@ const CustomFieldsSection: React.FC<CustomFieldsSectionProps> = ({ appData, hand
 
                     return (
                         <div key={field.id}>
-                            <label htmlFor={fieldId} className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                            <label htmlFor={fieldId} className="block text-sm font-medium text-[#a1a1aa] mb-1">
                                 {field.name}
                                 {field.required && <span className="text-red-500 ml-1">*</span>}
                                 {field.type === 'calculated' && (
-                                    <span className="ml-2 text-xs text-slate-500 dark:text-slate-400">
+                                    <span className="ml-2 text-xs text-[#a1a1aa]">
                                         <MaterialIcon name="calculate" className="text-xs align-middle" />
                                     </span>
                                 )}
                             </label>
 
                             {field.type === 'calculated' && (
-                                <div className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg text-slate-700 dark:text-slate-300">
+                                <div className="w-full px-4 py-2 bg-[#18181b] border border-[#27272a] rounded-lg text-[#a1a1aa]">
                                     {typeof value === 'number' ? value.toLocaleString() : String(value)}
                                 </div>
                             )}
@@ -129,19 +126,12 @@ const CustomFieldsSection: React.FC<CustomFieldsSectionProps> = ({ appData, hand
 
                             {field.type === 'boolean' && (
                                 <div className="flex items-center h-[42px]">
-                                    <label className="relative inline-flex items-center cursor-pointer">
-                                        <input
-                                            id={fieldId}
-                                            type="checkbox"
-                                            checked={!!value}
-                                            onChange={(e) => handleCustomFieldChange(field.id, e.target.checked)}
-                                            className="sr-only peer"
-                                        />
-                                        <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-red-600"></div>
-                                        <span className="ml-3 text-sm font-medium text-slate-900 dark:text-slate-300">
-                                            {!!value ? 'Yes' : 'No'}
-                                        </span>
-                                    </label>
+                                    <ToggleSwitch
+                                        id={fieldId}
+                                        checked={!!value}
+                                        onChange={(checked) => handleCustomFieldChange(field.id, checked)}
+                                        label={!!value ? 'Yes' : 'No'}
+                                    />
                                 </div>
                             )}
 
@@ -151,7 +141,7 @@ const CustomFieldsSection: React.FC<CustomFieldsSectionProps> = ({ appData, hand
                                     type="date"
                                     value={value as string}
                                     onChange={(e) => handleCustomFieldChange(field.id, e.target.value)}
-                                    className="w-full px-4 py-2 bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all"
+                                    className="w-full px-4 py-2 liquid-glass-input border border-[#27272a] bg-[#18181b] rounded-lg focus:ring-2 focus:ring-[#dc2626] focus:border-transparent transition-all text-[#f4f4f5] [color-scheme:dark]"
                                 />
                             )}
 
@@ -160,7 +150,7 @@ const CustomFieldsSection: React.FC<CustomFieldsSectionProps> = ({ appData, hand
                                     id={fieldId}
                                     value={value as string}
                                     onChange={(e) => handleCustomFieldChange(field.id, e.target.value)}
-                                    className="w-full px-4 py-2 bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all"
+                                    className="w-full px-4 py-2 liquid-glass-input border border-[#27272a] bg-[#18181b] rounded-lg focus:ring-2 focus:ring-[#dc2626] focus:border-transparent transition-all text-[#f4f4f5]"
                                 >
                                     <option value="">Select option</option>
                                     {field.options?.map(opt => (

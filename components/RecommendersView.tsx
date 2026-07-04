@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { Application, Recommender, RecommenderStatus } from '../types';
 import { RECOMMENDER_STATUS_OPTIONS, RECOMMENDER_STATUS_COLORS } from '../constants';
 import { formatLocalDate } from '../utils/dateUtils';
+import { MaterialIcon, formInputClass, formActionBtnClass } from './ApplicationFormUI';
 
 interface RecommendersViewProps {
     applications: Application[];
@@ -15,10 +16,6 @@ interface RecommenderWithContext extends Recommender {
     programName: string;
     deadline: string | null;
 }
-
-const MaterialIcon: React.FC<{ name: string; className?: string }> = ({ name, className }) => (
-    <span className={`material-symbols-outlined ${className || ''}`}>{name}</span>
-);
 
 const RecommendersView: React.FC<RecommendersViewProps> = ({ applications, updateApplication, openModal }) => {
     const [searchQuery, setSearchQuery] = useState('');
@@ -146,7 +143,7 @@ const RecommendersView: React.FC<RecommendersViewProps> = ({ applications, updat
                         key={status}
                         onClick={() => setStatusFilter(statusFilter === status ? 'all' : status)}
                         className={`p-3 rounded-xl border transition-all ${statusFilter === status
-                                ? 'ring-2 ring-blue-500 ring-offset-2 dark:ring-offset-slate-900'
+                                ? 'ring-2 ring-blue-500 ring-offset-2 ring-offset-[#09090b]'
                                 : 'hover:shadow-md'
                             } ${RECOMMENDER_STATUS_COLORS[status]} border-current`}
                     >
@@ -159,18 +156,18 @@ const RecommendersView: React.FC<RecommendersViewProps> = ({ applications, updat
             {/* Search and Filter Bar */}
             <div className="flex flex-col sm:flex-row gap-3">
                 <div className="relative flex-1">
-                    <MaterialIcon name="search" className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                    <MaterialIcon name="search" className="absolute left-3 top-1/2 -translate-y-1/2 text-[#a1a1aa]" />
                     <input
                         type="text"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         placeholder="Search recommenders by name, university, email..."
-                        className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-[#E8B4B8]/30 liquid-glass focus:outline-none focus:ring-2 focus:ring-[#E8B4B8] text-[#F5D7DA] placeholder:text-[#E8B4B8]/50"
+                        className={`${formInputClass} pl-10 pr-10 py-2.5 rounded-xl focus:ring-offset-2 focus:ring-offset-[#09090b]`}
                     />
                     {searchQuery && (
                         <button
                             onClick={() => setSearchQuery('')}
-                            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-[#a1a1aa] hover:text-[#a1a1aa]"
                             aria-label="Clear search"
                         >
                             <MaterialIcon name="close" className="text-lg" />
@@ -180,7 +177,7 @@ const RecommendersView: React.FC<RecommendersViewProps> = ({ applications, updat
                 {statusFilter !== 'all' && (
                     <button
                         onClick={() => setStatusFilter('all')}
-                        className="flex items-center gap-2 px-4 py-2 bg-slate-100 dark:bg-slate-700 rounded-xl text-sm font-medium hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors"
+                        className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-[#dc2626] focus:ring-offset-2 focus:ring-offset-[#09090b] ${formActionBtnClass}`}
                     >
                         <MaterialIcon name="filter_alt_off" className="text-lg" />
                         Clear Filter
@@ -191,23 +188,23 @@ const RecommendersView: React.FC<RecommendersViewProps> = ({ applications, updat
             {/* Recommenders Table */}
             {filteredRecommenders.length === 0 ? (
                 <div className="text-center py-12 liquid-glass-card rounded-2xl">
-                    <MaterialIcon name="group" className="text-6xl text-[#E8B4B8]/50" />
-                    <p className="mt-4 text-[#E8B4B8]/70">
+                    <MaterialIcon name="group" className="text-6xl text-[#a1a1aa]/50" />
+                    <p className="mt-4 text-[#a1a1aa]">
                         {allRecommenders.length === 0
                             ? 'No recommenders added yet. Add recommenders to your applications to see them here.'
                             : 'No recommenders match your search criteria.'}
                     </p>
                 </div>
             ) : (
-                <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 overflow-hidden">
+                <div className="bg-[#18181b] rounded-2xl border border-[#27272a] overflow-hidden">
                     <div className="overflow-x-auto">
                         <table className="w-full">
-                            <thead className="bg-slate-50 dark:bg-slate-700/50">
+                            <thead className="bg-[#27272a]/50">
                                 <tr>
                                     <th className="px-4 py-3 text-left">
                                         <button
                                             onClick={() => toggleSort('university')}
-                                            className="flex items-center gap-1 text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider hover:text-slate-900 dark:hover:text-white"
+                                            className="flex items-center gap-1 text-xs font-semibold text-[#a1a1aa] uppercase tracking-wider hover:text-[#f4f4f5] hover:text-[#f4f4f5]"
                                         >
                                             University / Program
                                             <MaterialIcon name={getSortIcon('university')} className="text-sm" />
@@ -216,19 +213,19 @@ const RecommendersView: React.FC<RecommendersViewProps> = ({ applications, updat
                                     <th className="px-4 py-3 text-left">
                                         <button
                                             onClick={() => toggleSort('name')}
-                                            className="flex items-center gap-1 text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider hover:text-slate-900 dark:hover:text-white"
+                                            className="flex items-center gap-1 text-xs font-semibold text-[#a1a1aa] uppercase tracking-wider hover:text-[#f4f4f5] hover:text-[#f4f4f5]"
                                         >
                                             Recommender
                                             <MaterialIcon name={getSortIcon('name')} className="text-sm" />
                                         </button>
                                     </th>
-                                    <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider">
+                                    <th className="px-4 py-3 text-left text-xs font-semibold text-[#a1a1aa] uppercase tracking-wider">
                                         Email / Title
                                     </th>
                                     <th className="px-4 py-3 text-left">
                                         <button
                                             onClick={() => toggleSort('status')}
-                                            className="flex items-center gap-1 text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider hover:text-slate-900 dark:hover:text-white"
+                                            className="flex items-center gap-1 text-xs font-semibold text-[#a1a1aa] uppercase tracking-wider hover:text-[#f4f4f5] hover:text-[#f4f4f5]"
                                         >
                                             Status
                                             <MaterialIcon name={getSortIcon('status')} className="text-sm" />
@@ -237,33 +234,33 @@ const RecommendersView: React.FC<RecommendersViewProps> = ({ applications, updat
                                     <th className="px-4 py-3 text-left">
                                         <button
                                             onClick={() => toggleSort('deadline')}
-                                            className="flex items-center gap-1 text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider hover:text-slate-900 dark:hover:text-white"
+                                            className="flex items-center gap-1 text-xs font-semibold text-[#a1a1aa] uppercase tracking-wider hover:text-[#f4f4f5] hover:text-[#f4f4f5]"
                                         >
                                             Deadline
                                             <MaterialIcon name={getSortIcon('deadline')} className="text-sm" />
                                         </button>
                                     </th>
-                                    <th className="px-4 py-3 text-right text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider">
+                                    <th className="px-4 py-3 text-right text-xs font-semibold text-[#a1a1aa] uppercase tracking-wider">
                                         Actions
                                     </th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
+                            <tbody className="divide-y divide-[#27272a]">
                                 {filteredRecommenders.map((recommender) => (
-                                    <tr key={`${recommender.applicationId}-${recommender.id}`} className="hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors">
+                                    <tr key={`${recommender.applicationId}-${recommender.id}`} className="hover:bg-[#27272a]/30 transition-colors">
                                         <td className="px-4 py-3">
-                                            <div className="font-medium text-slate-900 dark:text-white truncate max-w-[200px]">
+                                            <div className="font-medium text-[#f4f4f5] truncate max-w-[200px]">
                                                 {recommender.universityName}
                                             </div>
-                                            <div className="text-xs text-slate-500 dark:text-slate-400 truncate max-w-[200px]">
+                                            <div className="text-xs text-[#a1a1aa] truncate max-w-[200px]">
                                                 {recommender.programName}
                                             </div>
                                         </td>
                                         <td className="px-4 py-3">
-                                            <div className="font-medium text-slate-900 dark:text-white">
+                                            <div className="font-medium text-[#f4f4f5]">
                                                 {recommender.name}
                                             </div>
-                                            <div className="text-xs text-slate-500 dark:text-slate-400">
+                                            <div className="text-xs text-[#a1a1aa]">
                                                 {recommender.relationship}
                                             </div>
                                         </td>
@@ -271,12 +268,12 @@ const RecommendersView: React.FC<RecommendersViewProps> = ({ applications, updat
                                             {recommender.email && (
                                                 <a
                                                     href={`mailto:${recommender.email}`}
-                                                    className="text-xs text-blue-600 dark:text-blue-400 hover:underline block"
+                                                    className="text-xs text-blue-400 hover:underline block"
                                                 >
                                                     {recommender.email}
                                                 </a>
                                             )}
-                                            <div className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                                            <div className="text-xs text-[#a1a1aa] mt-0.5">
                                                 {recommender.title}
                                             </div>
                                         </td>
@@ -294,13 +291,13 @@ const RecommendersView: React.FC<RecommendersViewProps> = ({ applications, updat
                                                 ))}
                                             </select>
                                         </td>
-                                        <td className="px-4 py-3 text-sm text-slate-600 dark:text-slate-300">
+                                        <td className="px-4 py-3 text-sm text-[#a1a1aa]">
                                             {formatLocalDate(recommender.deadline)}
                                         </td>
                                         <td className="px-4 py-3 text-right">
                                             <button
                                                 onClick={() => handleViewApplication(recommender)}
-                                                className="p-1.5 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+                                                className="p-1.5 text-[#a1a1aa] hover:text-[#a1a1aa] hover:text-[#f4f4f5] rounded-lg hover:bg-[#27272a] transition-colors"
                                                 title="View Application"
                                             >
                                                 <MaterialIcon name="visibility" className="text-lg" />

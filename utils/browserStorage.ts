@@ -80,3 +80,9 @@ export const readJsonFromStorage = <T>(key: string): T | null => {
 
 export const writeJsonToStorage = (key: string, value: unknown): boolean =>
   setStorageItem(key, JSON.stringify(value));
+
+export const writeJsonToStorageOrThrow = (key: string, value: unknown): void => {
+  if (!writeJsonToStorage(key, value)) {
+    throw new Error(`Failed to write storage key "${key}".`);
+  }
+};

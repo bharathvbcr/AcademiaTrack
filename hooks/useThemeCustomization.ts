@@ -20,31 +20,35 @@ export interface CustomTheme {
   density?: 'compact' | 'comfortable' | 'spacious';
 }
 
+// Canonical zinc + red "Minimal Dark" palette — matches the tokens in
+// index.html :root. (Note: these --theme-* variables are currently applied to
+// <html> for forward-compatibility but no component consumes them yet; keeping
+// the defaults correct avoids leaking a stale crimson palette into the DOM.)
 const defaultThemes: CustomTheme[] = [
   {
     id: 'default',
-    name: 'Liquid Glass Crimson',
+    name: 'Minimal Dark',
     colors: {
-      primary: '#DC143C', // Diffused Crimson
-      secondary: '#FF2400', // Scarlet Red
-      accent: '#E8B4B8', // Rose Gold
-      background: '#1a0a0f', // Deep crimson-tinted dark
-      surface: '#2d0f1a', // Lighter crimson-tinted dark
-      text: '#F5D7DA', // Pale Pink for text
-      border: '#E8B4B8', // Rose Gold border
+      primary: '#dc2626',    // red 600 — accent
+      secondary: '#b91c1c',  // red 700 — accent hover
+      accent: '#a1a1aa',     // zinc 400 — secondary text
+      background: '#09090b',  // zinc 950 — app background
+      surface: '#18181b',    // zinc 900 — cards / surfaces
+      text: '#f4f4f5',       // zinc 100 — primary text
+      border: '#27272a',     // zinc 800 — borders
     },
   },
   {
     id: 'dark-default',
-    name: 'Liquid Glass Dark',
+    name: 'Minimal Dark (High Contrast)',
     colors: {
-      primary: '#DC143C', // Diffused Crimson
-      secondary: '#FF2400', // Scarlet Red
-      accent: '#E8B4B8', // Rose Gold
-      background: '#1a0a0f', // Deep crimson-tinted dark
-      surface: '#2d0f1a', // Lighter crimson-tinted dark
-      text: '#F5D7DA', // Pale Pink for text
-      border: '#D4A5A9', // Darker Rose Gold border
+      primary: '#ef4444',    // red 500
+      secondary: '#dc2626',  // red 600
+      accent: '#d4d4d8',     // zinc 300
+      background: '#09090b',  // zinc 950
+      surface: '#18181b',    // zinc 900
+      text: '#fafafa',       // zinc 50
+      border: '#3f3f46',     // zinc 700
     },
   },
 ];

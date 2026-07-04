@@ -16,7 +16,7 @@ export const SkeletonLoader: React.FC<SkeletonLoaderProps> = ({
       {Array.from({ length: count }).map((_, i) => (
         <div
           key={i}
-          className={`animate-pulse bg-slate-200 dark:bg-slate-700 rounded ${height} ${className}`}
+          className={`animate-pulse bg-[#27272a] rounded ${height} ${className}`}
           aria-label="Loading..."
         />
       ))}
@@ -34,7 +34,7 @@ export const SkeletonCard: React.FC<SkeletonCardProps> = ({ count = 1 }) => {
       {Array.from({ length: count }).map((_, i) => (
         <div
           key={i}
-          className="liquid-glass-depth rounded-2xl p-5 animate-pulse"
+          className="liquid-glass-card rounded-3xl p-5 animate-pulse"
         >
           <div className="space-y-4">
             <div className="flex items-center justify-between">

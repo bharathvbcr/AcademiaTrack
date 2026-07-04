@@ -1,4 +1,5 @@
 import React, { lazy, Suspense, useMemo, useEffect, useRef, useCallback } from 'react';
+import { MotionConfig } from 'framer-motion';
 import { useApplications } from './hooks/useApplications';
 import { useAppModals } from './hooks/useAppModals';
 import { useSortAndFilter } from './hooks/useSortAndFilter';
@@ -29,6 +30,7 @@ import TitleBar from './components/TitleBar';
 import ConfirmationModal from './components/ConfirmationModal';
 import MainContent from './components/MainContent';
 import CommandPalette from './components/CommandPalette';
+import LoadingSpinner from './components/LoadingSpinner';
 import { ToastContainer } from './components/Toast';
 import { BulkSelectionProvider } from './contexts/BulkSelectionContext';
 import { ApplicationActionsProvider } from './contexts/ApplicationActionsContext';
@@ -629,9 +631,9 @@ const App: React.FC = () => {
   const handleCloseAutomationRules = useCallback(() => setIsAutomationRulesOpen(false), []);
 
   return (
-    <>
+    <MotionConfig reducedMotion="user">
       <TitleBar />
-      <div className={`min-h-screen text-[#F5D7DA] font-sans p-4 sm:p-6 lg:p-8 ${desktopRuntime ? 'pt-14 sm:pt-16 lg:pt-16' : ''} relative z-10`}>
+      <div className={`min-h-screen text-[#f4f4f5] font-sans p-4 sm:p-6 lg:p-8 ${desktopRuntime ? 'pt-14 sm:pt-16 lg:pt-16' : ''} relative z-10`}>
         <div className="max-w-7xl mx-auto">
         <Header
           onAddNew={handleAddNew}
@@ -697,7 +699,7 @@ const App: React.FC = () => {
         isDanger={confirmation.isDanger}
       />
 
-      <Suspense fallback={<div>Loading...</div>}>
+      <Suspense fallback={<div className="flex justify-center py-12"><LoadingSpinner text="Loading…" /></div>}>
         <ApplicationModal
           isOpen={isModalOpen}
           onClose={closeModal}
@@ -717,7 +719,7 @@ const App: React.FC = () => {
         />
       </Suspense>
 
-      <Suspense fallback={<div>Loading...</div>}>
+      <Suspense fallback={<div className="flex justify-center py-12"><LoadingSpinner text="Loading…" /></div>}>
         {isComparisonOpen && (
           <ComparisonModal
             isOpen={true}
@@ -838,10 +840,11 @@ const App: React.FC = () => {
         <div className="fixed inset-0 z-50 flex items-center justify-center liquid-glass-modal">
           <div className="liquid-glass-modal-content rounded-2xl max-w-4xl w-full mx-4 max-h-[90vh] overflow-auto p-6">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-2xl font-bold text-[#F5D7DA]">Advanced Filter Builder</h2>
+              <h2 className="text-2xl font-bold text-[#f4f4f5]">Advanced Filter Builder</h2>
               <button
                 onClick={() => setIsAdvancedFilterOpen(false)}
-                className="p-2 hover:bg-[rgba(220,20,60,0.2)] rounded-lg text-[#E8B4B8]"
+                className="p-2 hover:bg-[#27272a] rounded-lg text-[#a1a1aa] hover:text-[#f4f4f5]"
+                aria-label="Close advanced filter builder"
               >
                 <span className="material-symbols-outlined">close</span>
               </button>
@@ -858,13 +861,13 @@ const App: React.FC = () => {
               <div className="mt-4 flex gap-2">
                 <button
                   onClick={clearFilter}
-                  className="px-4 py-2 border border-[#E8B4B8]/30 rounded-lg hover:bg-[rgba(220,20,60,0.2)] text-[#F5D7DA]"
+                  className="px-4 py-2 border border-[#27272a] rounded-lg hover:bg-[#27272a] text-[#f4f4f5]"
                 >
                   Clear Filter
                 </button>
                 <button
                   onClick={() => setIsAdvancedFilterOpen(false)}
-                  className="px-4 py-2 bg-gradient-to-br from-[#DC143C] to-[#FF2400] text-white rounded-lg hover:from-[#FF2400] hover:to-[#DC143C]"
+                  className="px-4 py-2 bg-[#dc2626] text-white rounded-lg hover:bg-[#b91c1c] transition-colors"
                 >
                   Apply Filter
                 </button>
@@ -877,7 +880,7 @@ const App: React.FC = () => {
 
       <ToastContainer toasts={toasts} onRemove={removeToast} />
       </div>
-    </>
+    </MotionConfig>
   );
 };
 

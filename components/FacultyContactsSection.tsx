@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Application, FacultyContactStatus } from '../types';
 import { FACULTY_CONTACT_STATUS_COLORS, FACULTY_CONTACT_STATUS_OPTIONS } from '../constants';
-import { FieldSet, Input, Select, TextArea, MaterialIcon } from './ApplicationFormUI';
+import { FieldSet, Input, Select, TextArea, MaterialIcon, formCardClass, formSectionDivider, formSubheadingClass, formLabelUpperClass, formInputSmClass, formActionBtnClass, formDashedAddClass } from './ApplicationFormUI';
 import MarkdownEditor from './MarkdownEditor';
 
 interface FacultyContactsSectionProps {
@@ -57,19 +57,19 @@ const FacultyContactsSection: React.FC<FacultyContactsSectionProps> = ({
                 {appData.facultyContacts.map((faculty, index) => {
                     const isExpanded = isFacultyOpen[index] || false;
                     return (
-                    <div key={faculty.id} className="bg-slate-100 dark:bg-slate-700/50 rounded-lg border border-slate-200 dark:border-slate-700">
+                    <div key={faculty.id} className={`${formCardClass} overflow-hidden`}>
                         <div className="flex items-center p-2">
                             <button type="button" onClick={() => setIsFacultyOpen(p => p.map((s, i) => i === index ? !s : s))} className="flex-grow flex items-center gap-2 text-left" aria-expanded={isExpanded}>
                                 <MaterialIcon name="expand_more" className={`transition-transform transform ${isExpanded ? 'rotate-180' : ''}`} />
-                                <span className="font-medium text-sm text-slate-800 dark:text-slate-200 truncate">{faculty.name || `Faculty Contact #${index + 1}`}</span>
+                                <span className="font-medium text-sm text-[#f4f4f5] truncate">{faculty.name || `Faculty Contact #${index + 1}`}</span>
                             </button>
                             <span className={`px-2 py-0.5 text-xs font-semibold rounded-full border shrink-0 ${FACULTY_CONTACT_STATUS_COLORS[faculty.contactStatus]}`}>{faculty.contactStatus}</span>
-                            <button type="button" onClick={() => removeFacultyContact(index)} className="ml-2 p-1.5 rounded-full text-slate-500 hover:text-red-500 hover:bg-red-100 dark:hover:bg-red-900/50 transition-colors" aria-label={`Remove contact`}>
+                            <button type="button" onClick={() => removeFacultyContact(index)} className="ml-2 p-1.5 rounded-full text-[#a1a1aa] hover:text-red-400 hover:bg-red-500/10 transition-colors" aria-label={`Remove contact`}>
                                 <MaterialIcon name="delete" className="text-base" />
                             </button>
                         </div>
                         {isExpanded && (
-                            <div className="p-4 border-t border-slate-200 dark:border-slate-600 space-y-6">
+                            <div className={`p-4 ${formSectionDivider} space-y-6`}>
                                 {/* Basic Info */}
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <Input label="Name" name="name" value={faculty.name} onChange={e => handleFacultyChange(index, e)} />
@@ -77,7 +77,7 @@ const FacultyContactsSection: React.FC<FacultyContactsSectionProps> = ({
                                     <Input label="Website URL" name="website" type="url" value={faculty.website} onChange={e => handleFacultyChange(index, e)} className="md:col-span-2" />
                                 </div>
                                 <TextArea label="Research Area" name="researchArea" value={faculty.researchArea} onChange={e => handleFacultyChange(index, e)} rows={2} />
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-slate-200 dark:border-slate-600 pt-4">
+                                <div className={`grid grid-cols-1 md:grid-cols-2 gap-4 ${formSectionDivider} pt-4`}>
                                     <Select label="Contact Status" name="contactStatus" value={faculty.contactStatus} onChange={e => handleFacultyChange(index, e)}>
                                         {FACULTY_CONTACT_STATUS_OPTIONS.map(s => <option key={s} value={s}>{s}</option>)}
                                     </Select>
@@ -88,14 +88,14 @@ const FacultyContactsSection: React.FC<FacultyContactsSectionProps> = ({
                                 </div>
 
                                 {/* Research Fit */}
-                                <div className="pt-4 border-t border-slate-200 dark:border-slate-600">
-                                    <h4 className="text-sm font-semibold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
+                                <div className={`pt-4 ${formSectionDivider}`}>
+                                    <h4 className={formSubheadingClass}>
                                         <MaterialIcon name="science" className="text-blue-500" />
                                         Research Fit
                                     </h4>
                                     <div className="space-y-4">
                                         <div>
-                                            <label htmlFor={`fit-score-${index}`} className="block text-xs font-medium text-slate-500 dark:text-slate-400 uppercase mb-1">Fit Score (1-10)</label>
+                                            <label htmlFor={`fit-score-${index}`} className={formLabelUpperClass}>Fit Score (1-10)</label>
                                             <div className="flex items-center gap-4">
                                                 <input
                                                     id={`fit-score-${index}`}
@@ -104,9 +104,9 @@ const FacultyContactsSection: React.FC<FacultyContactsSectionProps> = ({
                                                     max="10"
                                                     value={faculty.fitScore || 5}
                                                     onChange={e => handleFacultyFitChange(index, 'fitScore', parseInt(e.target.value))}
-                                                    className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer dark:bg-slate-700"
+                                                    className="w-full h-2 bg-[#27272a] rounded-lg appearance-none cursor-pointer accent-[#dc2626]"
                                                 />
-                                                <span className="text-lg font-bold text-blue-600 dark:text-blue-400 w-8 text-center">{faculty.fitScore || 5}</span>
+                                                <span className="text-lg font-bold text-blue-400 w-8 text-center">{faculty.fitScore || 5}</span>
                                             </div>
                                         </div>
                                         <MarkdownEditor
@@ -115,12 +115,12 @@ const FacultyContactsSection: React.FC<FacultyContactsSectionProps> = ({
                                             onChange={val => handleFacultyFitChange(index, 'fitNotes', val)}
                                         />
                                         <div>
-                                            <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 uppercase mb-2">Papers Read</label>
+                                            <label className="block text-xs font-medium text-[#a1a1aa] uppercase mb-2">Papers Read</label>
                                             <div className="space-y-2">
                                                 {faculty.papersRead?.map((paper, pIndex) => (
-                                                    <div key={pIndex} className="flex items-center justify-between bg-white dark:bg-slate-800 p-2 rounded border border-slate-200 dark:border-slate-600">
-                                                        <span className="text-sm text-slate-700 dark:text-slate-300 truncate">{paper}</span>
-                                                        <button type="button" onClick={() => removePaperRead(index, pIndex)} className="text-slate-400 hover:text-red-500" aria-label={`Remove paper: ${paper}`}>
+                                                    <div key={pIndex} className="flex items-center justify-between bg-[#18181b] p-2 rounded border border-[#27272a]">
+                                                        <span className="text-sm text-[#a1a1aa] truncate">{paper}</span>
+                                                        <button type="button" onClick={() => removePaperRead(index, pIndex)} className="text-[#a1a1aa] hover:text-red-500" aria-label={`Remove paper: ${paper}`}>
                                                             <MaterialIcon name="close" className="text-sm" />
                                                         </button>
                                                     </div>
@@ -131,10 +131,10 @@ const FacultyContactsSection: React.FC<FacultyContactsSectionProps> = ({
                                                         value={newPaper[index] || ''}
                                                         onChange={e => setNewPaper(prev => ({ ...prev, [index]: e.target.value }))}
                                                         placeholder="Paper Title / Link"
-                                                        className="flex-grow px-3 py-1.5 text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded focus:ring-2 focus:ring-blue-500 outline-none"
+                                                        className={`flex-grow ${formInputSmClass}`}
                                                         onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), handleAddPaper(index))}
                                                     />
-                                                    <button type="button" onClick={() => handleAddPaper(index)} className="px-3 py-1.5 text-sm bg-blue-50 text-blue-600 rounded hover:bg-blue-100">Add</button>
+                                                    <button type="button" onClick={() => handleAddPaper(index)} className={formActionBtnClass}>Add</button>
                                                 </div>
                                             </div>
                                         </div>
@@ -142,30 +142,30 @@ const FacultyContactsSection: React.FC<FacultyContactsSectionProps> = ({
                                 </div>
 
                                 {/* Correspondence History */}
-                                <div className="pt-4 border-t border-slate-200 dark:border-slate-600">
-                                    <h4 className="text-sm font-semibold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
+                                <div className={`pt-4 ${formSectionDivider}`}>
+                                    <h4 className={formSubheadingClass}>
                                         <MaterialIcon name="history" className="text-purple-500" />
                                         Correspondence History
                                     </h4>
                                     <div className="space-y-4">
                                         {faculty.correspondence?.map((corr, cIndex) => (
-                                            <div key={corr.id} className="bg-white dark:bg-slate-800 p-3 rounded border border-slate-200 dark:border-slate-600 text-sm">
+                                            <div key={corr.id} className="bg-[#18181b] p-3 rounded border border-[#27272a] text-sm">
                                                 <div className="flex justify-between items-start mb-1">
-                                                    <span className={`font-medium ${corr.type === 'Email Sent' ? 'text-blue-600' : corr.type === 'Email Received' ? 'text-green-600' : 'text-slate-600'}`}>
+                                                    <span className={`font-medium ${corr.type === 'Email Sent' ? 'text-blue-400' : corr.type === 'Email Received' ? 'text-green-400' : 'text-[#a1a1aa]'}`}>
                                                         {corr.type}
                                                     </span>
                                                     <div className="flex items-center gap-2">
-                                                        <span className="text-slate-400 text-xs">{corr.date}</span>
-                                                        <button type="button" onClick={() => removeCorrespondence(index, corr.id)} className="text-slate-400 hover:text-red-500" aria-label={`Remove correspondence: ${corr.subject}`}>
+                                                        <span className="text-[#a1a1aa] text-xs">{corr.date}</span>
+                                                        <button type="button" onClick={() => removeCorrespondence(index, corr.id)} className="text-[#a1a1aa] hover:text-red-500" aria-label={`Remove correspondence: ${corr.subject}`}>
                                                             <MaterialIcon name="delete" className="text-xs" />
                                                         </button>
                                                     </div>
                                                 </div>
-                                                <p className="font-medium text-slate-800 dark:text-slate-200">{corr.subject}</p>
-                                                {corr.notes && <p className="text-slate-500 dark:text-slate-400 mt-1">{corr.notes}</p>}
+                                                <p className="font-medium text-[#f4f4f5]">{corr.subject}</p>
+                                                {corr.notes && <p className="text-[#a1a1aa] mt-1">{corr.notes}</p>}
                                             </div>
                                         ))}
-                                        <div className="bg-slate-50 dark:bg-slate-800/50 p-3 rounded border border-dashed border-slate-300 dark:border-slate-600 space-y-2">
+                                        <div className="bg-[#09090b] p-3 rounded border border-dashed border-[#27272a] space-y-2">
                                             <div className="grid grid-cols-2 gap-2">
                                                 <div>
                                                     <label htmlFor={`correspondence-type-${index}`} className="sr-only">Correspondence Type</label>
@@ -173,7 +173,7 @@ const FacultyContactsSection: React.FC<FacultyContactsSectionProps> = ({
                                                         id={`correspondence-type-${index}`}
                                                         value={newCorrespondence[index]?.type || 'Email Sent'}
                                                         onChange={e => setNewCorrespondence(prev => ({ ...prev, [index]: { ...prev[index], type: e.target.value } }))}
-                                                        className="px-2 py-1.5 text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded"
+                                                        className="px-2 py-1.5 text-sm bg-[#18181b] border border-[#27272a] rounded"
                                                     >
                                                         <option>Email Sent</option>
                                                         <option>Email Received</option>
@@ -188,7 +188,7 @@ const FacultyContactsSection: React.FC<FacultyContactsSectionProps> = ({
                                                         type="date"
                                                         value={newCorrespondence[index]?.date || new Date().toISOString().split('T')[0]}
                                                         onChange={e => setNewCorrespondence(prev => ({ ...prev, [index]: { ...prev[index], date: e.target.value } }))}
-                                                        className="px-2 py-1.5 text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded"
+                                                        className="px-2 py-1.5 text-sm bg-[#18181b] border border-[#27272a] rounded"
                                                     />
                                                 </div>
                                             </div>
@@ -197,20 +197,20 @@ const FacultyContactsSection: React.FC<FacultyContactsSectionProps> = ({
                                                 placeholder="Subject / Topic"
                                                 value={newCorrespondence[index]?.subject || ''}
                                                 onChange={e => setNewCorrespondence(prev => ({ ...prev, [index]: { ...prev[index], subject: e.target.value } }))}
-                                                className="w-full px-2 py-1.5 text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded"
+                                                className="w-full px-2 py-1.5 text-sm bg-[#18181b] border border-[#27272a] rounded"
                                             />
                                             <textarea
                                                 placeholder="Notes..."
                                                 rows={2}
                                                 value={newCorrespondence[index]?.notes || ''}
                                                 onChange={e => setNewCorrespondence(prev => ({ ...prev, [index]: { ...prev[index], notes: e.target.value } }))}
-                                                className="w-full px-2 py-1.5 text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded resize-none"
+                                                className="w-full px-2 py-1.5 text-sm bg-[#18181b] border border-[#27272a] rounded resize-none"
                                             />
                                             <button
                                                 type="button"
                                                 onClick={() => handleAddCorrespondence(index)}
                                                 disabled={!newCorrespondence[index]?.subject}
-                                                className="w-full py-1.5 text-sm bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 rounded hover:bg-slate-300 dark:hover:bg-slate-600 disabled:opacity-50"
+                                                className={`w-full ${formActionBtnClass}`}
                                             >
                                                 Log Correspondence
                                             </button>
@@ -219,8 +219,8 @@ const FacultyContactsSection: React.FC<FacultyContactsSectionProps> = ({
                                 </div>
 
                                 {/* Interview Prep */}
-                                <div className="pt-4 border-t border-slate-200 dark:border-slate-600">
-                                    <h4 className="text-sm font-semibold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
+                                <div className={`pt-4 ${formSectionDivider}`}>
+                                    <h4 className={formSubheadingClass}>
                                         <MaterialIcon name="mic" className="text-orange-500" />
                                         Interview Preparation
                                     </h4>
@@ -248,7 +248,7 @@ const FacultyContactsSection: React.FC<FacultyContactsSectionProps> = ({
                     );
                 })}
                 {appData.facultyContacts.length < 3 && (
-                    <button type="button" onClick={addFacultyContact} className="w-full flex items-center justify-center gap-2 px-3 py-2 text-sm font-semibold text-[#E8B4B8] border-2 border-dashed border-[#E8B4B8]/30 rounded-lg hover:bg-[rgba(220,20,60,0.25)] hover:border-[#E8B4B8] transition-colors">
+                    <button type="button" onClick={addFacultyContact} className={formDashedAddClass}>
                         <MaterialIcon name="add" /><span>Add Faculty Contact</span>
                     </button>
                 )}

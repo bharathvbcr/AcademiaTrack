@@ -95,7 +95,7 @@ const TimelineView: React.FC<TimelineViewProps> = ({ applications, onEdit }) => 
 
     if (applications.length === 0) {
         return (
-            <div className="flex flex-col items-center justify-center h-64 text-[#E8B4B8]/70">
+            <div className="flex flex-col items-center justify-center h-64 text-[#a1a1aa]/70">
                 <span className="material-symbols-outlined text-4xl mb-2">timeline</span>
                 <p>No applications to display on timeline.</p>
             </div>
@@ -112,15 +112,15 @@ const TimelineView: React.FC<TimelineViewProps> = ({ applications, onEdit }) => 
                 <div style={{ width: Math.max(SIDEBAR_WIDTH + (totalMonths * MONTH_WIDTH), 800), minWidth: '100%' }}>
 
                     {/* Header */}
-                    <div className="flex sticky top-0 z-20 bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700">
-                        <div className="sticky left-0 bg-white dark:bg-slate-800 z-30 border-r border-slate-200 dark:border-slate-700 p-2 font-semibold text-slate-700 dark:text-slate-200 flex items-center justify-center shrink-0" style={{ width: SIDEBAR_WIDTH, height: HEADER_HEIGHT }}>
+                    <div className="flex sticky top-0 z-20 bg-[#18181b] border-b border-[#27272a]">
+                        <div className="sticky left-0 bg-[#18181b] z-30 border-r border-[#27272a] p-2 font-semibold text-[#a1a1aa] flex items-center justify-center shrink-0" style={{ width: SIDEBAR_WIDTH, height: HEADER_HEIGHT }}>
                             Application
                         </div>
                         <div className="relative h-10 flex grow">
                             {months.map((month, index) => (
                                 <div
                                     key={index}
-                                    className="absolute border-r border-slate-100 dark:border-slate-700/50 text-xs text-slate-500 uppercase font-medium flex items-center justify-center"
+                                    className="absolute border-r border-[#27272a]/50 text-xs text-[#a1a1aa] uppercase font-medium flex items-center justify-center"
                                     style={{
                                         left: index * MONTH_WIDTH,
                                         width: MONTH_WIDTH,
@@ -139,7 +139,7 @@ const TimelineView: React.FC<TimelineViewProps> = ({ applications, onEdit }) => 
                         {months.map((_, index) => (
                             <div
                                 key={`grid-${index}`}
-                                className="absolute top-0 bottom-0 border-r border-[#E8B4B8]/20 w-px"
+                                className="absolute top-0 bottom-0 border-r border-[#27272a] w-px"
                                 style={{ left: (index + 1) * MONTH_WIDTH }} // +1 to draw at end of month
                             />
                         ))}
@@ -177,29 +177,29 @@ const TimelineView: React.FC<TimelineViewProps> = ({ applications, onEdit }) => 
                                         onClick={() => onEdit(app)}
                                         title={`Deadline: ${new Date(app.deadline + 'T00:00:00').toLocaleDateString()}`}
                                     >
-                                        <div className="absolute right-0 top-1/2 -translate-y-1/2 px-2 text-xs font-semibold text-[#F5D7DA] translate-x-full whitespace-nowrap">
+                                        <div className="absolute right-0 top-1/2 -translate-y-1/2 px-2 text-xs font-semibold text-[#f4f4f5] translate-x-full whitespace-nowrap">
                                             {new Date(app.deadline + 'T00:00:00').toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
                                         </div>
                                     </div>
                                 );
                             } else {
                                 barContent = (
-                                    <div className="px-4 flex items-center h-full text-xs text-[#E8B4B8]/50 italic">
+                                    <div className="px-4 flex items-center h-full text-xs text-[#a1a1aa]/50 italic">
                                         No deadline set
                                     </div>
                                 );
                             }
 
                             return (
-                                <div key={app.id} className="flex relative hover:bg-[rgba(139,0,0,0.2)] transition-colors group border-b border-[#E8B4B8]/10">
+                                <div key={app.id} className="flex relative hover:bg-[#27272a] transition-colors group border-b border-[#27272a]">
                                     {/* Fixed Sidebar Row */}
                                     <div
-                                        className="sticky left-0 liquid-glass z-10 border-r border-[#E8B4B8]/30 p-3 flex items-center shrink-0"
+                                        className="sticky left-0 liquid-glass z-10 border-r border-[#27272a] p-3 flex items-center shrink-0"
                                         style={{ width: SIDEBAR_WIDTH, height: ROW_HEIGHT }}
                                     >
                                         <div className="truncate w-full cursor-pointer" onClick={() => onEdit(app)}>
-                                            <div className="font-medium text-[#F5D7DA] truncate" title={app.universityName}>{app.universityName}</div>
-                                            <div className="text-xs text-[#E8B4B8]/70 truncate" title={app.programName}>{app.programName}</div>
+                                            <div className="font-medium text-[#f4f4f5] truncate" title={app.universityName}>{app.universityName}</div>
+                                            <div className="text-xs text-[#a1a1aa]/70 truncate" title={app.programName}>{app.programName}</div>
                                         </div>
                                     </div>
 

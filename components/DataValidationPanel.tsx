@@ -1,14 +1,11 @@
 import React, { useMemo, useState } from 'react';
 import { Application } from '../types';
 import { useDataValidation, ValidationResult } from '../hooks/useDataValidation';
+import { MaterialIcon } from './ApplicationFormUI';
 
 interface DataValidationPanelProps {
   applications: Application[];
 }
-
-const MaterialIcon: React.FC<{ name: string; className?: string }> = ({ name, className }) => (
-  <span className={`material-symbols-outlined ${className}`}>{name}</span>
-);
 
 const countIssues = (result: ValidationResult) =>
   result.errors.length + result.warnings.length + result.info.length;
@@ -35,8 +32,9 @@ const DataValidationPanel: React.FC<DataValidationPanelProps> = ({ applications 
         type="button"
         aria-expanded={expanded}
         aria-controls="validation-panel-content"
+        aria-label={expanded ? 'Collapse data validation panel' : 'Expand data validation panel'}
         onClick={() => setExpanded(prev => !prev)}
-        className="flex w-full items-center justify-between gap-4 text-left"
+        className="flex w-full items-center justify-between gap-4 text-left rounded-lg focus:outline-none focus:ring-2 focus:ring-[#dc2626] focus:ring-offset-2 focus:ring-offset-[#09090b]"
       >
         <div className="flex items-center gap-3">
           <MaterialIcon name="rule" className="text-[#fca5a5]" />
@@ -49,7 +47,7 @@ const DataValidationPanel: React.FC<DataValidationPanelProps> = ({ applications 
         </div>
         <div className="flex items-center gap-3">
           <span className="text-sm text-[#a1a1aa]">{stats.averageCompleteness}% complete</span>
-          <MaterialIcon name={expanded ? 'expand_less' : 'expand_more'} className="text-[#a1a1aa]" />
+          <MaterialIcon name={expanded ? 'expand_less' : 'expand_more'} className="text-[#a1a1aa]" aria-hidden="true" />
         </div>
       </button>
 

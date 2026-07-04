@@ -18,8 +18,19 @@ Purpose: deterministic ownership mapping for every tracked file in this reposito
 
 ## Root Files
 
+- `.github/commands/gemini-invoke.toml` — Build/Operations
+- `.github/commands/gemini-plan-execute.toml` — Build/Operations
+- `.github/commands/gemini-review.toml` — Build/Operations
+- `.github/commands/gemini-scheduled-triage.toml` — Build/Operations
+- `.github/commands/gemini-triage.toml` — Build/Operations
 - `.github/release-notes.md` — Build/Operations
 - `.github/workflows/build.yml` — Build/Operations
+- `.github/workflows/gemini-dispatch.yml` — Build/Operations
+- `.github/workflows/gemini-invoke.yml` — Build/Operations
+- `.github/workflows/gemini-plan-execute.yml` — Build/Operations
+- `.github/workflows/gemini-review.yml` — Build/Operations
+- `.github/workflows/gemini-scheduled-triage.yml` — Build/Operations
+- `.github/workflows/gemini-triage.yml` — Build/Operations
 - `.github/workflows/release.yml` — Build/Operations
 - `.claude/settings.local.json` — Build/Operations
 - `.env.local` — Build/Operations
@@ -30,6 +41,7 @@ Purpose: deterministic ownership mapping for every tracked file in this reposito
 - `App.tsx` — Shell & App Compose
 - `CALL_CHAIN_PERSISTENCE.md` — Map/Maps
 - `CHANGELOG.md` — Build/Operations
+- `CLAUDE.md` — Map/Maps
 - `COMMUNITY_MAP_SUBSYSTEM.md` — Map/Maps
 - `IMPLEMENTATION_STATUS.md` — Build/Operations
 - `LICENSE` — Build/Operations
@@ -37,6 +49,7 @@ Purpose: deterministic ownership mapping for every tracked file in this reposito
 - `OWNERSHIP_INVENTORY.md` — Map/Maps
 - `README.md` — Shell & App Compose
 - `SECURITY.md` — Build/Operations
+- `SIGNING.md` — Build/Operations
 - `assets/MicrosoftEdgeWebview2Setup.exe` — Build/Operations
 - `assets/entitlements.mac.plist` — Build/Operations
 - `assets/icon.icns` — Map/Maps
@@ -44,6 +57,7 @@ Purpose: deterministic ownership mapping for every tracked file in this reposito
 - `assets/icon.png` — Map/Maps
 - `constants.ts` — Data/Model
 - `index.html` — Shell & App Compose
+- `index.css` — Renderer-UI
 - `index.tsx` — Shell & App Compose
 - `build-profile.json` — Build/Operations
 - `build-timings.json` — Build/Operations
@@ -54,8 +68,9 @@ Purpose: deterministic ownership mapping for every tracked file in this reposito
 - `public/AcademiaTrack.png` — Map/Maps
 - `public/favicon.ico` — Map/Maps
 - `scripts/build-profiler.cjs` — Build/Operations
-- `scripts/copy-electron-preload.cjs` — Build/Operations + Desktop Runtime
+- `scripts/check-version-consistency.cjs` — Build/Operations
 - `scripts/generate-release-notes.cjs` — Build/Operations
+- `scripts/import-apple-cert.sh` — Build/Operations
 - `scripts/log-analyzer.cjs` — Build/Operations
 - `scripts/measure-build.cjs` — Build/Operations
 - `scripts/verify-map-coverage.js` — Build/Operations + Map/Maps
@@ -69,6 +84,7 @@ Purpose: deterministic ownership mapping for every tracked file in this reposito
 - `types/interfaces.ts` — Data/Model
 - `types/vendor.d.ts` — Data/Model
 - `utils.ts` — Data/Model
+- `vite-env.d.ts` — Shell & App Compose
 - `vite.config.ts` — Build/Operations
 - `vitest.config.ts` — Testing
 
@@ -76,6 +92,8 @@ Purpose: deterministic ownership mapping for every tracked file in this reposito
 
 - `components/AdvancedFilterBuilder.tsx` — Renderer-UI
 - `components/AdvancedAnalyticsPanel.tsx` — Renderer-UI + State/Hook
+- `components/AIAssistantModal.tsx` — Renderer-UI
+- `components/AISettingsPanel.tsx` — Renderer-UI
 - `components/AdvancedSearchBar.tsx` — Renderer-UI + Search/Index
 - `components/ApplicationCard.tsx` — Renderer-UI
 - `components/ApplicationCard/index.tsx` — Renderer-UI
@@ -98,6 +116,7 @@ Purpose: deterministic ownership mapping for every tracked file in this reposito
 - `components/ContextMenu.tsx` — Renderer-UI
 - `components/CustomFieldsSection.tsx` — Renderer-UI
 - `components/DashboardSummary.tsx` — Renderer-UI
+- `components/DashboardAIBriefing.tsx` — Renderer-UI + State/Hook
 - `components/DataValidationPanel.tsx` — Renderer-UI + State/Hook
 - `components/DateInput.tsx` — Renderer-UI
 - `components/DocumentsSection.tsx` — Renderer-UI
@@ -138,10 +157,11 @@ Purpose: deterministic ownership mapping for every tracked file in this reposito
 - `components/UniversitySearchInput.tsx` — Renderer-UI + Search/Index
 - `components/ViewPresetModal.tsx` — Renderer-UI
 - `components/VirtualizedList.tsx` — Renderer-UI
-- `components/.FullName` — Renderer-UI
+- `components/__tests__/App.view-switching.test.tsx` — Testing
 - `components/__tests__/CommandPalette.test.tsx` — Testing
 - `components/__tests__/AdvancedSearchBar.test.tsx` — Testing
 - `components/__tests__/ApplicationList.wiring.test.tsx` — Testing
+- `components/__tests__/DashboardAIBriefing.test.tsx` — Testing
 - `components/__tests__/FacultyContactModal.test.tsx` — Testing
 - `components/__tests__/Header.view-switching.test.tsx` — Testing
 - `components/__tests__/QuickCaptureModal.test.tsx` — Testing
@@ -149,15 +169,13 @@ Purpose: deterministic ownership mapping for every tracked file in this reposito
 
 ## Contexts
 
+- `contexts/ApplicationActionsContext.tsx` — State/Hook
+- `contexts/BulkSelectionContext.tsx` — State/Hook
 - `contexts/CommandContext.tsx` — Renderer-Commands
 - `contexts/__tests__/CommandContext.test.tsx` — Testing
 
 ## Desktop Runtime
 
-- `electron/main.ts` — Desktop Runtime
-- `electron/preload.ts` — Desktop Runtime
-- `electron/preload.cjs` — Desktop Runtime
-- `electron/tsconfig.json` — Desktop Runtime
 - `lib/desktopBridge.ts` — Desktop Runtime
 - `src-tauri/.gitignore` — Build/Operations
 - `src-tauri/Cargo.lock` — Build/Operations
@@ -192,6 +210,7 @@ Purpose: deterministic ownership mapping for every tracked file in this reposito
 - `hooks/__tests__/useKeyboardShortcuts.test.tsx` — Testing
 - `hooks/__tests__/useLocalStorage.test.tsx` — Testing
 - `hooks/useAdvancedAnalytics.ts` — State/Hook
+- `hooks/useAI.ts` — State/Hook + Persistence
 - `hooks/useAdvancedFilter.ts` — State/Hook + Persistence
 - `hooks/useAdvancedSearch.ts` — State/Hook + Search/Index + Persistence
 - `hooks/useAnimations.ts` — State/Hook
@@ -225,11 +244,23 @@ Purpose: deterministic ownership mapping for every tracked file in this reposito
 - `hooks/useUniversityData.ts` — State/Hook + Data/Model
 - `hooks/useViewState.ts` — State/Hook + Persistence
 
+## Services
+
+- `services/ai/__tests__/prompts.test.ts` — Testing
+- `services/ai/__tests__/providers.test.ts` — Testing
+- `services/ai/index.ts` — Data/Model
+- `services/ai/ollama.ts` — Data/Model
+- `services/ai/openaiCompatible.ts` — Data/Model
+- `services/ai/prompts.ts` — Data/Model
+- `services/ai/stream.ts` — Data/Model
+- `services/ai/types.ts` — Data/Model
+
 ## Utils
 
 - `utils/__tests__/browserStorage.test.ts` — Testing
 - `utils/__tests__/dateUtils.test.ts` — Testing
 - `utils/__tests__/getDeadlineInfo.test.ts` — Testing
+- `utils/__tests__/parseCSV.test.ts` — Testing
 - `utils/browserStorage.ts` — Persistence
 - `utils/calendarExport.ts` — Data/Model
 - `utils/dataMigration.ts` — Persistence
@@ -252,6 +283,6 @@ Purpose: deterministic ownership mapping for every tracked file in this reposito
 
 ## Ownership Routing
 
-- UI-triggered persistence flow ownership: `components/*` → `hooks/*` → `utils/dataMigration.ts` + `utils/browserStorage.ts` (web) or `lib/desktopBridge.ts` + Tauri Rust commands (Tauri desktop), with `electron/main.ts` + `electron/preload.ts` retained for legacy Electron.
+- UI-triggered persistence flow ownership: `components/*` → `hooks/*` → `utils/dataMigration.ts` + `utils/browserStorage.ts` (web) or `lib/desktopBridge.ts` + Tauri Rust commands (Tauri desktop).
 - Command flow ownership: `components/CommandPalette.tsx` → `hooks/useAppCommands.ts` / `hooks/useCommandPalette.ts` → `contexts/CommandContext.tsx` → component handlers.
-- Desktop file APIs: `hooks/useApplicationForm.ts` + `hooks/useApplications.ts` → `lib/desktopBridge.ts` → Tauri Rust commands or legacy `electron/main.ts`.
+- Desktop file APIs: `hooks/useApplicationForm.ts` + `hooks/useApplications.ts` → `lib/desktopBridge.ts` → Tauri Rust commands.

@@ -3,16 +3,13 @@ import { useAdvancedSearch } from '../hooks/useAdvancedSearch';
 import { useDebounce } from '../hooks/useDebounce';
 import { Application } from '../types';
 import Tooltip from './Tooltip';
+import { MaterialIcon, formInputSmClass, formInputClass, formPrimaryBtnClass, formSecondaryBtnClass } from './ApplicationFormUI';
 
 interface AdvancedSearchBarProps {
   applications: Application[];
   onSearch: (results: Application[], query: string) => void;
   placeholder?: string;
 }
-
-const MaterialIcon: React.FC<{ name: string; className?: string }> = ({ name, className }) => (
-  <span className={`material-symbols-outlined ${className}`}>{name}</span>
-);
 
 const AdvancedSearchBar: React.FC<AdvancedSearchBarProps> = ({
   applications,
@@ -118,7 +115,7 @@ const AdvancedSearchBar: React.FC<AdvancedSearchBarProps> = ({
           onFocus={() => setShowSuggestions(true)}
           onKeyDown={handleInputKeyDown}
           placeholder={placeholder}
-          className="w-full pl-9 pr-20 py-1.5 text-sm liquid-glass rounded-lg focus:ring-2 focus:ring-[#dc2626] focus:border-transparent outline-none transition-all text-[#f4f4f5] placeholder:text-[#a1a1aa]/50"
+          className={`${formInputSmClass} pl-9 pr-20 focus:ring-offset-2 focus:ring-offset-[#09090b]`}
         />
         <div className="absolute right-1.5 top-1/2 -translate-y-1/2 flex items-center gap-0.5">
           {query.trim() && (
@@ -129,6 +126,7 @@ const AdvancedSearchBar: React.FC<AdvancedSearchBarProps> = ({
                   setSaveName('');
                 }}
                 className="p-1 hover:bg-[#27272a] rounded"
+                aria-label="Save search"
               >
                 <MaterialIcon name="bookmark_add" className="text-xs text-[#a1a1aa]" />
               </button>
@@ -138,6 +136,8 @@ const AdvancedSearchBar: React.FC<AdvancedSearchBarProps> = ({
             <button
               onClick={() => setShowSavedSearches(!showSavedSearches)}
               className="p-1 hover:bg-[#27272a] rounded"
+              aria-label="Saved searches"
+              aria-expanded={showSavedSearches}
             >
               <MaterialIcon name="bookmarks" className="text-xs text-[#a1a1aa]" />
             </button>
@@ -234,6 +234,7 @@ const AdvancedSearchBar: React.FC<AdvancedSearchBarProps> = ({
                   <button
                     onClick={() => handleLoad(saved.id)}
                     className="flex-1 text-left flex items-center gap-2"
+                    aria-label={`Load saved search ${saved.name}`}
                   >
                     <MaterialIcon name="bookmark" className="text-sm text-[#a1a1aa]" />
                     <div>
@@ -267,7 +268,7 @@ const AdvancedSearchBar: React.FC<AdvancedSearchBarProps> = ({
               value={saveName}
               onChange={(e) => setSaveName(e.target.value)}
               placeholder="Search name"
-              className="w-full px-3 py-2 border border-[#27272a] rounded-lg mb-4 liquid-glass text-[#f4f4f5] placeholder:text-[#a1a1aa]/50"
+              className={`${formInputClass} mb-4`}
               autoFocus
               onKeyDown={(e) => {
                 if (e.key === 'Enter') handleSave();
@@ -277,14 +278,14 @@ const AdvancedSearchBar: React.FC<AdvancedSearchBarProps> = ({
             <div className="flex gap-2 justify-end">
               <button
                 onClick={() => setSaveDialogOpen(false)}
-                className="px-4 py-2 border border-[#27272a] rounded-lg text-[#a1a1aa] hover:bg-[#27272a] hover:text-[#f4f4f5]"
+                className={formSecondaryBtnClass}
               >
                 Cancel
               </button>
               <button
                 onClick={handleSave}
                 disabled={!saveName.trim()}
-                className="px-4 py-2 bg-[#dc2626] text-white rounded-lg hover:bg-[#b91c1c] disabled:opacity-50"
+                className={formPrimaryBtnClass}
               >
                 Save
               </button>

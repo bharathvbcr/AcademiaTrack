@@ -2,6 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import { Application, ApplicationStatus } from '../types';
 import { STATUS_OPTIONS, STATUS_LABELS } from '../constants';
 import { sanitizeURL } from '../utils';
+import { MaterialIcon } from './ApplicationFormUI';
 
 interface ContextMenuProps {
     x: number;
@@ -14,9 +15,8 @@ interface ContextMenuProps {
     onStatusChange: (app: Application, status: ApplicationStatus) => void;
 }
 
-const MaterialIcon: React.FC<{ name: string; className?: string }> = ({ name, className }) => (
-    <span className={`material-symbols-outlined ${className}`}>{name}</span>
-);
+const menuItemClass =
+    'w-full text-left px-4 py-2.5 text-sm text-[#f4f4f5] hover:bg-[#27272a] flex items-center gap-3 transition-colors';
 
 const ContextMenu: React.FC<ContextMenuProps> = ({
     x,
@@ -49,7 +49,6 @@ const ContextMenu: React.FC<ContextMenuProps> = ({
         };
     }, [onClose]);
 
-    // Adjust position to keep menu in viewport
     const adjustedY = Math.min(y, window.innerHeight - 300);
     const adjustedX = Math.min(x, window.innerWidth - 200);
 
@@ -66,47 +65,42 @@ const ContextMenu: React.FC<ContextMenuProps> = ({
     return (
         <div
             ref={menuRef}
-            className="fixed z-50 w-52 bg-white dark:bg-slate-800 rounded-xl shadow-2xl border border-slate-200 dark:border-slate-700 py-1 animate-fade-in"
+            className="fixed z-50 w-52 liquid-glass-modal-content rounded-xl shadow-2xl py-1 animate-fade-in"
             style={{ left: adjustedX, top: adjustedY }}
         >
-            {/* Edit */}
             <button
                 onClick={() => { onEdit(application); onClose(); }}
-                className="w-full text-left px-4 py-2.5 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-3"
+                className={menuItemClass}
             >
-                <MaterialIcon name="edit" className="text-lg text-blue-500" />
+                <MaterialIcon name="edit" className="text-lg text-blue-400" />
                 Edit Application
             </button>
 
-            {/* Pin/Unpin */}
-            <button
-                onClick={handlePin}
-                className="w-full text-left px-4 py-2.5 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-3"
-            >
-                <MaterialIcon name="push_pin" className={`text-lg ${application.isPinned ? 'text-amber-500' : 'text-slate-400'}`} />
+            <button onClick={handlePin} className={menuItemClass}>
+                <MaterialIcon name="push_pin" className={`text-lg ${application.isPinned ? 'text-amber-400' : 'text-[#a1a1aa]'}`} />
                 {application.isPinned ? 'Unpin' : 'Pin to Top'}
             </button>
 
-            {/* Change Status */}
             <div className="relative">
                 <button
                     onClick={() => setShowStatusSubmenu(!showStatusSubmenu)}
-                    className="w-full text-left px-4 py-2.5 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center justify-between"
+                    className={`${menuItemClass} justify-between`}
                 >
                     <span className="flex items-center gap-3">
-                        <MaterialIcon name="swap_horiz" className="text-lg text-purple-500" />
+                        <MaterialIcon name="swap_horiz" className="text-lg text-purple-400" />
                         Change Status
                     </span>
-                    <MaterialIcon name={showStatusSubmenu ? 'expand_less' : 'chevron_right'} className="text-sm" />
+                    <MaterialIcon name={showStatusSubmenu ? 'expand_less' : 'chevron_right'} className="text-sm text-[#a1a1aa]" />
                 </button>
                 {showStatusSubmenu && (
-                    <div className="absolute left-full top-0 ml-1 w-40 bg-white dark:bg-slate-800 rounded-lg shadow-xl border border-slate-200 dark:border-slate-700 py-1 max-h-60 overflow-y-auto">
+                    <div className="absolute left-full top-0 ml-1 w-44 liquid-glass-modal-content rounded-lg shadow-xl py-1 max-h-60 overflow-y-auto custom-scrollbar">
                         {STATUS_OPTIONS.map(status => (
                             <button
                                 key={status}
                                 onClick={() => { onStatusChange(application, status); onClose(); }}
-                                className={`w-full text-left px-3 py-2 text-sm hover:bg-slate-100 dark:hover:bg-slate-700 ${application.status === status ? 'bg-slate-100 dark:bg-slate-700 font-medium' : ''
-                                    } text-slate-700 dark:text-slate-200`}
+                                className={`w-full text-left px-3 py-2 text-sm hover:bg-[#27272a] transition-colors ${
+                                    application.status === status ? 'bg-[#27272a] font-medium text-[#f4f4f5]' : 'text-[#a1a1aa]'
+                                }`}
                             >
                                 {STATUS_LABELS[status]}
                             </button>
@@ -115,34 +109,28 @@ const ContextMenu: React.FC<ContextMenuProps> = ({
                 )}
             </div>
 
-            <hr className="my-1 border-slate-200 dark:border-slate-700" />
+            <hr className="my-1 border-[#27272a]" />
 
-            {/* Copy Name */}
-            <button
-                onClick={handleCopyName}
-                className="w-full text-left px-4 py-2.5 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-3"
-            >
-                <MaterialIcon name="content_copy" className="text-lg text-slate-400" />
+            <button onClick={handleCopyName} className={menuItemClass}>
+                <MaterialIcon name="content_copy" className="text-lg text-[#a1a1aa]" />
                 Copy University Name
             </button>
 
-            {/* Open Portal */}
             {application.portalLink && (
                 <button
                     onClick={() => { window.open(sanitizeURL(application.portalLink ?? ''), '_blank', 'noopener,noreferrer'); onClose(); }}
-                    className="w-full text-left px-4 py-2.5 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-3"
+                    className={menuItemClass}
                 >
-                    <MaterialIcon name="open_in_new" className="text-lg text-slate-400" />
+                    <MaterialIcon name="open_in_new" className="text-lg text-[#a1a1aa]" />
                     Open Portal
                 </button>
             )}
 
-            <hr className="my-1 border-slate-200 dark:border-slate-700" />
+            <hr className="my-1 border-[#27272a]" />
 
-            {/* Delete */}
             <button
                 onClick={() => { onDelete(application.id); onClose(); }}
-                className="w-full text-left px-4 py-2.5 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-3"
+                className="w-full text-left px-4 py-2.5 text-sm text-red-400 hover:bg-red-500/10 flex items-center gap-3 transition-colors"
             >
                 <MaterialIcon name="delete" className="text-lg" />
                 Delete

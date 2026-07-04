@@ -102,23 +102,23 @@ const BudgetView: React.FC<BudgetViewProps> = ({ applications }) => {
             {/* Summary Cards */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div className="liquid-glass-card p-6 rounded-2xl">
-                    <h3 className="text-sm font-medium text-[#E8B4B8]/70 uppercase tracking-wider">Total Expenses</h3>
-                    <p className="text-3xl font-bold text-[#F5D7DA] mt-2">${totalCost.toLocaleString()}</p>
+                    <h3 className="text-sm font-medium text-[#a1a1aa]/70 uppercase tracking-wider">Total Expenses</h3>
+                    <p className="text-3xl font-bold text-[#f4f4f5] mt-2">${totalCost.toLocaleString()}</p>
                 </div>
                 <div className="liquid-glass-card p-6 rounded-2xl">
-                    <h3 className="text-sm font-medium text-[#E8B4B8]/70 uppercase tracking-wider">Avg. Cost per App</h3>
-                    <p className="text-3xl font-bold text-[#F5D7DA] mt-2">
+                    <h3 className="text-sm font-medium text-[#a1a1aa]/70 uppercase tracking-wider">Avg. Cost per App</h3>
+                    <p className="text-3xl font-bold text-[#f4f4f5] mt-2">
                         ${applications.length > 0 ? Math.round(totalCost / applications.length).toLocaleString() : 0}
                     </p>
                 </div>
                 <div className="liquid-glass-card p-6 rounded-2xl">
-                    <h3 className="text-sm font-medium text-[#E8B4B8]/70 uppercase tracking-wider">Potential Income</h3>
+                    <h3 className="text-sm font-medium text-[#a1a1aa]/70 uppercase tracking-wider">Potential Income</h3>
                     <p className="text-3xl font-bold text-[#10b981] mt-2">${totalStipendPotential.toLocaleString()}</p>
-                    <p className="text-xs text-[#E8B4B8]/50 mt-1">Annualized Stipends</p>
+                    <p className="text-xs text-[#a1a1aa]/50 mt-1">Annualized Stipends</p>
                 </div>
                 <div className="liquid-glass-card p-6 rounded-2xl">
-                    <h3 className="text-sm font-medium text-[#E8B4B8]/70 uppercase tracking-wider">Net Value</h3>
-                    <p className={`text-3xl font-bold mt-2 ${totalStipendPotential - totalCost >= 0 ? 'text-[#10b981]' : 'text-[#E03030]'}`}>
+                    <h3 className="text-sm font-medium text-[#a1a1aa]/70 uppercase tracking-wider">Net Value</h3>
+                    <p className={`text-3xl font-bold mt-2 ${totalStipendPotential - totalCost >= 0 ? 'text-[#10b981]' : 'text-[#dc2626]'}`}>
                         ${(totalStipendPotential - totalCost).toLocaleString()}
                     </p>
                 </div>
@@ -127,7 +127,7 @@ const BudgetView: React.FC<BudgetViewProps> = ({ applications }) => {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Expense Breakdown */}
                 <div className="liquid-glass-card p-6 rounded-3xl">
-                    <h3 className="text-lg font-semibold text-[#F5D7DA] mb-6">Expense Breakdown</h3>
+                    <h3 className="text-lg font-semibold text-[#f4f4f5] mb-6">Expense Breakdown</h3>
                     <div className="h-80">
                         {expenseBreakdown.length > 0 ? (
                             <ResponsiveContainer width="100%" height="100%">
@@ -153,7 +153,7 @@ const BudgetView: React.FC<BudgetViewProps> = ({ applications }) => {
                                 </PieChart>
                             </ResponsiveContainer>
                         ) : (
-                            <div className="h-full flex items-center justify-center text-[#E8B4B8]/60 text-sm">
+                            <div className="h-full flex items-center justify-center text-[#a1a1aa]/60 text-sm">
                                 No expenses tracked yet
                             </div>
                         )}
@@ -162,11 +162,11 @@ const BudgetView: React.FC<BudgetViewProps> = ({ applications }) => {
 
                 {/* Offer Comparison */}
                 <div className="liquid-glass-card p-6 rounded-3xl overflow-hidden">
-                    <h3 className="text-lg font-semibold text-[#F5D7DA] mb-6">Offer Comparison</h3>
+                    <h3 className="text-lg font-semibold text-[#f4f4f5] mb-6">Offer Comparison</h3>
                     {financialOffers.length > 0 ? (
                         <div className="overflow-x-auto">
-                            <table className="w-full text-sm text-left text-[#E8B4B8]/70">
-                                <thead className="text-xs text-[#F5D7DA] uppercase liquid-glass">
+                            <table className="w-full text-sm text-left text-[#a1a1aa]/70">
+                                <thead className="text-xs text-[#f4f4f5] uppercase liquid-glass">
                                     <tr>
                                         <th scope="col" className="px-6 py-3 rounded-l-lg">University</th>
                                         <th scope="col" className="px-6 py-3">Stipend (yr)</th>
@@ -175,8 +175,8 @@ const BudgetView: React.FC<BudgetViewProps> = ({ applications }) => {
                                 </thead>
                                 <tbody>
                                     {financialOffers.map((offer, index) => (
-                                        <tr key={index} className="border-b border-[#E8B4B8]/30">
-                                            <td className="px-6 py-4 font-medium text-[#F5D7DA] whitespace-nowrap">
+                                        <tr key={index} className="border-b border-[#27272a]/30">
+                                            <td className="px-6 py-4 font-medium text-[#f4f4f5] whitespace-nowrap">
                                                 {offer.university}
                                             </td>
                                             <td className="px-6 py-4 text-[#10b981] font-medium">
@@ -191,7 +191,7 @@ const BudgetView: React.FC<BudgetViewProps> = ({ applications }) => {
                             </table>
                         </div>
                     ) : (
-                        <div className="flex flex-col items-center justify-center h-64 text-[#E8B4B8]/50">
+                        <div className="flex flex-col items-center justify-center h-64 text-[#a1a1aa]/50">
                             <MaterialIcon name="attach_money" className="text-4xl mb-2 opacity-50" />
                             <p>No financial offers recorded yet.</p>
                         </div>
@@ -201,24 +201,24 @@ const BudgetView: React.FC<BudgetViewProps> = ({ applications }) => {
 
             {/* Scholarships List */}
             <div className="liquid-glass-card p-6 rounded-3xl">
-                <h3 className="text-lg font-semibold text-[#F5D7DA] mb-6">Scholarships & Grants</h3>
+                <h3 className="text-lg font-semibold text-[#f4f4f5] mb-6">Scholarships & Grants</h3>
                 {scholarships.length > 0 ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         {scholarships.map((sch, index) => (
                             <div key={index} className="p-4 rounded-xl liquid-glass">
                                 <div className="flex justify-between items-start mb-2">
-                                    <h4 className="font-medium text-[#F5D7DA] truncate pr-2" title={sch.name}>{sch.name}</h4>
-                                    <span className={`text-xs px-2 py-0.5 rounded-full ${sch.status === 'Awarded' ? 'bg-[rgba(16,185,129,0.2)] text-[#10b981]' : 'bg-[rgba(192,48,80,0.2)] text-[#C03050]'}`}>
+                                    <h4 className="font-medium text-[#f4f4f5] truncate pr-2" title={sch.name}>{sch.name}</h4>
+                                    <span className={`text-xs px-2 py-0.5 rounded-full ${sch.status === 'Awarded' ? 'bg-[rgba(16,185,129,0.2)] text-[#10b981]' : 'bg-[#dc2626]/10 text-[#dc2626]'}`}>
                                         {sch.status}
                                     </span>
                                 </div>
-                                <p className="text-sm text-[#E8B4B8]/70 mb-1">{sch.university}</p>
-                                <p className="text-lg font-bold text-[#F5D7DA]">${sch.amount.toLocaleString()}</p>
+                                <p className="text-sm text-[#a1a1aa]/70 mb-1">{sch.university}</p>
+                                <p className="text-lg font-bold text-[#f4f4f5]">${sch.amount.toLocaleString()}</p>
                             </div>
                         ))}
                     </div>
                 ) : (
-                    <div className="text-center py-8 text-[#E8B4B8]/70">
+                    <div className="text-center py-8 text-[#a1a1aa]/70">
                         No scholarships tracked.
                     </div>
                 )}
@@ -227,8 +227,8 @@ const BudgetView: React.FC<BudgetViewProps> = ({ applications }) => {
             {/* Cost per Admission Chance Analysis */}
             {costPerChance.length > 0 && (
                 <div className="liquid-glass-card p-6 rounded-3xl">
-                    <h3 className="text-lg font-semibold text-[#F5D7DA] mb-2">Cost per Admission Chance</h3>
-                    <p className="text-sm text-[#E8B4B8]/70 mb-6">
+                    <h3 className="text-lg font-semibold text-[#f4f4f5] mb-2">Cost per Admission Chance</h3>
+                    <p className="text-sm text-[#a1a1aa]/70 mb-6">
                         Lower cost per 1% admission chance = better ROI. Add admission chance estimates to your applications to see this analysis.
                     </p>
                     <div className="h-80">
@@ -264,12 +264,12 @@ const BudgetView: React.FC<BudgetViewProps> = ({ applications }) => {
                                 <div className="flex items-center gap-2 mb-1">
                                     {index === 0 && <span className="text-[#10b981] text-xs font-medium">Best ROI</span>}
                                 </div>
-                                <p className="font-medium text-[#F5D7DA] truncate" title={app.name}>{app.name}</p>
+                                <p className="font-medium text-[#f4f4f5] truncate" title={app.name}>{app.name}</p>
                                 <div className="flex justify-between text-sm mt-1">
-                                    <span className="text-[#E8B4B8]/70">Fee: ${app.fee}</span>
-                                    <span className="text-[#E8B4B8]/70">Chance: {app.chance}%</span>
+                                    <span className="text-[#a1a1aa]/70">Fee: ${app.fee}</span>
+                                    <span className="text-[#a1a1aa]/70">Chance: {app.chance}%</span>
                                 </div>
-                                <p className="text-lg font-bold text-[#C03050]">${app.costPerPercent.toFixed(2)}/1%</p>
+                                <p className="text-lg font-bold text-[#dc2626]">${app.costPerPercent.toFixed(2)}/1%</p>
                             </div>
                         ))}
                     </div>

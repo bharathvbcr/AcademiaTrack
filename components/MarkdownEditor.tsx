@@ -15,33 +15,33 @@ const MarkdownEditor: React.FC<MarkdownEditorProps> = ({ value, onChange, label,
     return (
         <div className={`flex flex-col gap-2 ${className}`}>
             <div className="flex justify-between items-center">
-                <label className="block text-sm font-medium text-[#F5D7DA]">
+                <label className="block text-sm font-medium text-[#f4f4f5]">
                     {label}
                 </label>
                 <button
                     type="button"
                     onClick={() => setIsPreview(!isPreview)}
-                    className="text-xs font-medium text-[#E8B4B8] hover:text-[#F5D7DA] transition-colors"
+                    className="text-xs font-medium text-[#a1a1aa] hover:text-[#f4f4f5] transition-colors"
                 >
                     {isPreview ? 'Edit' : 'Preview'}
                 </button>
             </div>
 
-            <div className="relative min-h-[150px] w-full rounded-lg border border-[#E8B4B8]/30 liquid-glass overflow-hidden focus-within:ring-2 focus-within:ring-[#E8B4B8] focus-within:border-[#E8B4B8] transition">
+            <div className="relative min-h-[150px] w-full rounded-lg border border-[#27272a] liquid-glass overflow-hidden focus-within:ring-2 focus-within:ring-[#dc2626] focus-within:border-[#27272a] transition">
                 {isPreview ? (
-                    <div className="prose prose-sm dark:prose-invert max-w-none p-3 overflow-y-auto max-h-[300px] text-[#F5D7DA]">
+                    <div className="ai-markdown max-h-[300px] overflow-y-auto custom-scrollbar p-3">
                         <ReactMarkdown remarkPlugins={[remarkGfm]}>{value || '*No notes yet*'}</ReactMarkdown>
                     </div>
                 ) : (
                     <textarea
                         value={value}
                         onChange={(e) => onChange(e.target.value)}
-                        className="w-full h-full min-h-[150px] p-3 bg-transparent border-none resize-y focus:ring-0 text-sm text-[#F5D7DA] placeholder:text-[#E8B4B8]/50"
+                        className="w-full h-full min-h-[150px] p-3 bg-transparent border-none resize-y focus:ring-0 text-sm text-[#f4f4f5] placeholder:text-[#a1a1aa]/50"
                         placeholder="Type your notes here... (Markdown supported)"
                     />
                 )}
             </div>
-            <p className="text-xs text-[#E8B4B8]/50">
+            <p className="text-xs text-[#a1a1aa]/50">
                 Supports Markdown: **bold**, *italic*, - lists, [links](url)
             </p>
         </div>

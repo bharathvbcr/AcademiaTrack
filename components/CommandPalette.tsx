@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useCommandRegistry } from '../contexts/CommandContext';
 import { CommandSearchResult } from '../types/commands';
 import { useEnhancedKeyboardShortcuts } from '../hooks/useEnhancedKeyboardShortcuts';
+import { MaterialIcon } from './ApplicationFormUI';
 
 interface CommandPaletteProps {
     isOpen: boolean;
@@ -23,15 +24,7 @@ const DEFAULT_APPLICATION_LIMIT = 12;
 const APPLICATION_SHOW_INCREMENT = 12;
 const GROUP_ORDER = ['Actions', 'Navigation', 'Settings', 'Search', 'Applications'];
 
-const MaterialIcon: React.FC<{ name: string; className?: string; 'aria-hidden'?: boolean }> = ({ name, className, 'aria-hidden': ariaHidden = true }) => {
-    const props: React.HTMLAttributes<HTMLSpanElement> = {
-        className: `material-symbols-outlined ${className}`,
-        'aria-hidden': ariaHidden ? 'true' : 'false',
-    };
-    return (
-        <span {...props}>{name}</span>
-    );
-};
+const kbdClass = 'px-1.5 py-0.5 rounded bg-[#27272a] border border-[#3f3f46] text-[#a1a1aa]';
 
 const CommandPalette: React.FC<CommandPaletteProps> = ({
     isOpen,
@@ -152,7 +145,6 @@ const CommandPalette: React.FC<CommandPaletteProps> = ({
         setSelectedIndex(0);
     }, [query]);
 
-    // Scroll selected item into view
     useEffect(() => {
         const selectedElement = scrollContainerRef.current?.querySelector(`[data-index="${selectedIndex}"]`);
         if (selectedElement) {
@@ -227,29 +219,27 @@ const CommandPalette: React.FC<CommandPaletteProps> = ({
                     className="relative w-full max-w-2xl mx-4"
                     onClick={(e) => e.stopPropagation()}
                 >
-                    <div className="liquid-glass-modal-content rounded-2xl overflow-hidden shadow-2xl border border-[#E8B4B8]/30">
-                        {/* Search Input */}
-                        <div className="flex items-center gap-4 p-5 border-b border-[#E8B4B8]/20 bg-[rgba(139,0,0,0.2)]">
-                            <MaterialIcon name="search" className="text-2xl text-[#E8B4B8]" />
+                    <div className="liquid-glass-modal-content rounded-2xl overflow-hidden shadow-2xl border border-[#27272a]">
+                        <div className="flex items-center gap-4 p-5 border-b border-[#27272a] bg-[#18181b]">
+                            <MaterialIcon name="search" className="text-2xl text-[#a1a1aa]" aria-hidden="true" />
                             <input
                                 type="text"
                                 value={query}
                                 onChange={(e) => setQuery(e.target.value)}
                                 onKeyDown={handleKeyDown}
                                 placeholder="Type to search... (> actions, @ apps, # filters)"
-                                className="flex-1 bg-transparent border-none outline-none text-[#F5D7DA] text-xl placeholder-[#E8B4B8]/40"
+                                className="flex-1 bg-transparent border-none outline-none text-[#f4f4f5] text-xl placeholder-[#a1a1aa]/50"
                                 autoFocus
                                 aria-label="Search commands"
                                 aria-controls="command-palette-listbox"
                             />
                             <div className="flex items-center gap-2">
-                                <kbd className="px-2 py-1 text-[10px] font-bold text-[#E8B4B8] bg-[rgba(139,0,0,0.4)] rounded border border-[#E8B4B8]/30 shadow-inner uppercase tracking-tighter">
+                                <kbd className={`${kbdClass} text-[10px] font-bold uppercase tracking-tighter`}>
                                     ESC
                                 </kbd>
                             </div>
                         </div>
 
-                        {/* Commands List */}
                         <div
                             id="command-palette-listbox"
                             ref={scrollContainerRef}
@@ -257,8 +247,8 @@ const CommandPalette: React.FC<CommandPaletteProps> = ({
                             role="listbox"
                         >
                             {filteredResults.length === 0 ? (
-                                <div className="p-12 text-center text-[#E8B4B8]">
-                                    <MaterialIcon name="search_off" className="text-5xl mb-3 opacity-30" />
+                                <div className="p-12 text-center text-[#a1a1aa]">
+                                    <MaterialIcon name="search_off" className="text-5xl mb-3 opacity-30" aria-hidden="true" />
                                     <p className="text-lg font-medium opacity-60">No results found for "{query}"</p>
                                     <p className="text-sm opacity-40 mt-1">Try a different search or use tokens like {'>'} or @</p>
                                 </div>
@@ -266,7 +256,7 @@ const CommandPalette: React.FC<CommandPaletteProps> = ({
                                 <>
                                     {renderedGroups.groups.map(([category, results]) => (
                                         <div key={category} className="py-2">
-                                            <div className="px-5 py-2 text-[10px] font-bold text-[#E8B4B8]/60 uppercase tracking-[0.2em]">
+                                            <div className="px-5 py-2 text-[10px] font-bold text-[#a1a1aa]/60 uppercase tracking-[0.2em]">
                                                 {category}
                                             </div>
                                                 {results.map((result) => {
@@ -285,8 +275,8 @@ const CommandPalette: React.FC<CommandPaletteProps> = ({
                                                         }}
                                                         onMouseEnter={() => setSelectedIndex(globalIndex)}
                                                         className={`group w-full flex items-center gap-4 px-5 py-3 transition-all cursor-pointer relative ${isSelected
-                                                                ? 'bg-[rgba(232,180,184,0.15)] text-[#F5D7DA]'
-                                                                : 'hover:bg-[rgba(232,180,184,0.05)] text-[#F5D7DA]/80'
+                                                                ? 'bg-[#27272a]/80 text-[#f4f4f5]'
+                                                                : 'hover:bg-[#27272a]/40 text-[#f4f4f5]/80'
                                                             }`}
                                                         role="option"
                                                         aria-selected={isSelected}
@@ -294,20 +284,20 @@ const CommandPalette: React.FC<CommandPaletteProps> = ({
                                                         {isSelected && (
                                                             <motion.div 
                                                                 layoutId="active-indicator"
-                                                                className="absolute left-0 w-1 h-2/3 bg-gradient-to-b from-[#DC143C] to-[#FF2400] rounded-r-full" 
+                                                                className="absolute left-0 w-1 h-2/3 bg-[#dc2626] rounded-r-full" 
                                                             />
                                                         )}
                                                             <div className={`flex items-center justify-center w-10 h-10 rounded-xl transition-colors ${
-                                                                isSelected ? 'bg-[rgba(220,20,60,0.2)] text-[#E8B4B8]' : 'bg-[rgba(0,0,0,0.2)] text-[#E8B4B8]/50 group-hover:text-[#E8B4B8]/70'
+                                                                isSelected ? 'bg-[#dc2626]/20 text-[#f4f4f5]' : 'bg-[#18181b] text-[#a1a1aa]/50 group-hover:text-[#a1a1aa]'
                                                             }`}>
-                                                            <MaterialIcon name={result.icon} className="text-2xl" />
+                                                            <MaterialIcon name={result.icon} className="text-2xl" aria-hidden="true" />
                                                         </div>
                                                         <div className="flex-1 min-w-0">
-                                                            <div className={`font-semibold truncate ${isSelected ? 'text-[#F5D7DA]' : 'text-[#F5D7DA]/90'}`}>
+                                                            <div className={`font-semibold truncate ${isSelected ? 'text-[#f4f4f5]' : 'text-[#f4f4f5]/90'}`}>
                                                                 {result.title}
                                                             </div>
                                                             {result.subtitle && (
-                                                                <div className={`text-xs truncate mt-0.5 ${isSelected ? 'text-[#E8B4B8]/80' : 'text-[#E8B4B8]/40'}`}>
+                                                                <div className={`text-xs truncate mt-0.5 ${isSelected ? 'text-[#a1a1aa]' : 'text-[#a1a1aa]/50'}`}>
                                                                     {result.subtitle}
                                                                 </div>
                                                             )}
@@ -315,8 +305,8 @@ const CommandPalette: React.FC<CommandPaletteProps> = ({
                                                         {result.shortcut && (
                                                             <kbd className={`ml-auto px-2 py-1 text-[10px] font-bold rounded border transition-colors ${
                                                                 isSelected 
-                                                                    ? 'text-[#F5D7DA] bg-[rgba(220,20,60,0.3)] border-[#E8B4B8]/40' 
-                                                                    : 'text-[#E8B4B8]/50 bg-[rgba(0,0,0,0.2)] border-[#E8B4B8]/10'
+                                                                    ? 'text-[#f4f4f5] bg-[#dc2626]/30 border-[#dc2626]/40' 
+                                                                    : 'text-[#a1a1aa]/50 bg-[#18181b] border-[#27272a]'
                                                             }`}>
                                                                 {result.shortcut}
                                                             </kbd>
@@ -330,19 +320,18 @@ const CommandPalette: React.FC<CommandPaletteProps> = ({
                             )}
                         </div>
 
-                        {/* Footer */}
-                        <div className="px-5 py-3 border-t border-[#E8B4B8]/10 bg-[rgba(0,0,0,0.2)] flex items-center justify-between text-[10px] text-[#E8B4B8]/50 font-medium">
+                        <div className="px-5 py-3 border-t border-[#27272a] bg-[#09090b]/60 flex items-center justify-between text-[10px] text-[#a1a1aa]/50 font-medium">
                             <div className="flex items-center gap-5">
                                 <span className="flex items-center gap-1.5">
-                                    <kbd className="px-1.5 py-0.5 rounded bg-[rgba(139,0,0,0.3)] border border-[#E8B4B8]/20 text-[#E8B4B8]">↑↓</kbd>
+                                    <kbd className={kbdClass}>↑↓</kbd>
                                     <span className="uppercase tracking-wider">Navigate</span>
                                 </span>
                                 <span className="flex items-center gap-1.5">
-                                    <kbd className="px-1.5 py-0.5 rounded bg-[rgba(139,0,0,0.3)] border border-[#E8B4B8]/20 text-[#E8B4B8]">Enter</kbd>
+                                    <kbd className={kbdClass}>Enter</kbd>
                                     <span className="uppercase tracking-wider">Select</span>
                                 </span>
                                 <span className="flex items-center gap-1.5">
-                                    <kbd className="px-1.5 py-0.5 rounded bg-[rgba(139,0,0,0.3)] border border-[#E8B4B8]/20 text-[#E8B4B8] font-bold">#</kbd>
+                                    <kbd className={`${kbdClass} font-bold`}>#</kbd>
                                     <span className="uppercase tracking-wider">Filters</span>
                                 </span>
                             </div>

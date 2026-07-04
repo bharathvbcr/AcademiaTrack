@@ -6,6 +6,7 @@ import { FEE_WAIVER_STATUS_COLORS, TEST_STATUS_COLORS } from '../../constants';
 import { sanitizeURL } from '../../utils';
 import { getStorageItem, setStorageItem, removeStorageItem } from '../../utils/browserStorage';
 import { CardHeader, DocumentChecklist, FacultyOutreachList, CardFooter } from './subcomponents';
+import { MaterialIcon } from '../ApplicationFormUI';
 
 interface ApplicationCardProps {
     application: Application;
@@ -16,14 +17,10 @@ interface ApplicationCardProps {
     onToggleExpand: () => void;
 }
 
-const MaterialIcon: React.FC<{ name: string; className?: string }> = ({ name, className }) => (
-    <span className={`material-symbols-outlined ${className}`}>{name}</span>
-);
-
 const DetailsSection: React.FC<{ title: string; children: React.ReactNode }> = ({ title, children }) => (
     <div>
-        <h4 className="text-sm font-bold text-[#F5D7DA] mb-2">{title}</h4>
-        <div className="space-y-1.5 pl-1 border-l-2 border-[#E8B4B8]/30 ml-1">
+        <h4 className="text-sm font-bold text-[#f4f4f5] mb-2">{title}</h4>
+        <div className="space-y-1.5 pl-1 border-l-2 border-[#27272a] ml-1">
             <div className="pl-3">
                 {children}
             </div>
@@ -34,11 +31,11 @@ const DetailsSection: React.FC<{ title: string; children: React.ReactNode }> = (
 const InfoRow: React.FC<{ icon: string; label: string; value?: string; children?: React.ReactNode }> = ({ icon, label, value, children }) => (
     <div className="flex justify-between items-start text-sm">
         <div className="flex items-center gap-2 shrink-0 pr-4">
-            <MaterialIcon name={icon} className="text-base text-[#E8B4B8]" />
-            <span className="font-medium text-[#E8B4B8]">{label}</span>
+            <MaterialIcon name={icon} className="text-base text-[#a1a1aa]" />
+            <span className="font-medium text-[#a1a1aa]">{label}</span>
         </div>
         <div className="text-right">
-            {value ? <span className="font-semibold text-[#F5D7DA]">{value}</span> : children}
+            {value ? <span className="font-semibold text-[#f4f4f5]">{value}</span> : children}
         </div>
     </div>
 );
@@ -196,7 +193,7 @@ const ApplicationCard: React.FC<ApplicationCardProps> = React.memo(({ applicatio
         <motion.div
             className="liquid-glass-card rounded-3xl p-5 flex flex-col justify-between relative overflow-hidden"
             onClick={onToggleExpand}
-            whileHover={{ y: -4, scale: 1.01, boxShadow: '0 20px 25px -5px rgba(220, 20, 60, 0.3), 0 10px 10px -5px rgba(220, 20, 60, 0.2)' }}
+            whileHover={{ y: -4, scale: 1.01, boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 10px 10px -5px rgba(0, 0, 0, 0.3)' }}
             whileTap={{ scale: 0.98 }}
             transition={{ type: 'spring', stiffness: 300, damping: 20 }}
         >
@@ -214,7 +211,7 @@ const ApplicationCard: React.FC<ApplicationCardProps> = React.memo(({ applicatio
                 />
 
                 {/* At-a-glance Details */}
-                <div className="flex flex-wrap gap-x-4 gap-y-2 text-xs text-[#E8B4B8] mb-4">
+                <div className="flex flex-wrap gap-x-4 gap-y-2 text-xs text-[#a1a1aa] mb-4">
                     <div className="flex items-center gap-1.5">
                         <MaterialIcon name="school" className="text-sm" />
                         <span>{programTypeValue}</span>
@@ -232,7 +229,7 @@ const ApplicationCard: React.FC<ApplicationCardProps> = React.memo(({ applicatio
                         </div>
                     )}
                     {upcomingInterview && (
-                        <div className="flex items-center gap-1.5 text-[#E03030] font-semibold">
+                        <div className="flex items-center gap-1.5 text-[#dc2626] font-semibold">
                             <MaterialIcon name="event_upcoming" className="text-sm" />
                             <span>Interview: {new Date(upcomingInterview.interviewDate! + 'T00:00:00').toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span>
                         </div>
@@ -278,7 +275,7 @@ const ApplicationCard: React.FC<ApplicationCardProps> = React.memo(({ applicatio
 
                         {application.notes && (
                             <DetailsSection title="Notes">
-                                <p className="text-sm text-[#E8B4B8] whitespace-pre-wrap">{application.notes}</p>
+                                <p className="text-sm text-[#a1a1aa] whitespace-pre-wrap">{application.notes}</p>
                             </DetailsSection>
                         )}
                     </div>

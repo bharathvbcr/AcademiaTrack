@@ -55,27 +55,27 @@ const CalendarView: React.FC<CalendarViewProps> = ({ applications, onEdit }) => 
         <div className="liquid-glass rounded-3xl p-6 h-[calc(100vh-200px)] flex flex-col">
             {/* Calendar Header */}
             <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold text-[#F5D7DA]">
+                <h2 className="text-2xl font-bold text-[#f4f4f5]">
                     {format(currentMonth, 'MMMM yyyy')}
                 </h2>
                 <div className="flex items-center gap-2">
                     <button
                         onClick={prevMonth}
                         aria-label="Previous month"
-                        className="p-2 rounded-full hover:bg-[rgba(192,48,80,0.25)] text-[#E8B4B8] hover:text-[#F5D7DA] transition-colors"
+                        className="p-2 rounded-full hover:bg-[#27272a] text-[#a1a1aa] hover:text-[#f4f4f5] transition-colors"
                     >
                         <span className="material-symbols-outlined" aria-hidden="true">chevron_left</span>
                     </button>
                     <button
                         onClick={goToToday}
-                        className="px-4 py-1.5 text-sm font-medium rounded-full liquid-glass text-[#F5D7DA] hover:bg-[rgba(192,48,80,0.25)] transition-colors"
+                        className="px-4 py-1.5 text-sm font-medium rounded-full liquid-glass text-[#f4f4f5] hover:bg-[#27272a] transition-colors"
                     >
                         Today
                     </button>
                     <button
                         onClick={nextMonth}
                         aria-label="Next month"
-                        className="p-2 rounded-full hover:bg-[rgba(192,48,80,0.25)] text-[#E8B4B8] hover:text-[#F5D7DA] transition-colors"
+                        className="p-2 rounded-full hover:bg-[#27272a] text-[#a1a1aa] hover:text-[#f4f4f5] transition-colors"
                     >
                         <span className="material-symbols-outlined" aria-hidden="true">chevron_right</span>
                     </button>
@@ -85,7 +85,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({ applications, onEdit }) => 
             {/* Days Header */}
             <div role="row" className="grid grid-cols-7 mb-2">
                 {[['Sun','Sunday'],['Mon','Monday'],['Tue','Tuesday'],['Wed','Wednesday'],['Thu','Thursday'],['Fri','Friday'],['Sat','Saturday']].map(([abbr, full]) => (
-                    <div key={abbr} role="columnheader" aria-label={full} className="text-center text-sm font-semibold text-[#E8B4B8]/70 py-2">
+                    <div key={abbr} role="columnheader" aria-label={full} className="text-center text-sm font-semibold text-[#a1a1aa] py-2">
                         {abbr}
                     </div>
                 ))}
@@ -105,11 +105,11 @@ const CalendarView: React.FC<CalendarViewProps> = ({ applications, onEdit }) => 
                             aria-label={format(day, 'EEEE, MMMM d, yyyy')}
                             className={`
                 relative flex flex-col p-2 rounded-xl border transition-all overflow-hidden
-                ${isCurrentMonth ? 'liquid-glass border-[#E8B4B8]/30' : 'liquid-glass border-[#E8B4B8]/20 text-[#E8B4B8]/50'}
-                ${isTodayDate ? 'ring-2 ring-[#C03050] ring-offset-2' : ''}
+                ${isCurrentMonth ? 'liquid-glass border-[#27272a]' : 'liquid-glass border-[#27272a] text-[#a1a1aa]'}
+                ${isTodayDate ? 'ring-2 ring-[#dc2626] ring-offset-2' : ''}
               `}
                         >
-                            <span className={`text-sm font-semibold mb-1 ${isTodayDate ? 'text-[#C03050]' : 'text-[#F5D7DA]'}`}>
+                            <span className={`text-sm font-semibold mb-1 ${isTodayDate ? 'text-[#dc2626]' : 'text-[#f4f4f5]'}`}>
                                 {format(day, 'd')}
                             </span>
 
@@ -121,8 +121,8 @@ const CalendarView: React.FC<CalendarViewProps> = ({ applications, onEdit }) => 
                                         className={`
                       w-full text-left px-2 py-1 rounded text-xs font-medium truncate transition-colors
                       ${event.type === 'deadline'
-                                                ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300 hover:bg-red-200 dark:hover:bg-red-900/50'
-                                                : 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300 hover:bg-blue-200 dark:hover:bg-blue-900/50'}
+                                                ? 'bg-red-500/15 text-red-300 hover:bg-red-500/25'
+                                                : 'bg-blue-500/15 text-blue-300 hover:bg-blue-500/25'}
                     `}
                                         title={event.label}
                                     >

@@ -11,63 +11,24 @@
   <!-- Fonts are self-hosted (imported in index.tsx) so they load offline without a CDN. -->
   <style>
     :root {
-      /* Minimal Dark Palette */
-      --bg-base: #09090b;
-      /* Zinc 950 */
-      --bg-card: #18181b;
-      /* Zinc 900 */
-      --bg-card-hover: #27272a;
-      /* Zinc 800 */
-      --border-color: #27272a;
-      /* Zinc 800 */
+      /* ── Minimal Dark Palette — single source of truth ──
+         Zinc surfaces + red accent. Components hardcode these same hex values
+         (e.g. text-[#f4f4f5], bg-[#18181b], text-[#dc2626]); the variables below
+         back the shared utility classes and the global focus ring. */
+      --bg-base: #09090b;        /* zinc 950 — app background   */
+      --bg-card: #18181b;        /* zinc 900 — cards / surfaces  */
+      --bg-card-hover: #27272a;  /* zinc 800 — hover / raised    */
+      --border-color: #27272a;   /* zinc 800 — hairline borders  */
 
-      --text-primary: #f4f4f5;
-      /* Zinc 100 */
-      --text-secondary: #a1a1aa;
-      /* Zinc 400 */
-      --text-muted: #71717a;
-      /* Zinc 500 */
+      --text-primary: #f4f4f5;   /* zinc 100 — primary text      */
+      --text-secondary: #a1a1aa; /* zinc 400 — secondary text    */
+      --text-muted: #71717a;     /* zinc 500 — muted / hints     */
 
-      --accent-primary: #dc2626;
-      /* Red 600 */
-      --accent-hover: #b91c1c;
-      /* Red 700 */
+      --accent-primary: #dc2626; /* red 600 — primary accent     */
+      --accent-hover: #b91c1c;   /* red 700 — accent hover       */
       --accent-subtle: rgba(220, 38, 38, 0.1);
 
-      /* Re-mapping old variables to new palette for compatibility */
-      --crimson-diffused: var(--accent-primary);
-      --crimson-diffused-40: var(--accent-subtle);
-      --crimson-diffused-50: var(--accent-subtle);
-      --crimson-diffused-60: var(--accent-subtle);
-      --scarlet-red: var(--accent-primary);
-      --scarlet-red-30: var(--accent-subtle);
-      --scarlet-red-50: var(--accent-subtle);
-      --rose-gold: var(--text-secondary);
-      --rose-gold-dark: var(--text-muted);
-      --rose-gold-30: rgba(161, 161, 170, 0.3);
-      --rose-gold-50: rgba(161, 161, 170, 0.5);
-      --pale-pink: var(--text-primary);
-      --pale-pink-dark: var(--text-secondary);
-      --pale-pink-20: rgba(244, 244, 245, 0.2);
-      --pale-pink-30: rgba(244, 244, 245, 0.3);
-
-      --bg-base-light: var(--bg-card);
-      --bg-surface-glass: var(--bg-card);
-      --glass-border: var(--border-color);
-
-      /* Dark Red Background Variables - Muted to dark */
-      --dark-red: #18181b;
-      --dark-red-15: rgba(24, 24, 27, 0.5);
-      --dark-red-12: rgba(24, 24, 27, 0.5);
-      --darker-red: #09090b;
-      --darker-red-12: rgba(9, 9, 11, 0.5);
-      --darker-red-10: rgba(9, 9, 11, 0.5);
-      --very-dark-red-5: rgba(9, 9, 11, 0.5);
-
-      /* Glass Effect Variables - Removed glass, now solid */
-      --glass-blur: none;
-      --glass-shadow: none;
-      --glass-shadow-hover: none;
+      --radius-card: 12px;
     }
 
     body {
@@ -76,78 +37,40 @@
       color: var(--text-primary);
     }
 
-    /* Remove the pseudo-element gradients */
-    body::before {
-      display: none;
-    }
-
     .material-symbols-outlined {
       font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
       vertical-align: bottom;
     }
 
-    /* Custom focus ring */
+    /* Global focus ring — consistent, high-contrast, accent-coloured. */
     *:focus-visible {
       outline: 2px solid var(--accent-primary) !important;
       outline-offset: 2px !important;
       box-shadow: none !important;
     }
 
-    /* Minimal Dropdown */
-    .liquid-glass-dropdown {
-      position: relative;
-      background: var(--bg-card);
-      border: 1px solid var(--border-color);
-      border-radius: 8px;
-      color: var(--text-primary);
-      overflow: hidden;
-      transition: all 0.2s ease;
-    }
-
-    .liquid-glass-dropdown::before {
-      display: none;
-    }
-
-    .liquid-glass-dropdown:hover {
-      background: var(--bg-card-hover);
-      transform: none;
-      box-shadow: none;
-    }
-
-    /* Replaced Liquid Glass Utilities with Minimal equivalents */
+    /* ── Shared surface utilities (solid, flat — no glass effects) ── */
     .liquid-glass {
       background: var(--bg-card);
       border: 1px solid var(--border-color);
-      box-shadow: none;
-      backdrop-filter: none;
-      -webkit-backdrop-filter: none;
-      transition: all 0.2s ease;
+      transition: background-color 0.2s ease, border-color 0.2s ease;
     }
 
     .liquid-glass-card {
       background: var(--bg-card);
       border: 1px solid var(--border-color);
-      box-shadow: none;
-      backdrop-filter: none;
-      -webkit-backdrop-filter: none;
-      border-radius: 12px;
-      /* Consistent corner radius */
-      transition: all 0.2s ease;
+      border-radius: var(--radius-card);
+      transition: background-color 0.2s ease, border-color 0.2s ease;
     }
 
     .liquid-glass-card:hover {
       background: var(--bg-card-hover);
       border-color: var(--border-color);
-      transform: none;
-      box-shadow: none;
     }
 
     .liquid-glass-nav {
       background: var(--bg-card);
       border: 1px solid var(--border-color);
-      box-shadow: none;
-      backdrop-filter: none;
-      -webkit-backdrop-filter: none;
     }
 
     .liquid-glass-modal {
@@ -159,30 +82,10 @@
     .liquid-glass-modal-content {
       background: var(--bg-card);
       border: 1px solid var(--border-color);
-      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-      backdrop-filter: none;
-      -webkit-backdrop-filter: none;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 10px 10px -5px rgba(0, 0, 0, 0.3);
     }
 
-    /* Restored Liquid Glass for specific depth elements */
-    .liquid-glass-depth {
-      background: rgba(24, 24, 27, 0.4);
-      backdrop-filter: blur(8px);
-      -webkit-backdrop-filter: blur(8px);
-      border: 1px solid rgba(255, 255, 255, 0.05);
-      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-    }
-
-    .glass-depth-1,
-    .glass-depth-2,
-    .glass-depth-3,
-    .glass-refraction::before {
-      box-shadow: none;
-      background: none;
-      display: none;
-    }
-
-    /* Custom Scrollbar - Minimal */
+    /* Custom Scrollbar — minimal */
     .custom-scrollbar::-webkit-scrollbar {
       width: 6px;
     }
@@ -198,6 +101,19 @@
 
     .custom-scrollbar::-webkit-scrollbar-thumb:hover {
       background-color: var(--text-secondary);
+    }
+
+    /* ── Reduced motion ── honour the OS preference: drop transitions,
+       animations, and framer-motion transforms for users who ask for it. */
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        animation-duration: 0.001ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.001ms !important;
+        scroll-behavior: auto !important;
+      }
     }
   </style>
 

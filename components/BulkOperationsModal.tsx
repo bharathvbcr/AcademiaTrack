@@ -4,6 +4,16 @@ import { useEscapeKey } from '../hooks/useEscapeKey';
 import { Application, ApplicationStatus, DocumentStatus, ApplicationFeeWaiverStatus, ProgramType, FinancialOffer } from '../types';
 import { STATUS_OPTIONS, DOCUMENT_STATUS_OPTIONS, FEE_WAIVER_STATUS_OPTIONS, TAG_PRESETS, PROGRAM_TYPE_OPTIONS, ADMISSION_TERM_OPTIONS, TAG_REMOVE_PREFIX } from '../constants';
 import { useCustomFields } from '../hooks/useCustomFields';
+import {
+  formCheckboxClass,
+  formInputClass,
+  formInputSmClass,
+  formPrimaryBtnClass,
+  formSecondaryBtnClass,
+  formInfoBoxClass,
+  formIconBtnClass,
+  MaterialIcon,
+} from './ApplicationFormUI';
 
 // Extended type that allows partial documents for bulk updates
 type BulkUpdates = Omit<Partial<Application>, 'documents'> & {
@@ -28,10 +38,6 @@ interface BulkOperationsModalProps {
   selectedApplications: Application[];
   onUpdate: (updates: Partial<Application> | ((app: Application) => Partial<Application>), ids: string[]) => void;
 }
-
-const MaterialIcon: React.FC<{ name: string; className?: string }> = ({ name, className }) => (
-  <span className={`material-symbols-outlined ${className}`}>{name}</span>
-);
 
 const BulkOperationsModal: React.FC<BulkOperationsModalProps> = ({
   isOpen,
@@ -168,17 +174,17 @@ const BulkOperationsModal: React.FC<BulkOperationsModalProps> = ({
     <div className="fixed inset-0 z-50 flex items-center justify-center liquid-glass-modal">
       <div className="liquid-glass-modal-content rounded-2xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-hidden flex flex-col">
         {/* Header */}
-        <div className="p-6 border-b border-[#E8B4B8]/30">
+        <div className="p-6 border-b border-[#27272a]">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-2xl font-bold text-[#F5D7DA]">Bulk Operations</h2>
-              <p className="text-sm text-[#E8B4B8]/70 mt-1">
+              <h2 className="text-2xl font-bold text-[#f4f4f5]">Bulk Operations</h2>
+              <p className="text-sm text-[#a1a1aa] mt-1">
                 Updating {selectedApplications.length} application{selectedApplications.length !== 1 ? 's' : ''}
               </p>
             </div>
             <button
               onClick={onClose}
-              className="p-2 hover:bg-[rgba(192,48,80,0.25)] rounded-lg text-[#E8B4B8] hover:text-[#F5D7DA]"
+              className={formIconBtnClass}
               aria-label="Close bulk operations modal"
             >
               <MaterialIcon name="close" className="text-xl" />
@@ -187,14 +193,14 @@ const BulkOperationsModal: React.FC<BulkOperationsModalProps> = ({
         </div>
 
         {/* Tabs */}
-        <div className="flex border-b border-[#E8B4B8]/30 overflow-x-auto">
+        <div className="flex border-b border-[#27272a] overflow-x-auto">
           {(['status', 'fields', 'documents', 'tags', 'dates', 'recommenders', 'ranking', 'location', 'program', 'custom', 'reminders', 'faculty', 'financial'] as const).map(tab => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
               className={`px-4 py-3 font-medium text-xs capitalize transition-colors whitespace-nowrap ${activeTab === tab
-                ? 'text-[#C03050] border-b-2 border-[#C03050]'
-                : 'text-[#E8B4B8] hover:text-[#F5D7DA]'
+                ? 'text-[#dc2626] border-b-2 border-[#dc2626]'
+                : 'text-[#a1a1aa] hover:text-[#f4f4f5]'
                 }`}
             >
               {tab}
@@ -207,11 +213,11 @@ const BulkOperationsModal: React.FC<BulkOperationsModalProps> = ({
           {activeTab === 'status' && (
             <div className="space-y-4">
               <label className="block">
-                <span className="text-sm font-medium text-[#F5D7DA] mb-2 block">Status</span>
+                <span className="text-sm font-medium text-[#f4f4f5] mb-2 block">Status</span>
                 <select
                   value={(updates.status as ApplicationStatus) || ''}
                   onChange={(e) => setUpdates({ ...updates, status: e.target.value as ApplicationStatus })}
-                  className="w-full px-4 py-2 border border-[#E8B4B8]/30 rounded-lg liquid-glass text-[#F5D7DA]"
+                  className={formInputClass}
                 >
                   <option value="">-- No change --</option>
                   {STATUS_OPTIONS.map(status => (
@@ -225,22 +231,22 @@ const BulkOperationsModal: React.FC<BulkOperationsModalProps> = ({
           {activeTab === 'fields' && (
             <div className="space-y-4">
               <label className="block">
-                <span className="text-sm font-medium text-[#F5D7DA] mb-2 block">Application Fee</span>
+                <span className="text-sm font-medium text-[#f4f4f5] mb-2 block">Application Fee</span>
                 <input
                   type="number"
                   value={updates.applicationFee ?? ''}
                   onChange={(e) => setUpdates({ ...updates, applicationFee: Number(e.target.value) || 0 })}
-                  className="w-full px-4 py-2 border border-[#E8B4B8]/30 rounded-lg liquid-glass text-[#F5D7DA] placeholder:text-[#E8B4B8]/50"
+                  className={formInputClass}
                   placeholder="Leave empty for no change"
                 />
               </label>
 
               <label className="block">
-                <span className="text-sm font-medium text-[#F5D7DA] mb-2 block">Fee Waiver Status</span>
+                <span className="text-sm font-medium text-[#f4f4f5] mb-2 block">Fee Waiver Status</span>
                 <select
                   value={updates.feeWaiverStatus || ''}
                   onChange={(e) => setUpdates({ ...updates, feeWaiverStatus: e.target.value as ApplicationFeeWaiverStatus })}
-                  className="w-full px-4 py-2 border border-[#E8B4B8]/30 rounded-lg liquid-glass text-[#F5D7DA]"
+                  className={formInputClass}
                 >
                   <option value="">-- No change --</option>
                   {FEE_WAIVER_STATUS_OPTIONS.map(status => (
@@ -250,14 +256,14 @@ const BulkOperationsModal: React.FC<BulkOperationsModalProps> = ({
               </label>
 
               <label className="block">
-                <span className="text-sm font-medium text-[#F5D7DA] mb-2 block">Admission Chance (%)</span>
+                <span className="text-sm font-medium text-[#f4f4f5] mb-2 block">Admission Chance (%)</span>
                 <input
                   type="number"
                   min="0"
                   max="100"
                   value={updates.admissionChance ?? ''}
                   onChange={(e) => setUpdates({ ...updates, admissionChance: Number(e.target.value) || undefined })}
-                  className="w-full px-4 py-2 border border-[#E8B4B8]/30 rounded-lg liquid-glass text-[#F5D7DA] placeholder:text-[#E8B4B8]/50"
+                  className={formInputClass}
                   placeholder="0-100"
                 />
               </label>
@@ -267,9 +273,9 @@ const BulkOperationsModal: React.FC<BulkOperationsModalProps> = ({
           {activeTab === 'documents' && (
             <div className="space-y-4">
               <label className="block">
-                <span className="text-sm font-medium text-[#F5D7DA] mb-2 block">Document Type</span>
+                <span className="text-sm font-medium text-[#f4f4f5] mb-2 block">Document Type</span>
                 <select
-                  className="w-full px-4 py-2 border border-[#E8B4B8]/30 rounded-lg liquid-glass text-[#F5D7DA] mb-4"
+                  className={`${formInputClass} mb-4`}
                   onChange={(e) => {
                     const docType = e.target.value as keyof Application['documents'];
                     if (docType) {
@@ -301,7 +307,7 @@ const BulkOperationsModal: React.FC<BulkOperationsModalProps> = ({
               {updates.documents && Object.keys(updates.documents).length > 0 && (
                 <div className="space-y-2">
                   {Object.entries(updates.documents).map(([docType, doc]) => (
-                    <div key={docType} className="flex items-center gap-2 p-3 bg-slate-50 dark:bg-slate-900 rounded-lg">
+                    <div key={docType} className="flex items-center gap-2 p-3 bg-[#09090b] rounded-lg">
                       <span className="flex-1 text-sm font-medium capitalize">{docType.replace(/([A-Z])/g, ' $1').trim()}</span>
                       <select
                         value={doc?.status || DocumentStatus.NotStarted}
@@ -317,7 +323,7 @@ const BulkOperationsModal: React.FC<BulkOperationsModalProps> = ({
                             } as Partial<Application['documents']>,
                           });
                         }}
-                        className="px-3 py-1.5 border border-[#E8B4B8]/30 rounded-lg text-sm liquid-glass text-[#F5D7DA]"
+                        className={formInputSmClass}
                         aria-label={`Document status for ${docType.replace(/([A-Z])/g, ' $1').trim()}`}
                       >
                         {DOCUMENT_STATUS_OPTIONS.map(status => (
@@ -334,7 +340,7 @@ const BulkOperationsModal: React.FC<BulkOperationsModalProps> = ({
           {activeTab === 'tags' && (
             <div className="space-y-4">
               <div>
-                <span className="text-sm font-medium text-[#F5D7DA] mb-2 block">Add Tags</span>
+                <span className="text-sm font-medium text-[#f4f4f5] mb-2 block">Add Tags</span>
                 <div className="flex flex-wrap gap-2">
                   {TAG_PRESETS.map(tag => {
                     const currentTags = updates.tags || [];
@@ -350,7 +356,7 @@ const BulkOperationsModal: React.FC<BulkOperationsModalProps> = ({
                         }}
                         className={`px-3 py-1.5 rounded-full text-sm transition-all ${isSelected
                           ? tag.bgClass + ' ring-2 ring-offset-1 ring-current'
-                          : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600'
+                          : 'bg-[#27272a] text-[#a1a1aa] hover:bg-[#3f3f46]'
                           }`}
                       >
                         {tag.icon && <MaterialIcon name={tag.icon} className="text-xs inline mr-1" />}
@@ -362,7 +368,7 @@ const BulkOperationsModal: React.FC<BulkOperationsModalProps> = ({
               </div>
 
               <div>
-                <span className="text-sm font-medium text-[#F5D7DA] mb-2 block">Remove Tags</span>
+                <span className="text-sm font-medium text-[#f4f4f5] mb-2 block">Remove Tags</span>
                 <div className="flex flex-wrap gap-2">
                   {Array.from(new Set(selectedApplications.flatMap(app => app.tags || []))).map(tag => (
                     <button
@@ -378,7 +384,7 @@ const BulkOperationsModal: React.FC<BulkOperationsModalProps> = ({
                           });
                         }
                       }}
-                      className="px-3 py-1.5 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 rounded-full text-sm hover:bg-red-200 dark:hover:bg-red-900/50"
+                      className="px-3 py-1.5 bg-red-500/15 text-red-300 rounded-full text-sm hover:bg-red-500/25"
                     >
                       <MaterialIcon name="close" className="text-xs inline mr-1" />
                       {tag}
@@ -391,7 +397,7 @@ const BulkOperationsModal: React.FC<BulkOperationsModalProps> = ({
 
           {activeTab === 'dates' && (
             <div className="space-y-6">
-              <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg text-sm text-blue-800 dark:text-blue-200">
+              <div className={formInfoBoxClass}>
                 <p>Shift deadlines for all selected applications relative to their current dates.</p>
               </div>
 
@@ -400,8 +406,8 @@ const BulkOperationsModal: React.FC<BulkOperationsModalProps> = ({
                 const days = shift?.days || 0;
 
                 return (
-                  <div key={field} className="flex items-center justify-between p-4 border border-slate-200 dark:border-slate-700 rounded-lg">
-                    <span className="font-medium text-slate-700 dark:text-slate-300 capitalize">
+                  <div key={field} className="flex items-center justify-between p-4 border border-[#27272a] rounded-lg">
+                    <span className="font-medium text-[#a1a1aa] capitalize">
                       {field.replace(/([A-Z])/g, ' $1').trim()}
                     </span>
                     <div className="flex items-center gap-3">
@@ -412,13 +418,13 @@ const BulkOperationsModal: React.FC<BulkOperationsModalProps> = ({
                           if (newDays !== 0) newShifts.push({ field, days: newDays });
                           setDateShifts(newShifts);
                         }}
-                        className="p-1 hover:bg-slate-100 dark:hover:bg-slate-700 rounded"
+                        className="p-1 hover:bg-[#27272a] rounded"
                         aria-label={`Decrease ${field.replace(/([A-Z])/g, ' $1').trim()} by 1 day`}
                         title={`Decrease ${field.replace(/([A-Z])/g, ' $1').trim()} by 1 day`}
                       >
                         <MaterialIcon name="remove" className="text-sm" />
                       </button>
-                      <span className={`w-16 text-center font-mono ${days !== 0 ? 'text-blue-600 dark:text-blue-400 font-bold' : 'text-slate-400'}`}>
+                      <span className={`w-16 text-center font-mono ${days !== 0 ? 'text-blue-400 font-bold' : 'text-[#a1a1aa]'}`}>
                         {days > 0 ? '+' : ''}{days} days
                       </span>
                       <button
@@ -428,7 +434,7 @@ const BulkOperationsModal: React.FC<BulkOperationsModalProps> = ({
                           if (newDays !== 0) newShifts.push({ field, days: newDays });
                           setDateShifts(newShifts);
                         }}
-                        className="p-1 hover:bg-slate-100 dark:hover:bg-slate-700 rounded"
+                        className="p-1 hover:bg-[#27272a] rounded"
                         aria-label={`Increase ${field.replace(/([A-Z])/g, ' $1').trim()} by 1 day`}
                         title={`Increase ${field.replace(/([A-Z])/g, ' $1').trim()} by 1 day`}
                       >
@@ -443,7 +449,7 @@ const BulkOperationsModal: React.FC<BulkOperationsModalProps> = ({
 
           {activeTab === 'recommenders' && (
             <div className="space-y-6">
-              <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg text-sm text-blue-800 dark:text-blue-200">
+              <div className={formInfoBoxClass}>
                 <p>Add a new recommender to all selected applications.</p>
               </div>
 
@@ -453,9 +459,9 @@ const BulkOperationsModal: React.FC<BulkOperationsModalProps> = ({
                     type="checkbox"
                     checked={addRecommenderEnabled}
                     onChange={(e) => setAddRecommenderEnabled(e.target.checked)}
-                    className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
+                    className={formCheckboxClass}
                   />
-                  <span className="font-medium text-slate-700 dark:text-slate-300">Add Recommender</span>
+                  <span className="font-medium text-[#a1a1aa]">Add Recommender</span>
                 </label>
 
                 {addRecommenderEnabled && (
@@ -464,27 +470,27 @@ const BulkOperationsModal: React.FC<BulkOperationsModalProps> = ({
                       placeholder="Full Name"
                       value={recommenderToAdd.name}
                       onChange={e => setRecommenderToAdd({ ...recommenderToAdd, name: e.target.value })}
-                      className="w-full px-4 py-2 border border-[#E8B4B8]/30 rounded-lg liquid-glass text-[#F5D7DA] placeholder:text-[#E8B4B8]/50"
+                      className={formInputClass}
                     />
                     <input
                       placeholder="Email"
                       type="email"
                       value={recommenderToAdd.email}
                       onChange={e => setRecommenderToAdd({ ...recommenderToAdd, email: e.target.value })}
-                      className="w-full px-4 py-2 border border-[#E8B4B8]/30 rounded-lg liquid-glass text-[#F5D7DA] placeholder:text-[#E8B4B8]/50"
+                      className={formInputClass}
                     />
                     <div className="grid grid-cols-2 gap-4">
                       <input
                         placeholder="Title (e.g. Professor)"
                         value={recommenderToAdd.title}
                         onChange={e => setRecommenderToAdd({ ...recommenderToAdd, title: e.target.value })}
-                        className="w-full px-4 py-2 border border-[#E8B4B8]/30 rounded-lg liquid-glass text-[#F5D7DA] placeholder:text-[#E8B4B8]/50"
+                        className={formInputClass}
                       />
                       <input
                         placeholder="Relationship"
                         value={recommenderToAdd.relationship}
                         onChange={e => setRecommenderToAdd({ ...recommenderToAdd, relationship: e.target.value })}
-                        className="w-full px-4 py-2 border border-[#E8B4B8]/30 rounded-lg liquid-glass text-[#F5D7DA] placeholder:text-[#E8B4B8]/50"
+                        className={formInputClass}
                       />
                     </div>
                   </div>
@@ -496,23 +502,23 @@ const BulkOperationsModal: React.FC<BulkOperationsModalProps> = ({
           {activeTab === 'ranking' && (
             <div className="space-y-4">
               <label className="block">
-                <span className="text-sm font-medium text-[#F5D7DA] mb-2 block">University Ranking</span>
+                <span className="text-sm font-medium text-[#f4f4f5] mb-2 block">University Ranking</span>
                 <input
                   type="text"
                   value={updates.universityRanking || ''}
                   onChange={(e) => setUpdates({ ...updates, universityRanking: e.target.value })}
                   placeholder="e.g., 1-10, 11-20"
-                  className="w-full px-4 py-2 border border-[#E8B4B8]/30 rounded-lg liquid-glass text-[#F5D7DA] placeholder:text-[#E8B4B8]/50"
+                  className={formInputClass}
                 />
               </label>
               <label className="block">
-                <span className="text-sm font-medium text-[#F5D7DA] mb-2 block">Department Ranking</span>
+                <span className="text-sm font-medium text-[#f4f4f5] mb-2 block">Department Ranking</span>
                 <input
                   type="text"
                   value={updates.departmentRanking || ''}
                   onChange={(e) => setUpdates({ ...updates, departmentRanking: e.target.value })}
                   placeholder="e.g., 1-10, 11-20"
-                  className="w-full px-4 py-2 border border-[#E8B4B8]/30 rounded-lg liquid-glass text-[#F5D7DA] placeholder:text-[#E8B4B8]/50"
+                  className={formInputClass}
                 />
               </label>
             </div>
@@ -521,13 +527,13 @@ const BulkOperationsModal: React.FC<BulkOperationsModalProps> = ({
           {activeTab === 'location' && (
             <div className="space-y-4">
               <label className="block">
-                <span className="text-sm font-medium text-[#F5D7DA] mb-2 block">Location</span>
+                <span className="text-sm font-medium text-[#f4f4f5] mb-2 block">Location</span>
                 <input
                   type="text"
                   value={updates.location || ''}
                   onChange={(e) => setUpdates({ ...updates, location: e.target.value })}
                   placeholder="e.g., Cambridge, MA, USA"
-                  className="w-full px-4 py-2 border border-[#E8B4B8]/30 rounded-lg liquid-glass text-[#F5D7DA] placeholder:text-[#E8B4B8]/50"
+                  className={formInputClass}
                 />
               </label>
             </div>
@@ -536,11 +542,11 @@ const BulkOperationsModal: React.FC<BulkOperationsModalProps> = ({
           {activeTab === 'program' && (
             <div className="space-y-4">
               <label className="block">
-                <span className="text-sm font-medium text-[#F5D7DA] mb-2 block">Program Type</span>
+                <span className="text-sm font-medium text-[#f4f4f5] mb-2 block">Program Type</span>
                 <select
                   value={updates.programType || ''}
                   onChange={(e) => setUpdates({ ...updates, programType: e.target.value as ProgramType })}
-                  className="w-full px-4 py-2 border border-[#E8B4B8]/30 rounded-lg liquid-glass text-[#F5D7DA] placeholder:text-[#E8B4B8]/50"
+                  className={formInputClass}
                 >
                   <option value="">-- No change --</option>
                   {PROGRAM_TYPE_OPTIONS.map(type => (
@@ -549,11 +555,11 @@ const BulkOperationsModal: React.FC<BulkOperationsModalProps> = ({
                 </select>
               </label>
               <label className="block">
-                <span className="text-sm font-medium text-[#F5D7DA] mb-2 block">Admission Term</span>
+                <span className="text-sm font-medium text-[#f4f4f5] mb-2 block">Admission Term</span>
                 <select
                   value={updates.admissionTerm || ''}
                   onChange={(e) => setUpdates({ ...updates, admissionTerm: e.target.value as any })}
-                  className="w-full px-4 py-2 border border-[#E8B4B8]/30 rounded-lg liquid-glass text-[#F5D7DA] placeholder:text-[#E8B4B8]/50"
+                  className={formInputClass}
                 >
                   <option value="">-- No change --</option>
                   {ADMISSION_TERM_OPTIONS.map(term => (
@@ -562,13 +568,13 @@ const BulkOperationsModal: React.FC<BulkOperationsModalProps> = ({
                 </select>
               </label>
               <label className="block">
-                <span className="text-sm font-medium text-[#F5D7DA] mb-2 block">Admission Year</span>
+                <span className="text-sm font-medium text-[#f4f4f5] mb-2 block">Admission Year</span>
                 <input
                   type="text"
                   value={updates.admissionYear || ''}
                   onChange={(e) => setUpdates({ ...updates, admissionYear: e.target.value })}
                   placeholder="e.g., 2024"
-                  className="w-full px-4 py-2 border border-[#E8B4B8]/30 rounded-lg liquid-glass text-[#F5D7DA] placeholder:text-[#E8B4B8]/50"
+                  className={formInputClass}
                 />
               </label>
             </div>
@@ -576,22 +582,22 @@ const BulkOperationsModal: React.FC<BulkOperationsModalProps> = ({
 
           {activeTab === 'custom' && (
             <div className="space-y-4">
-              <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg text-sm text-blue-800 dark:text-blue-200">
+              <div className={formInfoBoxClass}>
                 <p>Update custom fields for all selected applications.</p>
               </div>
               {customFields.length === 0 ? (
-                <p className="text-center text-slate-500 py-8">No custom fields defined. Create them in Settings.</p>
+                <p className="text-center text-[#a1a1aa] py-8">No custom fields defined. Create them in Settings.</p>
               ) : (
                 <div className="space-y-4">
                   {customFields.map(field => (
                     <label key={field.id} className="block">
-                      <span className="text-sm font-medium text-[#F5D7DA] mb-2 block">{field.name}</span>
+                      <span className="text-sm font-medium text-[#f4f4f5] mb-2 block">{field.name}</span>
                       {field.type === 'text' && (
                         <input
                           type="text"
                           value={(customFieldUpdates[field.id] as string) || ''}
                           onChange={(e) => setCustomFieldUpdates({ ...customFieldUpdates, [field.id]: e.target.value })}
-                          className="w-full px-4 py-2 border border-[#E8B4B8]/30 rounded-lg liquid-glass text-[#F5D7DA] placeholder:text-[#E8B4B8]/50"
+                          className={formInputClass}
                         />
                       )}
                       {field.type === 'number' && (
@@ -599,14 +605,14 @@ const BulkOperationsModal: React.FC<BulkOperationsModalProps> = ({
                           type="number"
                           value={(customFieldUpdates[field.id] as number) || ''}
                           onChange={(e) => setCustomFieldUpdates({ ...customFieldUpdates, [field.id]: parseFloat(e.target.value) || 0 })}
-                          className="w-full px-4 py-2 border border-[#E8B4B8]/30 rounded-lg liquid-glass text-[#F5D7DA] placeholder:text-[#E8B4B8]/50"
+                          className={formInputClass}
                         />
                       )}
                       {field.type === 'boolean' && (
                         <select
                           value={customFieldUpdates[field.id] === undefined ? '' : String(customFieldUpdates[field.id])}
                           onChange={(e) => setCustomFieldUpdates({ ...customFieldUpdates, [field.id]: e.target.value === 'true' })}
-                          className="w-full px-4 py-2 border border-[#E8B4B8]/30 rounded-lg liquid-glass text-[#F5D7DA] placeholder:text-[#E8B4B8]/50"
+                          className={formInputClass}
                         >
                           <option value="">-- No change --</option>
                           <option value="true">Yes</option>
@@ -622,7 +628,7 @@ const BulkOperationsModal: React.FC<BulkOperationsModalProps> = ({
 
           {activeTab === 'reminders' && (
             <div className="space-y-6">
-              <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg text-sm text-blue-800 dark:text-blue-200">
+              <div className={formInfoBoxClass}>
                 <p>Add a reminder to all selected applications.</p>
               </div>
               <div className="space-y-4">
@@ -631,9 +637,9 @@ const BulkOperationsModal: React.FC<BulkOperationsModalProps> = ({
                     type="checkbox"
                     checked={addReminderEnabled}
                     onChange={(e) => setAddReminderEnabled(e.target.checked)}
-                    className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
+                    className={formCheckboxClass}
                   />
-                  <span className="font-medium text-slate-700 dark:text-slate-300">Add Reminder</span>
+                  <span className="font-medium text-[#a1a1aa]">Add Reminder</span>
                 </label>
                 {addReminderEnabled && (
                   <div className="grid grid-cols-1 gap-4 pl-7 animate-fadeIn">
@@ -641,7 +647,7 @@ const BulkOperationsModal: React.FC<BulkOperationsModalProps> = ({
                       placeholder="Reminder text"
                       value={reminderToAdd.text}
                       onChange={e => setReminderToAdd({ ...reminderToAdd, text: e.target.value })}
-                      className="w-full px-4 py-2 border border-[#E8B4B8]/30 rounded-lg liquid-glass text-[#F5D7DA] placeholder:text-[#E8B4B8]/50"
+                      className={formInputClass}
                     />
                     <div className="grid grid-cols-2 gap-4">
                       <input
@@ -649,14 +655,14 @@ const BulkOperationsModal: React.FC<BulkOperationsModalProps> = ({
                         value={reminderToAdd.date}
                         onChange={e => setReminderToAdd({ ...reminderToAdd, date: e.target.value, daysOffset: 0 })}
                         placeholder="Specific date"
-                        className="w-full px-4 py-2 border border-[#E8B4B8]/30 rounded-lg liquid-glass text-[#F5D7DA] placeholder:text-[#E8B4B8]/50"
+                        className={formInputClass}
                       />
                       <input
                         type="number"
                         value={reminderToAdd.daysOffset || ''}
                         onChange={e => setReminderToAdd({ ...reminderToAdd, daysOffset: parseInt(e.target.value) || 0, date: '' })}
                         placeholder="Days from today"
-                        className="w-full px-4 py-2 border border-[#E8B4B8]/30 rounded-lg liquid-glass text-[#F5D7DA] placeholder:text-[#E8B4B8]/50"
+                        className={formInputClass}
                       />
                     </div>
                   </div>
@@ -667,29 +673,29 @@ const BulkOperationsModal: React.FC<BulkOperationsModalProps> = ({
 
           {activeTab === 'financial' && (
             <div className="space-y-4">
-              <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg text-sm text-blue-800 dark:text-blue-200">
+              <div className={formInfoBoxClass}>
                 <p>Update financial information for all selected applications.</p>
               </div>
               
               <label className="block">
-                <span className="text-sm font-medium text-[#F5D7DA] mb-2 block">Application Fee</span>
+                <span className="text-sm font-medium text-[#f4f4f5] mb-2 block">Application Fee</span>
                 <input
                   type="number"
                   min="0"
                   step="0.01"
                   value={updates.applicationFee ?? ''}
                   onChange={(e) => setUpdates({ ...updates, applicationFee: Number(e.target.value) || undefined })}
-                  className="w-full px-4 py-2 border border-[#E8B4B8]/30 rounded-lg liquid-glass text-[#F5D7DA] placeholder:text-[#E8B4B8]/50"
+                  className={formInputClass}
                   placeholder="e.g., 75.00"
                 />
               </label>
 
               <label className="block">
-                <span className="text-sm font-medium text-[#F5D7DA] mb-2 block">Fee Waiver Status</span>
+                <span className="text-sm font-medium text-[#f4f4f5] mb-2 block">Fee Waiver Status</span>
                 <select
                   value={updates.feeWaiverStatus || ''}
                   onChange={(e) => setUpdates({ ...updates, feeWaiverStatus: e.target.value as ApplicationFeeWaiverStatus })}
-                  className="w-full px-4 py-2 border border-[#E8B4B8]/30 rounded-lg liquid-glass text-[#F5D7DA] placeholder:text-[#E8B4B8]/50"
+                  className={formInputClass}
                 >
                   <option value="">-- No change --</option>
                   {FEE_WAIVER_STATUS_OPTIONS.map(status => (
@@ -698,8 +704,8 @@ const BulkOperationsModal: React.FC<BulkOperationsModalProps> = ({
                 </select>
               </label>
 
-              <div className="border-t border-slate-200 dark:border-slate-700 pt-4">
-                <h4 className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3">Financial Offer</h4>
+              <div className="border-t border-[#27272a] pt-4">
+                <h4 className="text-sm font-semibold text-[#a1a1aa] mb-3">Financial Offer</h4>
                 <div className="space-y-4">
                   <label className="flex items-center gap-3">
                     <input
@@ -712,15 +718,15 @@ const BulkOperationsModal: React.FC<BulkOperationsModalProps> = ({
                           received: e.target.checked,
                         } as FinancialOffer,
                       })}
-                      className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
+                      className={formCheckboxClass}
                     />
-                    <span className="text-sm text-slate-700 dark:text-slate-300">Received Financial Offer</span>
+                    <span className="text-sm text-[#a1a1aa]">Received Financial Offer</span>
                   </label>
 
                   {updates.financialOffer?.received && (
                     <div className="grid grid-cols-2 gap-4 pl-7">
                       <label className="block">
-                        <span className="text-xs text-slate-600 dark:text-slate-400 mb-1 block">Stipend Amount</span>
+                        <span className="text-xs text-[#a1a1aa] mb-1 block">Stipend Amount</span>
                         <input
                           type="number"
                           min="0"
@@ -733,12 +739,12 @@ const BulkOperationsModal: React.FC<BulkOperationsModalProps> = ({
                               stipendAmount: Number(e.target.value) || 0,
                             } as FinancialOffer,
                           })}
-                          className="w-full px-3 py-2 text-sm border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700"
+                          className="w-full px-3 py-2 text-sm border border-[#27272a] rounded-lg bg-[#18181b]"
                           placeholder="0.00"
                         />
                       </label>
                       <label className="block">
-                        <span className="text-xs text-slate-600 dark:text-slate-400 mb-1 block">Tuition Waiver (%)</span>
+                        <span className="text-xs text-[#a1a1aa] mb-1 block">Tuition Waiver (%)</span>
                         <input
                           type="number"
                           min="0"
@@ -751,7 +757,7 @@ const BulkOperationsModal: React.FC<BulkOperationsModalProps> = ({
                               tuitionWaiver: Number(e.target.value) || 0,
                             } as FinancialOffer,
                           })}
-                          className="w-full px-3 py-2 text-sm border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700"
+                          className="w-full px-3 py-2 text-sm border border-[#27272a] rounded-lg bg-[#18181b]"
                           placeholder="0-100"
                         />
                       </label>
@@ -764,7 +770,7 @@ const BulkOperationsModal: React.FC<BulkOperationsModalProps> = ({
 
           {activeTab === 'faculty' && (
             <div className="space-y-6">
-              <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg text-sm text-blue-800 dark:text-blue-200">
+              <div className={formInfoBoxClass}>
                 <p>Add a faculty contact to all selected applications.</p>
               </div>
               <div className="space-y-4">
@@ -773,9 +779,9 @@ const BulkOperationsModal: React.FC<BulkOperationsModalProps> = ({
                     type="checkbox"
                     checked={addFacultyEnabled}
                     onChange={(e) => setAddFacultyEnabled(e.target.checked)}
-                    className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
+                    className={formCheckboxClass}
                   />
-                  <span className="font-medium text-slate-700 dark:text-slate-300">Add Faculty Contact</span>
+                  <span className="font-medium text-[#a1a1aa]">Add Faculty Contact</span>
                 </label>
                 {addFacultyEnabled && (
                   <div className="grid grid-cols-1 gap-4 pl-7 animate-fadeIn">
@@ -783,20 +789,20 @@ const BulkOperationsModal: React.FC<BulkOperationsModalProps> = ({
                       placeholder="Faculty Name"
                       value={facultyToAdd.name}
                       onChange={e => setFacultyToAdd({ ...facultyToAdd, name: e.target.value })}
-                      className="w-full px-4 py-2 border border-[#E8B4B8]/30 rounded-lg liquid-glass text-[#F5D7DA] placeholder:text-[#E8B4B8]/50"
+                      className={formInputClass}
                     />
                     <input
                       placeholder="Email"
                       type="email"
                       value={facultyToAdd.email}
                       onChange={e => setFacultyToAdd({ ...facultyToAdd, email: e.target.value })}
-                      className="w-full px-4 py-2 border border-[#E8B4B8]/30 rounded-lg liquid-glass text-[#F5D7DA] placeholder:text-[#E8B4B8]/50"
+                      className={formInputClass}
                     />
                     <input
                       placeholder="Research Area"
                       value={facultyToAdd.researchArea}
                       onChange={e => setFacultyToAdd({ ...facultyToAdd, researchArea: e.target.value })}
-                      className="w-full px-4 py-2 border border-[#E8B4B8]/30 rounded-lg liquid-glass text-[#F5D7DA] placeholder:text-[#E8B4B8]/50"
+                      className={formInputClass}
                     />
                   </div>
                 )}
@@ -806,17 +812,17 @@ const BulkOperationsModal: React.FC<BulkOperationsModalProps> = ({
         </div>
 
         {/* Footer */}
-        <div className="p-6 border-t border-[#E8B4B8]/30 flex items-center justify-end gap-3">
+        <div className="p-6 border-t border-[#27272a] flex items-center justify-end gap-3">
           <button
             onClick={onClose}
-            className="px-4 py-2 border border-[#E8B4B8]/30 rounded-lg hover:bg-[rgba(192,48,80,0.25)] text-[#F5D7DA]"
+            className={formSecondaryBtnClass}
           >
             Cancel
           </button>
           <button
             onClick={handleApply}
             disabled={Object.keys(updates).length === 0 && dateShifts.length === 0 && (!addRecommenderEnabled || !recommenderToAdd.name) && !addReminderEnabled && !addFacultyEnabled && Object.keys(customFieldUpdates).length === 0}
-            className="px-4 py-2 bg-[#C03050] text-white rounded-lg hover:bg-[#E03030] disabled:opacity-50 disabled:cursor-not-allowed"
+            className={`${formPrimaryBtnClass} disabled:cursor-not-allowed`}
           >
             Apply to {selectedApplications.length} Application{selectedApplications.length !== 1 ? 's' : ''}
           </button>

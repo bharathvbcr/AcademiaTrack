@@ -18,7 +18,7 @@ interface KanbanColumnProps {
 const KanbanColumn: React.FC<KanbanColumnProps> = React.memo(({ status, applications, onEdit, onUpdate, onDuplicate, statusConfig }) => {
     // Use statusConfig if provided, otherwise fallback to defaults
     const statusName = statusConfig?.name || STATUS_LABELS[status] || status;
-    const statusColor = statusConfig?.color || STATUS_COLORS[status] || 'bg-slate-200 text-slate-700 border-slate-300 dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600';
+    const statusColor = statusConfig?.color || STATUS_COLORS[status] || 'bg-[#27272a] text-[#a1a1aa] border-[#3f3f46]';
 
     // Enable virtual scrolling for columns with many cards (100+)
     const useVirtualScrolling = useMemo(() => applications.length > 100, [applications.length]);
@@ -26,8 +26,8 @@ const KanbanColumn: React.FC<KanbanColumnProps> = React.memo(({ status, applicat
     return (
         <div className="flex flex-col w-72 shrink-0 max-h-full">
             <div className={`flex items-center justify-between mb-3 px-2 py-1 rounded-lg liquid-glass ${statusColor} bg-opacity-20`}>
-                <h3 className="font-bold text-[#F5D7DA] text-sm">{statusName}</h3>
-                <span className="text-xs font-semibold bg-[rgba(139,0,0,0.5)] backdrop-blur-sm px-2 py-0.5 rounded-full text-[#E8B4B8]">
+                <h3 className="font-bold text-[#f4f4f5] text-sm">{statusName}</h3>
+                <span className="text-xs font-semibold bg-[#dc2626]/10 backdrop-blur-sm px-2 py-0.5 rounded-full text-[#a1a1aa]">
                     {applications.length}
                 </span>
             </div>
@@ -37,7 +37,7 @@ const KanbanColumn: React.FC<KanbanColumnProps> = React.memo(({ status, applicat
                     <div
                         ref={provided.innerRef}
                         {...provided.droppableProps}
-                        className={`flex-1 overflow-y-auto custom-scrollbar rounded-xl p-2 transition-colors min-h-[150px] max-h-[calc(100vh-280px)] liquid-glass ${snapshot.isDraggingOver ? 'bg-[rgba(139,0,0,0.5)]' : ''
+                        className={`flex-1 overflow-y-auto custom-scrollbar rounded-xl p-2 transition-colors min-h-[150px] max-h-[calc(100vh-280px)] liquid-glass ${snapshot.isDraggingOver ? 'bg-[#dc2626]/10' : ''
                             }`}
                     >
                         {useVirtualScrolling ? (

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { FilterGroup, FilterCondition, FilterField, FilterOperator, SavedFilter } from '../hooks/useAdvancedFilter';
 import { ApplicationStatus, ProgramType, DocumentStatus } from '../types';
 import { STATUS_OPTIONS, PROGRAM_TYPE_OPTIONS, DOCUMENT_STATUS_OPTIONS } from '../constants';
+import { formPrimaryBtnClass, formSecondaryBtnClass, formInputClass, formInlineInputClass, formInlineInputSmClass, MaterialIcon } from './ApplicationFormUI';
 
 interface AdvancedFilterBuilderProps {
   filter: FilterGroup | null;
@@ -11,10 +12,6 @@ interface AdvancedFilterBuilderProps {
   onLoadFilter?: (id: string) => void;
   onDeleteFilter?: (id: string) => void;
 }
-
-const MaterialIcon: React.FC<{ name: string; className?: string }> = ({ name, className }) => (
-  <span className={`material-symbols-outlined ${className}`}>{name}</span>
-);
 
 const AdvancedFilterBuilder: React.FC<AdvancedFilterBuilderProps> = ({
   filter,
@@ -143,7 +140,7 @@ const AdvancedFilterBuilder: React.FC<AdvancedFilterBuilderProps> = ({
                 const selected = Array.from(e.target.selectedOptions, opt => opt.value);
                 updateCondition(index, { value: selected });
               }}
-              className="px-3 py-2 border border-[#E8B4B8]/30 rounded-lg liquid-glass text-[#F5D7DA]"
+              className={formInlineInputClass}
               aria-label="Select status values"
             >
               {STATUS_OPTIONS.map(s => (
@@ -156,7 +153,7 @@ const AdvancedFilterBuilder: React.FC<AdvancedFilterBuilderProps> = ({
           <select
             value={value || ''}
             onChange={(e) => updateCondition(index, { value: e.target.value })}
-            className="px-3 py-2 border rounded-lg"
+            className={formInlineInputClass}
             aria-label="Select status"
           >
             {STATUS_OPTIONS.map(s => (
@@ -175,7 +172,7 @@ const AdvancedFilterBuilder: React.FC<AdvancedFilterBuilderProps> = ({
                 const selected = Array.from(e.target.selectedOptions, opt => opt.value);
                 updateCondition(index, { value: selected });
               }}
-              className="px-3 py-2 border border-[#E8B4B8]/30 rounded-lg liquid-glass text-[#F5D7DA]"
+              className={formInlineInputClass}
               aria-label="Select program type values"
             >
               {PROGRAM_TYPE_OPTIONS.map(p => (
@@ -188,7 +185,7 @@ const AdvancedFilterBuilder: React.FC<AdvancedFilterBuilderProps> = ({
           <select
             value={value || ''}
             onChange={(e) => updateCondition(index, { value: e.target.value })}
-            className="px-3 py-2 border rounded-lg"
+            className={formInlineInputClass}
             aria-label="Select program type"
           >
             {PROGRAM_TYPE_OPTIONS.map(p => (
@@ -207,7 +204,7 @@ const AdvancedFilterBuilder: React.FC<AdvancedFilterBuilderProps> = ({
                 aria-label="Minimum days until deadline"
                 value={min}
                 onChange={(e) => updateCondition(index, { value: [Number(e.target.value), max] })}
-                className="px-3 py-2 border rounded-lg w-20"
+                className={`${formInlineInputClass} w-20`}
                 placeholder="Min days"
               />
               <span>and</span>
@@ -216,7 +213,7 @@ const AdvancedFilterBuilder: React.FC<AdvancedFilterBuilderProps> = ({
                 aria-label="Maximum days until deadline"
                 value={max}
                 onChange={(e) => updateCondition(index, { value: [min, Number(e.target.value)] })}
-                className="px-3 py-2 border rounded-lg w-20"
+                className={`${formInlineInputClass} w-20`}
                 placeholder="Max days"
               />
             </div>
@@ -227,7 +224,7 @@ const AdvancedFilterBuilder: React.FC<AdvancedFilterBuilderProps> = ({
             type="number"
             value={value || ''}
             onChange={(e) => updateCondition(index, { value: Number(e.target.value) })}
-            className="px-3 py-2 border rounded-lg w-32"
+            className={`${formInlineInputClass} w-32`}
             placeholder="Days"
           />
         );
@@ -242,7 +239,7 @@ const AdvancedFilterBuilder: React.FC<AdvancedFilterBuilderProps> = ({
                 type="number"
                 value={min}
                 onChange={(e) => updateCondition(index, { value: [Number(e.target.value), max] })}
-                className="px-3 py-2 border rounded-lg w-24"
+                className={`${formInlineInputClass} w-24`}
                 aria-label={`Minimum ${field === 'fee' ? 'fee' : 'admission chance'} value`}
                 placeholder="Min"
               />
@@ -251,7 +248,7 @@ const AdvancedFilterBuilder: React.FC<AdvancedFilterBuilderProps> = ({
                 type="number"
                 value={max}
                 onChange={(e) => updateCondition(index, { value: [min, Number(e.target.value)] })}
-                className="px-3 py-2 border rounded-lg w-24"
+                className={`${formInlineInputClass} w-24`}
                 aria-label={`Maximum ${field === 'fee' ? 'fee' : 'admission chance'} value`}
                 placeholder="Max"
               />
@@ -263,7 +260,7 @@ const AdvancedFilterBuilder: React.FC<AdvancedFilterBuilderProps> = ({
             type="number"
             value={value || ''}
             onChange={(e) => updateCondition(index, { value: Number(e.target.value) })}
-            className="px-3 py-2 border rounded-lg w-32"
+            className={`${formInlineInputClass} w-32`}
             aria-label={field === 'fee' ? 'Application fee' : 'Admission chance'}
             placeholder={field === 'fee' ? 'Fee' : 'Chance'}
           />
@@ -276,7 +273,7 @@ const AdvancedFilterBuilder: React.FC<AdvancedFilterBuilderProps> = ({
             aria-label="Tag to filter by"
             value={value || ''}
             onChange={(e) => updateCondition(index, { value: e.target.value })}
-            className="px-3 py-2 border rounded-lg"
+            className={formInlineInputClass}
             placeholder="Tag name"
           />
         );
@@ -291,7 +288,7 @@ const AdvancedFilterBuilder: React.FC<AdvancedFilterBuilderProps> = ({
             aria-label={`Filter by ${field}`}
             value={value || ''}
             onChange={(e) => updateCondition(index, { value: e.target.value })}
-            className="px-3 py-2 border rounded-lg"
+            className={formInlineInputClass}
             placeholder="Search text"
           />
         );
@@ -302,7 +299,7 @@ const AdvancedFilterBuilder: React.FC<AdvancedFilterBuilderProps> = ({
           <select
             value={value ? 'true' : 'false'}
             onChange={(e) => updateCondition(index, { value: e.target.value === 'true' })}
-            className="px-3 py-2 border rounded-lg"
+            className={formInlineInputClass}
             aria-label={field === 'isR1' ? 'R1 University status' : 'Financial offer status'}
           >
             <option value="true">Yes</option>
@@ -316,7 +313,7 @@ const AdvancedFilterBuilder: React.FC<AdvancedFilterBuilderProps> = ({
             type="text"
             value={value || ''}
             onChange={(e) => updateCondition(index, { value: e.target.value })}
-            className="px-3 py-2 border rounded-lg"
+            className={formInlineInputClass}
             aria-label={`Filter value for ${field}`}
             placeholder="Enter value"
           />
@@ -328,11 +325,11 @@ const AdvancedFilterBuilder: React.FC<AdvancedFilterBuilderProps> = ({
     <div className="space-y-4">
       {/* Saved Filters */}
       {savedFilters.length > 0 && (
-        <div className="p-4 bg-slate-50 dark:bg-slate-800 rounded-lg">
-          <div className="text-sm font-semibold text-slate-700 dark:text-slate-200 mb-2">Saved Filters</div>
+        <div className="p-4 bg-[#18181b] rounded-lg">
+          <div className="text-sm font-semibold text-[#a1a1aa] mb-2">Saved Filters</div>
           <div className="flex flex-wrap gap-2">
             {savedFilters.map(saved => (
-              <div key={saved.id} className="flex items-center gap-2 px-3 py-1.5 bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg text-sm hover:bg-slate-100 dark:hover:bg-slate-600">
+              <div key={saved.id} className="flex items-center gap-2 px-3 py-1.5 bg-[#18181b] border border-[#27272a] rounded-lg text-sm hover:bg-[#27272a]">
                 <button
                   onClick={() => onLoadFilter?.(saved.id)}
                   className="flex-1 text-left"
@@ -343,7 +340,7 @@ const AdvancedFilterBuilder: React.FC<AdvancedFilterBuilderProps> = ({
                 {onDeleteFilter && (
                   <button
                     onClick={() => onDeleteFilter(saved.id)}
-                    className="text-red-500 hover:text-red-700 ml-auto"
+                    className="text-red-400 hover:text-red-300 ml-auto"
                     aria-label={`Delete filter ${saved.name}`}
                   >
                     <MaterialIcon name="close" className="text-sm" />
@@ -357,7 +354,7 @@ const AdvancedFilterBuilder: React.FC<AdvancedFilterBuilderProps> = ({
 
       {/* Filter Builder */}
       {filter && (
-        <div className="p-4 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg">
+        <div className="p-4 bg-[#18181b] border border-[#27272a] rounded-lg">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
               <label htmlFor="filter-operator" className="text-sm font-medium">Operator:</label>
@@ -365,7 +362,7 @@ const AdvancedFilterBuilder: React.FC<AdvancedFilterBuilderProps> = ({
                 id="filter-operator"
                 value={filter.operator}
                 onChange={(e) => onFilterChange({ ...filter, operator: e.target.value as FilterOperator })}
-                className="px-3 py-1.5 border rounded-lg text-sm"
+                className={formInlineInputSmClass}
                 aria-label="Filter group operator"
               >
                 <option value="AND">AND</option>
@@ -376,7 +373,7 @@ const AdvancedFilterBuilder: React.FC<AdvancedFilterBuilderProps> = ({
             {onSave && (
               <button
                 onClick={() => setShowSaveDialog(true)}
-                className="px-3 py-1.5 bg-blue-500 text-white rounded-lg text-sm hover:bg-blue-600"
+                className={`${formPrimaryBtnClass} px-3 py-1.5 text-sm`}
               >
                 <MaterialIcon name="save" className="text-sm" />
                 Save Filter
@@ -386,7 +383,7 @@ const AdvancedFilterBuilder: React.FC<AdvancedFilterBuilderProps> = ({
 
           <div className="space-y-3">
             {filter.conditions.map((condition, index) => (
-              <div key={index} className="flex items-center gap-2 p-3 bg-slate-50 dark:bg-slate-900 rounded-lg">
+              <div key={index} className="flex items-center gap-2 p-3 bg-[#09090b] rounded-lg">
                 <select
                   value={condition.field}
                   onChange={(e) => {
@@ -398,7 +395,7 @@ const AdvancedFilterBuilder: React.FC<AdvancedFilterBuilderProps> = ({
                       value: undefined,
                     });
                   }}
-                  className="px-3 py-2 border rounded-lg text-sm"
+                  className={`${formInlineInputClass} text-sm`}
                   aria-label={`Filter field for condition ${index + 1}`}
                 >
                   {fieldOptions.map(opt => (
@@ -409,7 +406,7 @@ const AdvancedFilterBuilder: React.FC<AdvancedFilterBuilderProps> = ({
                 <select
                   value={condition.operator}
                   onChange={(e) => updateCondition(index, { operator: e.target.value as FilterCondition['operator'] })}
-                  className="px-3 py-2 border rounded-lg text-sm"
+                  className={`${formInlineInputClass} text-sm`}
                   aria-label={`Filter operator for condition ${index + 1}`}
                 >
                   {getOperatorOptions(condition.field).map(opt => (
@@ -423,7 +420,7 @@ const AdvancedFilterBuilder: React.FC<AdvancedFilterBuilderProps> = ({
 
                 <button
                   onClick={() => removeCondition(index)}
-                  className="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded"
+                  className="p-2 text-red-400 hover:bg-red-500/10 rounded"
                   aria-label={`Remove condition ${index + 1}`}
                 >
                   <MaterialIcon name="delete" className="text-sm" />
@@ -434,7 +431,7 @@ const AdvancedFilterBuilder: React.FC<AdvancedFilterBuilderProps> = ({
 
           <button
             onClick={addCondition}
-            className="mt-3 px-4 py-2 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-lg text-sm hover:bg-slate-200 dark:hover:bg-slate-600 flex items-center gap-2"
+            className="mt-3 px-4 py-2 bg-[#27272a] text-[#a1a1aa] rounded-lg text-sm hover:bg-[#3f3f46] flex items-center gap-2"
           >
             <MaterialIcon name="add" className="text-sm" />
             Add Condition
@@ -445,7 +442,7 @@ const AdvancedFilterBuilder: React.FC<AdvancedFilterBuilderProps> = ({
       {!filter && (
         <button
           onClick={addCondition}
-          className="w-full px-4 py-3 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-lg text-sm hover:bg-slate-200 dark:hover:bg-slate-600 flex items-center justify-center gap-2"
+          className="w-full px-4 py-3 bg-[#27272a] text-[#a1a1aa] rounded-lg text-sm hover:bg-[#3f3f46] flex items-center justify-center gap-2"
         >
           <MaterialIcon name="add" className="text-sm" />
           Create New Filter
@@ -459,7 +456,7 @@ const AdvancedFilterBuilder: React.FC<AdvancedFilterBuilderProps> = ({
             role="dialog"
             aria-modal="true"
             aria-labelledby="save-filter-title"
-            className="bg-white dark:bg-slate-800 rounded-lg p-6 max-w-md w-full mx-4"
+            className="bg-[#18181b] rounded-lg p-6 max-w-md w-full mx-4"
           >
             <h3 id="save-filter-title" className="text-lg font-semibold mb-4">Save Filter</h3>
             <input
@@ -467,7 +464,7 @@ const AdvancedFilterBuilder: React.FC<AdvancedFilterBuilderProps> = ({
               value={filterName}
               onChange={(e) => setFilterName(e.target.value)}
               placeholder="Filter name"
-              className="w-full px-3 py-2 border rounded-lg mb-4"
+              className={`${formInputClass} mb-4`}
               autoFocus
             />
             <div className="flex gap-2 justify-end">
@@ -476,14 +473,14 @@ const AdvancedFilterBuilder: React.FC<AdvancedFilterBuilderProps> = ({
                   setShowSaveDialog(false);
                   setFilterName('');
                 }}
-                className="px-4 py-2 border rounded-lg"
+                className={formSecondaryBtnClass}
               >
                 Cancel
               </button>
               <button
                 onClick={handleSave}
                 disabled={!filterName.trim()}
-                className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50"
+                className={formPrimaryBtnClass}
               >
                 Save
               </button>

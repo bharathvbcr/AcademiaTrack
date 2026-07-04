@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useAutoComplete } from '../hooks/useAutoComplete';
 import { Application } from '../types';
+import { MaterialIcon } from './ApplicationFormUI';
 
 interface AutoCompleteInputProps {
   type: 'university' | 'program' | 'department' | 'location';
@@ -10,10 +11,6 @@ interface AutoCompleteInputProps {
   applications: Application[];
   className?: string;
 }
-
-const MaterialIcon: React.FC<{ name: string; className?: string }> = ({ name, className }) => (
-  <span className={`material-symbols-outlined ${className}`}>{name}</span>
-);
 
 const AutoCompleteInput: React.FC<AutoCompleteInputProps> = ({
   type,

@@ -5,6 +5,7 @@ import { STATUS_OPTIONS, CHART_COLORS, FACULTY_CHART_COLORS, FACULTY_CONTACT_STA
 import { format, parseISO, isValid } from 'date-fns';
 import { getDaysUntil } from '../utils/dateUtils';
 import { ViewMode } from '../hooks/useViewState';
+import EmptyState from './EmptyState';
 
 interface DashboardSummaryProps {
   applications: Application[];
@@ -117,35 +118,48 @@ const DashboardSummary: React.FC<DashboardSummaryProps> = ({ applications, viewM
 
   if (applications.length === 0) {
     return (
-      <div className="text-center py-16 px-6 liquid-glass-card rounded-3xl mb-8">
-        <img src="./AcademiaTrack.png" alt="AcademiaTrack" className="w-16 h-16 object-contain mx-auto mb-4" />
-        <h2 className="text-2xl font-bold text-[#f4f4f5]">Welcome to AcademiaTrack!</h2>
-        <p className="text-[#a1a1aa] mt-2">Click "Add New" to get started and see your dashboard come to life.</p>
-      </div>
+      <EmptyState
+        icon="school"
+        title="Welcome to AcademiaTrack"
+        message="Track applications, deadlines, faculty outreach, and more — all in one place."
+        tips={[
+          'Click Add New or hover it to use Quick Capture',
+          'Press ⌘K (Ctrl+K) to open the command palette',
+          'Import existing data from CSV or JSON in the More menu',
+        ]}
+      />
     );
   }
 
   return (
     <div className="space-y-6 mb-8">
       {/* Summary Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-        <SummaryCard title="Total Applications" value={summaryStats.total} icon="folder_open" color="text-blue-500" />
-        <SummaryCard title="Pending / In Progress" value={summaryStats.pending} icon="hourglass_empty" color="text-amber-500" />
-        <SummaryCard title="Accepted" value={summaryStats.accepted} icon="check_circle" color="text-green-500" />
-        <SummaryCard title="Deadlines (14 Days)" value={summaryStats.upcomingDeadlines} icon="event_busy" color="text-red-500" />
-        <SummaryCard title="Rejected" value={summaryStats.rejected} icon="cancel" color="text-rose-500" />
+      <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-3">
+        <SummaryCard title="Total Applications" value={summaryStats.total} icon="folder_open" color="text-blue-400" bgColor="bg-blue-500/10" />
+        <SummaryCard title="Pending / In Progress" value={summaryStats.pending} icon="hourglass_empty" color="text-amber-400" bgColor="bg-amber-500/10" />
+        <SummaryCard title="Accepted" value={summaryStats.accepted} icon="check_circle" color="text-green-400" bgColor="bg-green-500/10" />
+        <SummaryCard
+          title="Deadlines (14 Days)"
+          value={summaryStats.upcomingDeadlines}
+          icon="event_busy"
+          color={summaryStats.upcomingDeadlines > 0 ? 'text-red-400' : 'text-[#a1a1aa]'}
+          bgColor={summaryStats.upcomingDeadlines > 0 ? 'bg-red-500/15' : 'bg-[#27272a]'}
+          highlight={summaryStats.upcomingDeadlines > 0}
+        />
+        <SummaryCard title="Rejected" value={summaryStats.rejected} icon="cancel" color="text-rose-400" bgColor="bg-rose-500/10" />
         <SummaryCard
           title="Total Cost Spent"
           value={`$${summaryStats.totalCost.toLocaleString()}`}
           icon="payments"
-          color="text-emerald-500"
+          color="text-emerald-400"
+          bgColor="bg-emerald-500/10"
         />
       </div>
 
       <div className="flex justify-end">
         <button
           onClick={() => setUserPreference(!showAnalytics)}
-          className="flex items-center gap-2 text-sm font-medium text-[#a1a1aa] hover:text-[#F5D7DA] transition-colors"
+          className="flex items-center gap-2 text-sm font-medium text-[#a1a1aa] hover:text-[#f4f4f5] transition-colors"
         >
           <span className="material-symbols-outlined text-lg">
             {showAnalytics ? 'expand_less' : 'expand_more'}
@@ -234,14 +248,25 @@ const DashboardSummary: React.FC<DashboardSummaryProps> = ({ applications, viewM
   );
 };
 
-const SummaryCard: React.FC<{ title: string; value: number | string; icon: string; color: string }> = ({ title, value, icon, color }) => (
-  <div className="p-4 rounded-xl border border-[#27272a] bg-[#18181b] flex items-center gap-4 hover:border-[#3f3f46] transition-colors">
-    <div className={`h-12 w-12 rounded-xl bg-opacity-0 flex items-center justify-center shrink-0`}>
-      <span className={`material-symbols-outlined ${color}`}>{icon}</span>
+const SummaryCard: React.FC<{
+  title: string;
+  value: number | string;
+  icon: string;
+  color: string;
+  bgColor?: string;
+  highlight?: boolean;
+}> = ({ title, value, icon, color, bgColor = 'bg-[#27272a]', highlight = false }) => (
+  <div className={`p-3.5 rounded-xl border flex items-center gap-3 transition-colors ${
+    highlight
+      ? 'border-red-500/30 bg-red-500/5 hover:border-red-500/50'
+      : 'border-[#27272a] bg-[#18181b] hover:border-[#3f3f46]'
+  }`}>
+    <div className={`h-10 w-10 rounded-lg ${bgColor} flex items-center justify-center shrink-0`}>
+      <span className={`material-symbols-outlined text-xl ${color}`} aria-hidden="true">{icon}</span>
     </div>
-    <div>
-      <p className="text-xs font-medium text-[#a1a1aa] uppercase tracking-wider">{title}</p>
-      <p className="text-2xl font-bold text-[#f4f4f5]">{value}</p>
+    <div className="min-w-0">
+      <p className="text-[10px] font-medium text-[#a1a1aa] uppercase tracking-wider leading-tight line-clamp-2" title={title}>{title}</p>
+      <p className={`text-xl font-bold truncate ${highlight ? 'text-red-300' : 'text-[#f4f4f5]'}`}>{value}</p>
     </div>
   </div>
 );

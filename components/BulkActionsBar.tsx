@@ -1,6 +1,7 @@
 import React from 'react';
 import { ApplicationStatus } from '../types';
 import { STATUS_OPTIONS } from '../constants';
+import { MaterialIcon } from './ApplicationFormUI';
 
 interface BulkActionsBarProps {
     selectedCount: number;
@@ -12,10 +13,6 @@ interface BulkActionsBarProps {
     onExitSelectionMode: () => void;
     totalCount: number;
 }
-
-const MaterialIcon: React.FC<{ name: string; className?: string }> = ({ name, className }) => (
-    <span className={`material-symbols-outlined ${className}`}>{name}</span>
-);
 
 const BulkActionsBar: React.FC<BulkActionsBarProps> = ({
     selectedCount,
@@ -34,34 +31,35 @@ const BulkActionsBar: React.FC<BulkActionsBarProps> = ({
         setShowStatusMenu(false);
     };
 
+    const canCompare = selectedCount >= 2;
+
     return (
-        <div className="sticky top-0 z-30 bg-white/95 dark:bg-slate-900/95 backdrop-blur-lg border-b border-slate-200 dark:border-slate-700 shadow-lg">
+        <div className="sticky top-0 z-30 bg-[#09090b]/95 backdrop-blur-lg border-b border-[#27272a] shadow-lg">
             <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
-                {/* Left: Selection info */}
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-4 min-w-0">
                     <button
                         onClick={onExitSelectionMode}
-                        className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                        className="p-2 rounded-full hover:bg-[#27272a] transition-colors shrink-0"
                         aria-label="Exit selection mode"
                     >
-                        <MaterialIcon name="close" className="text-xl text-slate-600 dark:text-slate-300" />
+                        <MaterialIcon name="close" className="text-xl text-[#a1a1aa]" />
                     </button>
-                    <span className="text-sm font-medium text-slate-700 dark:text-slate-200">
+                    <span className="text-sm font-medium text-[#f4f4f5] truncate">
                         {selectedCount} of {totalCount} selected
                     </span>
                     <div className="hidden sm:flex items-center gap-2">
                         <button
                             onClick={onSelectAll}
-                            className="text-sm text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 font-medium"
+                            className="text-sm text-[#dc2626] hover:text-[#fca5a5] font-medium transition-colors"
                         >
                             Select All
                         </button>
                         {selectedCount > 0 && (
                             <>
-                                <span className="text-slate-300 dark:text-slate-600">|</span>
+                                <span className="text-[#3f3f46]">|</span>
                                 <button
                                     onClick={onClearSelection}
-                                    className="text-sm text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 font-medium"
+                                    className="text-sm text-[#a1a1aa] hover:text-[#f4f4f5] font-medium transition-colors"
                                 >
                                     Clear
                                 </button>
@@ -70,29 +68,42 @@ const BulkActionsBar: React.FC<BulkActionsBarProps> = ({
                     </div>
                 </div>
 
-                {/* Right: Actions */}
-                <div className="flex items-center gap-2">
-                    {/* Status Change Dropdown */}
+                <div className="flex items-center gap-2 shrink-0">
+                    <button
+                        onClick={onBulkCompare}
+                        disabled={!canCompare}
+                        title={canCompare ? 'Compare selected applications' : 'Select at least 2 applications to compare'}
+                        className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-colors ${
+                            canCompare
+                                ? 'bg-[#18181b] border border-[#27272a] text-[#f4f4f5] hover:bg-[#27272a]'
+                                : 'bg-[#18181b] text-[#71717a] cursor-not-allowed'
+                        }`}
+                    >
+                        <MaterialIcon name="compare" className="text-lg" />
+                        <span className="hidden sm:inline">Compare</span>
+                    </button>
+
                     <div className="relative">
                         <button
                             onClick={() => setShowStatusMenu(!showStatusMenu)}
                             disabled={selectedCount === 0}
-                            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-colors ${selectedCount > 0
-                                ? 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 shadow-sm'
-                                : 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-600 cursor-not-allowed'
-                                }`}
+                            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-colors ${
+                                selectedCount > 0
+                                    ? 'bg-[#18181b] border border-[#27272a] text-[#f4f4f5] hover:bg-[#27272a]'
+                                    : 'bg-[#18181b] text-[#71717a] cursor-not-allowed'
+                            }`}
                         >
                             <MaterialIcon name="sync_alt" className="text-lg" />
                             <span className="hidden sm:inline">Change Status</span>
                             <MaterialIcon name="expand_more" className="text-lg" />
                         </button>
                         {showStatusMenu && selectedCount > 0 && (
-                            <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700 py-1 z-40">
+                            <div className="absolute right-0 mt-2 w-48 liquid-glass-modal-content rounded-xl py-1 z-40 custom-scrollbar max-h-64 overflow-y-auto">
                                 {STATUS_OPTIONS.map(status => (
                                     <button
                                         key={status}
                                         onClick={() => handleStatusSelect(status)}
-                                        className="w-full text-left px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700"
+                                        className="w-full text-left px-4 py-2 text-sm text-[#f4f4f5] hover:bg-[#27272a] transition-colors"
                                     >
                                         {status}
                                     </button>
@@ -101,14 +112,14 @@ const BulkActionsBar: React.FC<BulkActionsBarProps> = ({
                         )}
                     </div>
 
-                    {/* Delete Button */}
                     <button
                         onClick={onBulkDelete}
                         disabled={selectedCount === 0}
-                        className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-colors ${selectedCount > 0
-                            ? 'bg-red-600 text-white hover:bg-red-700 shadow-lg shadow-red-600/20'
-                            : 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-600 cursor-not-allowed'
-                            }`}
+                        className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-colors ${
+                            selectedCount > 0
+                                ? 'bg-[#dc2626] text-white hover:bg-[#b91c1c]'
+                                : 'bg-[#18181b] text-[#71717a] cursor-not-allowed'
+                        }`}
                     >
                         <MaterialIcon name="delete" className="text-lg" />
                         <span className="hidden sm:inline">Delete</span>

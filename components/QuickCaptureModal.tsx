@@ -6,6 +6,7 @@ import { useEscapeKey } from '../hooks/useEscapeKey';
 import { Application, ProgramType, ApplicationStatus } from '../types';
 import { emptyApplication } from '../hooks/useApplicationForm';
 import { searchLocation } from '../utils/locationService';
+import { MaterialIcon } from './ApplicationFormUI';
 
 interface QuickCaptureModalProps {
     isOpen: boolean;
@@ -196,10 +197,10 @@ const QuickCaptureModal: React.FC<QuickCaptureModalProps> = ({ isOpen, onClose, 
                         exit="exit"
                     >
                         <div className="liquid-glass-modal-content rounded-2xl overflow-hidden">
-                            <div className="p-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500"></div>
+                            <div className="p-1 bg-gradient-to-r from-[#dc2626] via-[#b91c1c] to-[#991b1b]"></div>
                             <div className="p-6">
-                                <h3 className="text-lg font-semibold text-[#F5D7DA] mb-4 flex items-center gap-2">
-                                    <span className="material-symbols-outlined text-[#C03050]">bolt</span>
+                                <h3 className="text-lg font-semibold text-[#f4f4f5] mb-4 flex items-center gap-2">
+                                    <MaterialIcon name="bolt" className="text-[#dc2626]" />
                                     Quick Capture
                                 </h3>
 
@@ -210,19 +211,20 @@ const QuickCaptureModal: React.FC<QuickCaptureModalProps> = ({ isOpen, onClose, 
                                     onChange={(e) => setInput(e.target.value)}
                                     onKeyDown={handleKeyDown}
                                     placeholder="e.g. Stanford University, PhD in CS, Dec 15"
-                                    className="w-full text-xl bg-transparent border-b-2 border-[#E8B4B8]/30 focus:border-[#C03050] focus:outline-none py-2 px-1 text-[#F5D7DA] placeholder:text-[#E8B4B8]/50"
+                                    className="w-full text-xl bg-transparent border-b-2 border-[#27272a] focus:border-[#dc2626] focus:outline-none py-2 px-1 text-[#f4f4f5] placeholder:text-[#a1a1aa]/50"
                                     autoComplete="off"
                                     disabled={isProcessing}
+                                    aria-label="Quick capture application details"
                                 />
 
-                                <div className="flex justify-between items-center mt-4 text-xs text-[#E8B4B8]/70">
+                                <div className="flex justify-between items-center mt-4 text-xs text-[#a1a1aa]">
                                     <div className="flex gap-4">
-                                        <span>Hit <kbd className="font-mono liquid-glass px-1 rounded">Enter</kbd> to save</span>
-                                        <span><kbd className="font-mono liquid-glass px-1 rounded">Esc</kbd> to close</span>
+                                        <span>Hit <kbd className="font-mono bg-[#27272a] px-1 rounded border border-[#3f3f46]">Enter</kbd> to save</span>
+                                        <span><kbd className="font-mono bg-[#27272a] px-1 rounded border border-[#3f3f46]">Esc</kbd> to close</span>
                                     </div>
                                     {isProcessing && (
-                                        <div className="flex items-center gap-2 text-[#C03050]">
-                                            <span className="animate-spin material-symbols-outlined text-sm">sync</span>
+                                        <div className="flex items-center gap-2 text-[#dc2626]">
+                                            <MaterialIcon name="sync" className="text-sm animate-spin" aria-hidden />
                                             Processing...
                                         </div>
                                     )}

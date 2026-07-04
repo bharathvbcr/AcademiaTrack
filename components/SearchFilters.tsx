@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { ApplicationStatus, ProgramType } from '../types';
 import { STATUS_OPTIONS, STATUS_LABELS, PROGRAM_TYPE_OPTIONS, TAG_PRESETS } from '../constants';
+import { MaterialIcon, formInputClass, formInputSmClass, formSecondaryBtnClass } from './ApplicationFormUI';
 
 export interface FilterState {
     status: ApplicationStatus | 'all';
@@ -16,10 +17,6 @@ interface SearchFiltersProps {
     searchQuery: string;
     onSearchChange: (query: string) => void;
 }
-
-const MaterialIcon: React.FC<{ name: string; className?: string }> = ({ name, className }) => (
-    <span className={`material-symbols-outlined ${className}`}>{name}</span>
-);
 
 const SearchFilters: React.FC<SearchFiltersProps> = ({
     filters,
@@ -65,19 +62,19 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({
             {/* Search Bar */}
             <div className="flex gap-2">
                 <div className="relative flex-1">
-                    <MaterialIcon name="search" className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg" />
+                    <MaterialIcon name="search" className="absolute left-3 top-1/2 -translate-y-1/2 text-[#a1a1aa] text-lg" />
                     <input
                         type="text"
                         aria-label="Search applications"
                         value={searchQuery}
                         onChange={(e) => onSearchChange(e.target.value)}
                         placeholder="Search universities, programs, faculty, notes..."
-                        className="w-full pl-10 pr-4 py-2.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent outline-none transition-all text-slate-800 dark:text-slate-200"
+                        className={`${formInputClass} pl-10 pr-10 py-2.5 rounded-xl focus:ring-offset-2 focus:ring-offset-[#09090b]`}
                     />
                     {searchQuery && (
                         <button
                             onClick={() => onSearchChange('')}
-                            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-[#a1a1aa] hover:text-[#a1a1aa]"
                             aria-label="Clear search"
                             title="Clear search"
                         >
@@ -87,26 +84,26 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({
                 </div>
                 <button
                     onClick={() => setShowFilters(!showFilters)}
-                    className={`flex items-center gap-2 px-4 py-2 border rounded-xl transition-colors ${hasActiveFilters
-                            ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800 text-red-700 dark:text-red-300'
-                            : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700'
+                    className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-colors focus:outline-none focus:ring-2 focus:ring-[#dc2626] focus:ring-offset-2 focus:ring-offset-[#09090b] ${hasActiveFilters
+                            ? 'bg-[#dc2626]/10 border border-[#dc2626]/30 text-[#fca5a5]'
+                            : `${formSecondaryBtnClass} py-2`
                         }`}
                 >
                     <MaterialIcon name="filter_list" className="text-lg" />
                     Filters
                     {activeFilterCount > 0 && (
-                        <span className="bg-red-500 text-white text-xs px-1.5 py-0.5 rounded-full">{activeFilterCount}</span>
+                        <span className="bg-[#dc2626] text-white text-xs px-1.5 py-0.5 rounded-full">{activeFilterCount}</span>
                     )}
                 </button>
             </div>
 
             {/* Expandable Filters */}
             {showFilters && (
-                <div className="p-4 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl space-y-4 animate-fade-in">
+                <div className="p-4 bg-[#18181b] border border-[#27272a] rounded-xl space-y-4 animate-fade-in">
                     <div className="flex justify-between items-center">
-                        <h4 className="font-medium text-slate-800 dark:text-white">Filters</h4>
+                        <h4 className="font-medium text-[#f4f4f5]">Filters</h4>
                         {hasActiveFilters && (
-                            <button onClick={resetFilters} className="text-sm text-red-600 hover:text-red-700">
+                            <button onClick={resetFilters} className="text-sm text-[#fca5a5] hover:text-[#f4f4f5] focus:outline-none focus:ring-2 focus:ring-[#dc2626] focus:ring-offset-2 focus:ring-offset-[#09090b] rounded">
                                 Clear all
                             </button>
                         )}
@@ -115,11 +112,11 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                         {/* Status Filter */}
                         <div>
-                            <label className="block text-xs font-medium text-[#E8B4B8]/70 mb-1">Status</label>
+                            <label className="block text-xs font-medium text-[#a1a1aa] mb-1">Status</label>
                             <select
                                 value={filters.status}
                                 onChange={(e) => onFiltersChange({ ...filters, status: e.target.value as any })}
-                                className="w-full px-3 py-2 liquid-glass border border-[#E8B4B8]/30 rounded-lg text-sm text-[#F5D7DA]"
+                                className={formInputSmClass}
                                 aria-label="Filter by application status"
                                 title="Filter by application status"
                             >
@@ -132,11 +129,11 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({
 
                         {/* Program Type Filter */}
                         <div>
-                            <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Program</label>
+                            <label className="block text-xs font-medium text-[#a1a1aa] mb-1">Program</label>
                             <select
                                 value={filters.programType}
                                 onChange={(e) => onFiltersChange({ ...filters, programType: e.target.value as any })}
-                                className="w-full px-3 py-2 liquid-glass border border-[#E8B4B8]/30 rounded-lg text-sm text-[#F5D7DA]"
+                                className={formInputSmClass}
                                 aria-label="Filter by program type"
                                 title="Filter by program type"
                             >
@@ -149,11 +146,11 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({
 
                         {/* Deadline Filter */}
                         <div>
-                            <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Deadline</label>
+                            <label className="block text-xs font-medium text-[#a1a1aa] mb-1">Deadline</label>
                             <select
                                 value={filters.deadlineRange}
                                 onChange={(e) => onFiltersChange({ ...filters, deadlineRange: e.target.value as any })}
-                                className="w-full px-3 py-2 liquid-glass border border-[#E8B4B8]/30 rounded-lg text-sm text-[#F5D7DA]"
+                                className={formInputSmClass}
                                 aria-label="Filter by deadline range"
                                 title="Filter by deadline range"
                             >
@@ -166,11 +163,11 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({
 
                         {/* Fee Filter */}
                         <div>
-                            <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Max Fee</label>
+                            <label className="block text-xs font-medium text-[#a1a1aa] mb-1">Max Fee</label>
                             <select
                                 value={filters.feeMax ?? 'all'}
                                 onChange={(e) => onFiltersChange({ ...filters, feeMax: e.target.value === 'all' ? null : Number(e.target.value) })}
-                                className="w-full px-3 py-2 liquid-glass border border-[#E8B4B8]/30 rounded-lg text-sm text-[#F5D7DA]"
+                                className={formInputSmClass}
                                 aria-label="Filter by maximum application fee"
                                 title="Filter by maximum application fee"
                             >
@@ -185,7 +182,7 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({
 
                     {/* Tag Filter */}
                     <div>
-                        <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-2">Tags</label>
+                        <label className="block text-xs font-medium text-[#a1a1aa] mb-2">Tags</label>
                         <div className="flex flex-wrap gap-2">
                             {TAG_PRESETS.map(tag => (
                                 <button
@@ -194,7 +191,7 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({
                                     aria-pressed={filters.tags.includes(tag.name)}
                                     className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs transition-all ${filters.tags.includes(tag.name)
                                             ? tag.bgClass + ' ring-2 ring-offset-1 ring-current'
-                                            : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600'
+                                            : 'bg-[#27272a] text-[#a1a1aa] hover:bg-[#3f3f46]'
                                         }`}
                                 >
                                     {tag.icon && <span className="material-symbols-outlined text-xs">{tag.icon}</span>}

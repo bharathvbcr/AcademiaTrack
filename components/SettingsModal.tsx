@@ -11,6 +11,14 @@ import { useThemeCustomization } from '../hooks/useThemeCustomization';
 import { BackupInfo, CustomFieldDefinition } from '../types';
 import AISettingsPanel from './AISettingsPanel';
 import { UseAIReturn } from '../hooks/useAI';
+import {
+  MaterialIcon,
+  formInputClass,
+  formInputSmClass,
+  formPrimaryBtnClass,
+  formSecondaryBtnClass,
+  formCheckboxClass,
+} from './ApplicationFormUI';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -22,10 +30,6 @@ interface SettingsModalProps {
   initialTab?: 'shortcuts' | 'views' | 'general' | 'fields' | 'kanban' | 'automation' | 'ai';
   ai?: UseAIReturn;
 }
-
-const MaterialIcon: React.FC<{ name: string; className?: string }> = ({ name, className }) => (
-  <span className={`material-symbols-outlined ${className}`}>{name}</span>
-);
 
 const SettingsModal: React.FC<SettingsModalProps> = ({
   isOpen,
@@ -241,7 +245,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                       type="checkbox"
                       checked={enabled}
                       onChange={(e) => setEnabled(e.target.checked)}
-                      className="w-4 h-4"
+                      className={formCheckboxClass}
                     />
                     <span>Enable Keyboard Shortcuts</span>
                   </label>
@@ -282,7 +286,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                               autoFocus
                               onKeyDown={(e) => handleKeyCapture(shortcut.id, e)}
                               onBlur={() => setEditingShortcut(null)}
-                              className="px-3 py-1.5 border rounded-lg w-32 text-sm"
+                              className={`${formInputSmClass} w-32`}
                               placeholder="Press keys..."
                             />
                           ) : (
@@ -293,7 +297,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                               <Tooltip content="Edit Shortcut">
                                 <button
                                   onClick={() => setEditingShortcut(shortcut.id)}
-                                  className="p-1 hover:bg-slate-200 dark:hover:bg-slate-700 rounded"
+                                  className="p-1 hover:bg-[#27272a] rounded transition-colors"
                                   aria-label={`Edit keyboard shortcut for ${shortcut.description}`}
                                 >
                                   <MaterialIcon name="edit" className="text-sm" />
@@ -320,7 +324,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                     <select
                       value={activeThemeId}
                       onChange={(e) => setActiveThemeId(e.target.value)}
-                      className="w-full px-3 py-2 border rounded-lg"
+                      className={formInputClass}
                       aria-label="Theme"
                       title="Theme"
                     >
@@ -334,7 +338,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                     <select
                       value={viewDensity}
                       onChange={(e) => setViewDensity(e.target.value as any)}
-                      className="w-full px-3 py-2 border rounded-lg"
+                      className={formInputClass}
                       aria-label="View Density"
                       title="View Density"
                     >
@@ -348,7 +352,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                     <select
                       value={fontSize}
                       onChange={(e) => setFontSize(e.target.value as any)}
-                      className="w-full px-3 py-2 border rounded-lg"
+                      className={formInputClass}
                       aria-label="Font Size"
                       title="Font Size"
                     >
@@ -362,7 +366,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                     <select
                       value={fontFamily}
                       onChange={(e) => setFontFamily(e.target.value)}
-                      className="w-full px-3 py-2 border rounded-lg"
+                      className={formInputClass}
                       aria-label="Font Family"
                       title="Font Family"
                     >
@@ -377,7 +381,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                         onClose();
                         onOpenViewPresets?.();
                       }}
-                      className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                      className={formPrimaryBtnClass}
                     >
                       Manage View Presets
                     </button>
@@ -388,7 +392,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                         onClose();
                         onOpenColumnConfig?.();
                       }}
-                      className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                      className={formPrimaryBtnClass}
                     >
                       Configure Columns
                     </button>
@@ -408,7 +412,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                       type="checkbox"
                       checked={autoSaveEnabled}
                       onChange={(e) => setAutoSaveEnabled(e.target.checked)}
-                      className="w-4 h-4"
+                      className={formCheckboxClass}
                     />
                     <span>Auto-save changes</span>
                   </label>
@@ -417,7 +421,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                       type="checkbox"
                       checked={deadlineNotificationsEnabled}
                       onChange={(e) => setDeadlineNotificationsEnabled(e.target.checked)}
-                      className="w-4 h-4"
+                      className={formCheckboxClass}
                     />
                     <span>Show notifications for deadlines</span>
                   </label>
@@ -426,7 +430,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                       type="checkbox"
                       checked={showAdvancedAnalytics}
                       onChange={(e) => setShowAdvancedAnalytics(e.target.checked)}
-                      className="w-4 h-4"
+                      className={formCheckboxClass}
                     />
                     <span>Show advanced analytics panel</span>
                   </label>
@@ -439,7 +443,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                           setFetchLogosEnabled(e.target.checked);
                           setShowUniversityLogos(e.target.checked);
                         }}
-                        className="w-4 h-4"
+                        className={formCheckboxClass}
                       />
                       <span>Show university logos</span>
                     </label>
@@ -458,7 +462,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                   <button
                     onClick={createBackup}
                     disabled={isMaintenanceBusy}
-                    className="px-3 py-1.5 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                    className={`${formPrimaryBtnClass} px-3 py-1.5 text-sm`}
                   >
                     Create Backup
                   </button>
@@ -504,7 +508,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                   <button
                     onClick={checkForUpdates}
                     disabled={isMaintenanceBusy}
-                    className="px-3 py-1.5 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                    className={`${formPrimaryBtnClass} px-3 py-1.5 text-sm`}
                   >
                     Check
                   </button>
@@ -558,7 +562,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                 <h3 className="text-lg font-semibold">Custom Fields</h3>
                 <button
                   onClick={() => setIsAddingField(true)}
-                  className="px-3 py-1.5 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2"
+                  className={`${formPrimaryBtnClass} px-3 py-1.5 text-sm flex items-center gap-2`}
                 >
                   <MaterialIcon name="add" className="text-sm" />
                   Add Field
@@ -573,7 +577,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                       type="text"
                       value={newField.name || ''}
                       onChange={e => setNewField({ ...newField, name: e.target.value })}
-                      className="w-full px-3 py-2 border rounded-lg text-sm"
+                      className={formInputSmClass}
                       placeholder="e.g., Interview Date"
                       autoFocus
                     />
@@ -583,7 +587,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                     <select
                       value={newField.type}
                       onChange={e => setNewField({ ...newField, type: e.target.value as any, calculatedFormula: e.target.value === 'calculated' ? '' : undefined })}
-                      className="w-full px-3 py-2 border rounded-lg text-sm"
+                      className={formInputSmClass}
                       aria-label="Field Type"
                       title="Field Type"
                     >
@@ -602,7 +606,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                         type="text"
                         value={newField.options?.join(', ') || ''}
                         onChange={e => setNewField({ ...newField, options: e.target.value.split(',').map(s => s.trim()).filter(Boolean) })}
-                        className="w-full px-3 py-2 border rounded-lg text-sm"
+                        className={formInputSmClass}
                         placeholder="Option 1, Option 2"
                       />
                     </div>
@@ -613,7 +617,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                       <select
                         value={newField.calculatedFormula || ''}
                         onChange={e => setNewField({ ...newField, calculatedFormula: e.target.value })}
-                        className="w-full px-3 py-2 border rounded-lg text-sm"
+                        className={formInputSmClass}
                         aria-label="Calculated Field Formula"
                         title="Calculated Field Formula"
                       >
@@ -623,7 +627,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                         <option value="fee * 0.1">10% of Application Fee</option>
                         <option value="total cost">Total Cost (Fee + Tests)</option>
                       </select>
-                      <p className="text-xs text-slate-500 mt-1">Calculated fields are read-only and update automatically</p>
+                      <p className="text-xs text-[#a1a1aa] mt-1">Calculated fields are read-only and update automatically</p>
                     </div>
                   )}
                   <div>
@@ -632,7 +636,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                         type="checkbox"
                         checked={newField.required || false}
                         onChange={e => setNewField({ ...newField, required: e.target.checked })}
-                        className="w-4 h-4"
+                        className={formCheckboxClass}
                       />
                       <span className="text-sm">Required field</span>
                     </label>
@@ -640,7 +644,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                   <div className="flex gap-2 justify-end">
                     <button
                       onClick={() => setIsAddingField(false)}
-                      className="px-3 py-1.5 text-sm border rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700"
+                      className="px-3 py-1.5 text-sm border border-[#27272a] rounded-lg hover:bg-[#27272a] text-[#f4f4f5] transition-colors"
                     >
                       Cancel
                     </button>
@@ -652,7 +656,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                           setIsAddingField(false);
                         }
                       }}
-                      className="px-3 py-1.5 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                      className={`${formPrimaryBtnClass} px-3 py-1.5 text-sm`}
                     >
                       Save
                     </button>
@@ -662,12 +666,12 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
 
               <div className="space-y-2">
                 {customFields.length === 0 && !isAddingField && (
-                  <p className="text-center text-slate-500 py-8">No custom fields defined.</p>
+                  <p className="text-center text-[#a1a1aa] py-8">No custom fields defined.</p>
                 )}
                 {customFields
                   .sort((a, b) => (a.order ?? 999) - (b.order ?? 999))
                   .map((field, index) => (
-                    <div key={field.id} className="flex items-center justify-between p-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg">
+                    <div key={field.id} className="flex items-center justify-between p-3 bg-[#09090b] border border-[#27272a] rounded-lg">
                       <div className="flex items-center gap-3 flex-1">
                         <div className="flex flex-col gap-1">
                           <Tooltip content="Move Up">
@@ -680,7 +684,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                                 }
                               }}
                               disabled={index === 0}
-                              className="p-1 text-slate-400 hover:text-slate-600 disabled:opacity-30"
+                              className="p-1 text-[#a1a1aa] hover:text-[#f4f4f5] disabled:opacity-30 transition-colors"
                               aria-label="Move up"
                             >
                               <MaterialIcon name="arrow_upward" className="text-sm" />
@@ -696,7 +700,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                                 }
                               }}
                               disabled={index === customFields.length - 1}
-                              className="p-1 text-slate-400 hover:text-slate-600 disabled:opacity-30"
+                              className="p-1 text-[#a1a1aa] hover:text-[#f4f4f5] disabled:opacity-30 transition-colors"
                               aria-label="Move down"
                             >
                               <MaterialIcon name="arrow_downward" className="text-sm" />
@@ -707,16 +711,16 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                           <div className="font-medium flex items-center gap-2">
                             {field.name}
                             {field.type === 'calculated' && (
-                              <span className="text-xs text-blue-600 dark:text-blue-400">(Calculated)</span>
+                              <span className="text-xs text-blue-400">(Calculated)</span>
                             )}
                             {field.required && <span className="text-red-500 text-xs">*</span>}
                           </div>
-                          <div className="text-xs text-slate-500 capitalize">{field.type}</div>
+                          <div className="text-xs text-[#a1a1aa] capitalize">{field.type}</div>
                         </div>
                         <Tooltip content={field.visible !== false ? 'Hide Field' : 'Show Field'}>
                           <button
                             onClick={() => toggleFieldVisibility(field.id)}
-                            className={`p-2 rounded ${field.visible !== false ? 'text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20' : 'text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700'}`}
+                            className={`p-2 rounded transition-colors ${field.visible !== false ? 'text-green-400 hover:bg-green-500/10' : 'text-[#a1a1aa] hover:bg-[#27272a]'}`}
                           >
                             <MaterialIcon name={field.visible !== false ? 'visibility' : 'visibility_off'} className="text-lg" />
                           </button>
@@ -725,7 +729,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                       <Tooltip content="Delete Field">
                         <button
                           onClick={() => deleteField(field.id)}
-                          className="p-1 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded ml-2"
+                          className="p-1 text-red-400 hover:bg-red-500/10 rounded ml-2"
                           aria-label="Delete field"
                         >
                           <MaterialIcon name="delete" className="text-lg" />
@@ -739,8 +743,8 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
 
           {activeTab === 'kanban' && (
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-slate-800 dark:text-white">Kanban Configuration</h3>
-              <p className="text-sm text-slate-600 dark:text-slate-400">
+              <h3 className="text-lg font-semibold text-[#f4f4f5]">Kanban Configuration</h3>
+              <p className="text-sm text-[#a1a1aa]">
                 Customize your Kanban board columns and statuses.
               </p>
               <button
@@ -748,7 +752,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                   onClose();
                   onOpenKanbanConfig?.();
                 }}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                className={formPrimaryBtnClass}
               >
                 Configure Kanban Board
               </button>
@@ -757,8 +761,8 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
 
           {activeTab === 'automation' && (
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-slate-800 dark:text-white">Workflow Automation</h3>
-              <p className="text-sm text-slate-600 dark:text-slate-400">
+              <h3 className="text-lg font-semibold text-[#f4f4f5]">Workflow Automation</h3>
+              <p className="text-sm text-[#a1a1aa]">
                 Create rules to automate actions based on triggers.
               </p>
               <button
@@ -766,7 +770,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                   onClose();
                   onOpenAutomationRules?.();
                 }}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                className={formPrimaryBtnClass}
               >
                 Manage Automation Rules
               </button>

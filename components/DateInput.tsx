@@ -1,8 +1,5 @@
 import React from 'react';
-
-const MaterialIcon: React.FC<{ name: string; className?: string }> = ({ name, className }) => (
-  <span className={`material-symbols-outlined ${className}`}>{name}</span>
-);
+import { MaterialIcon, formInputClass } from './ApplicationFormUI';
 
 interface DateInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   label: string;
@@ -21,7 +18,7 @@ const DateInput: React.FC<DateInputProps> = ({ label, containerClassName, ...pro
           {...props}
           id={props.name}
           type="date"
-          className="w-full pl-10 pr-3 py-2 liquid-glass-input border border-[#27272a] bg-[#18181b] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#dc2626] focus:border-transparent transition text-[#f4f4f5] [color-scheme:dark]"
+          className={`${formInputClass} pl-10 [color-scheme:dark] focus:ring-offset-2 focus:ring-offset-[#09090b]`}
         />
       </div>
     </div>
