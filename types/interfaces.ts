@@ -280,6 +280,10 @@ export interface DesktopAPI {
     restoreBackup: (path: string) => Promise<BackupResult>;
     deleteBackup: (path: string) => Promise<BackupResult>;
     autoBackup: () => Promise<BackupResult>;
+    /** Local semantic layer sidecar (Tauri desktop only). */
+    startSemanticSidecar: (port?: number) => Promise<unknown>;
+    stopSemanticSidecar: () => Promise<unknown>;
+    getSemanticSidecarStatus: (port?: number) => Promise<unknown>;
     // Window controls for frameless window
     windowControls: WindowControls;
 }

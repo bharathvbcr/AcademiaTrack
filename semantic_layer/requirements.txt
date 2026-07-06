@@ -1,0 +1,19 @@
+# Semantic layer runtime dependencies (CPU-friendly, pinned for reproducibility).
+# Install: python -m pip install -r semantic_layer/requirements.txt
+
+sentence-transformers==3.4.1
+faiss-cpu==1.10.0
+numpy==2.2.4
+pydantic==2.11.3
+pydantic-settings==2.8.1
+
+# Optional backends and sidecar (see requirements-semantic.txt at repo root)
+chromadb==0.6.3
+httpx==0.28.1
+prometheus-client==0.21.1
+starlette==0.46.1
+uvicorn==0.34.0
+
+# Dev / test
+pytest==8.3.5
+pytest-asyncio==0.26.0

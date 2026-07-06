@@ -1,5 +1,6 @@
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { useLocalStorage } from './useLocalStorage';
+import { useSemanticSidecar } from './useSemanticSidecar';
 import {
     AISettings,
     ChatMessage,
@@ -7,6 +8,7 @@ import {
     AI_SETTINGS_STORAGE_KEY,
     getProvider,
     AIError,
+    chatWithSemanticLayer,
 } from '../services/ai';
 
 export type ConnectionState =
@@ -33,6 +35,7 @@ export function useAI() {
     const generationOwnerRef = useRef<string | null>(null);
     const connectionAbortRef = useRef<AbortController | null>(null);
     const connectionRequestIdRef = useRef(0);
+    const { semanticStatus, refreshSemanticStatus } = useSemanticSidecar(settings);
 
     const provider = useMemo(() => getProvider(settings.provider), [settings.provider]);
 
@@ -111,7 +114,7 @@ export function useAI() {
             generationOwnerRef.current = owner;
             setIsGenerating(true);
             try {
-                return await provider.chat(settings, {
+                return await chatWithSemanticLayer(provider, settings, {
                     messages,
                     signal: controller.signal,
                     onToken,
@@ -140,6 +143,8 @@ export function useAI() {
         stop,
         isGenerating,
         isConfigured,
+        semanticStatus,
+        refreshSemanticStatus,
     };
 }
 
