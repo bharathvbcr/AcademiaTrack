@@ -24,6 +24,8 @@
     "test": "vitest",
     "test:ui": "vitest --ui",
     "test:run": "vitest run",
+    "semantic:serve": "SEMANTIC_ENABLED=1 .venv-semantic/bin/python -m semantic_layer.server 2>/dev/null || SEMANTIC_ENABLED=1 python3 -m semantic_layer.server",
+    "semantic:test": ".venv-semantic/bin/python -m pytest tests/test_semantic_layer.py tests/test_semantic_server.py -q 2>/dev/null || python3 -m pytest tests/test_semantic_layer.py tests/test_semantic_server.py -q",
     "typecheck": "tsgo -p tsconfig.json --noEmit",
     "check:version": "node scripts/check-version-consistency.cjs",
     "dev": "vite",

@@ -68,6 +68,11 @@ const installTauriBridge = () => {
     restoreBackup: (filename: string) => invoke("restore_backup", { filename }),
     deleteBackup: (filename: string) => invoke("delete_backup", { filename }),
     autoBackup: () => invoke("auto_backup"),
+    startSemanticSidecar: (port?: number) =>
+      invoke("start_semantic_sidecar", { port }),
+    stopSemanticSidecar: () => invoke("stop_semantic_sidecar"),
+    getSemanticSidecarStatus: (port?: number) =>
+      invoke("get_semantic_sidecar_status", { port }),
     windowControls: {
       minimize: () => appWindow.minimize(),
       maximize: async () => {

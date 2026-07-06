@@ -11,6 +11,9 @@ import { openAICompatibleProvider } from './openaiCompatible';
 
 export * from './types';
 export * from './prompts';
+export * from './semanticBridge';
+export * from './semanticSidecar';
+export * from './chat';
 
 const PROVIDERS: Record<AIProviderId, AIProvider> = {
     ollama: ollamaProvider,
@@ -57,4 +60,5 @@ export const DEFAULT_AI_SETTINGS: AISettings = {
     model: '',
     apiKey: '',
     temperature: 0.7,
+    // undefined → enabled by default via readBuildTimeSemanticDefault() for Ollama chat
 };

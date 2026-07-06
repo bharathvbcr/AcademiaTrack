@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { UseAIReturn } from '../hooks/useAI';
-import { AIProviderId, PROVIDER_META } from '../services/ai';
+import { AIProviderId, PROVIDER_META, resolveSemanticEnabled } from '../services/ai';
 import { ToggleSwitch, MaterialIcon } from './ApplicationFormUI';
 
 interface AISettingsPanelProps {
@@ -13,7 +13,7 @@ interface AISettingsPanelProps {
  * connection, and pick from the models the server actually has installed.
  */
 const AISettingsPanel: React.FC<AISettingsPanelProps> = ({ ai }) => {
-    const { settings, updateSettings, connection, testConnection, stopTesting } = ai;
+    const { settings, updateSettings, connection, testConnection, stopTesting, semanticStatus } = ai;
     const [models, setModels] = useState<string[]>(
         connection.status === 'ok' ? connection.models : [],
     );
@@ -222,6 +222,59 @@ const AISettingsPanel: React.FC<AISettingsPanelProps> = ({ ai }) => {
                             <span>Creative</span>
                         </div>
                     </div>
+
+                    {settings.provider === 'ollama' && (
+                        <div className="flex items-start justify-between gap-4 rounded-xl border border-[#27272a] p-4">
+                            <div className="min-w-0 flex-1">
+                                <h4 className="text-sm font-semibold text-[#f4f4f5] flex items-center gap-2">
+                                    <MaterialIcon name="bolt" className="text-[#dc2626]" />
+                                    Semantic acceleration
+                                </h4>
+                                <p className="text-xs text-[#a1a1aa] mt-1 max-w-md">
+                                    Routes chat through a local semantic layer (cache, routing, RAG compression)
+                                    before Ollama. Starts automatically in dev and the desktop app when enabled.
+                                    Falls back to direct Ollama if unavailable.
+                                </p>
+                                {!resolveSemanticEnabled(settings) && (
+                                    <p className="text-xs text-[#71717a] mt-2">
+                                        Enable for faster repeat queries via local caching and prompt routing.
+                                    </p>
+                                )}
+                                {resolveSemanticEnabled(settings) && (
+                                    <p
+                                        className={`text-xs mt-2 flex items-center gap-1 ${
+                                            semanticStatus.ready
+                                                ? 'text-emerald-300'
+                                                : semanticStatus.sidecar?.phase === 'starting'
+                                                  ? 'text-amber-200'
+                                                  : 'text-[#a1a1aa]'
+                                        }`}
+                                    >
+                                        <MaterialIcon
+                                            name={
+                                                semanticStatus.ready
+                                                    ? 'check_circle'
+                                                    : semanticStatus.sidecar?.phase === 'starting'
+                                                      ? 'progress_activity'
+                                                      : 'info'
+                                            }
+                                            className={`text-sm ${
+                                                semanticStatus.sidecar?.phase === 'starting'
+                                                    ? 'animate-spin'
+                                                    : ''
+                                            }`}
+                                        />
+                                        {semanticStatus.label}
+                                    </p>
+                                )}
+                            </div>
+                            <ToggleSwitch
+                                checked={resolveSemanticEnabled(settings)}
+                                onChange={(semanticEnabled) => updateSettings({ semanticEnabled })}
+                                className="shrink-0"
+                            />
+                        </div>
+                    )}
 
                     {settings.provider === 'ollama' && (
                         <div className="rounded-lg border border-[#27272a] bg-[#18181b] p-3 text-xs text-[#a1a1aa] space-y-1">

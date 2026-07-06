@@ -1,10 +1,16 @@
+mod semantic_sidecar;
+
 use chrono::{DateTime, Utc};
+use semantic_sidecar::{
+  get_semantic_sidecar_status, init as init_semantic_sidecar, shutdown as shutdown_semantic_sidecar,
+  start_semantic_sidecar, stop_semantic_sidecar, SemanticSidecarState,
+};
 use serde::Serialize;
 use serde_json::Value;
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::Command;
-use tauri::{AppHandle, Manager};
+use tauri::{AppHandle, Manager, RunEvent};
 use tauri_plugin_dialog::DialogExt;
 use tauri_plugin_notification::NotificationExt;
 
@@ -531,6 +537,8 @@ pub fn run() {
         )?;
       }
 
+      init_semantic_sidecar(app.handle());
+
       // The window is created hidden (`"visible": false`) so we can finish
       // styling it before the first paint, avoiding a flash of the wrong frame.
       //
@@ -564,7 +572,17 @@ pub fn run() {
       check_for_updates,
       download_update,
       install_update,
+      start_semantic_sidecar,
+      stop_semantic_sidecar,
+      get_semantic_sidecar_status,
     ])
-    .run(tauri::generate_context!())
-    .expect("error while running tauri application");
+    .build(tauri::generate_context!())
+    .expect("error while building tauri application")
+    .run(|app_handle, event| {
+      if let RunEvent::Exit = event {
+        if let Some(state) = app_handle.try_state::<SemanticSidecarState>() {
+          shutdown_semantic_sidecar(&state);
+        }
+      }
+    });
 }

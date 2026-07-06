@@ -33,6 +33,13 @@ export interface AISettings {
     apiKey?: string;
     /** Sampling temperature, 0–2. */
     temperature: number;
+    /**
+     * Route chat through the local semantic layer sidecar (cache → router → compressor → LLM).
+     * Falls back to direct provider calls when the sidecar is unavailable.
+     */
+    semanticEnabled?: boolean;
+    /** Override sidecar base URL (default http://127.0.0.1:8765). */
+    semanticBaseUrl?: string;
 }
 
 export interface ChatOptions {

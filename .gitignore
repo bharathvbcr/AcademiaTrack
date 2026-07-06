@@ -57,3 +57,8 @@ build-timings.json
 .FullName
 .tmp-patch-new/
 .tmp-patch-orig/
+
+# Python virtual environments and bytecode
+.venv-semantic/
+__pycache__/
+*.py[cod]
