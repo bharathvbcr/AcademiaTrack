@@ -46,6 +46,7 @@ gha-creds-*.json
 
 # Local agent/tool settings and caches
 .claude/
+!.claude/launch.json
 .codex/
 .devcouncil/
 .electrobun-win-drive/

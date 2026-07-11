@@ -28,7 +28,7 @@
     "semantic:test": ".venv-semantic/bin/python -m pytest tests/test_semantic_layer.py tests/test_semantic_server.py -q 2>/dev/null || python3 -m pytest tests/test_semantic_layer.py tests/test_semantic_server.py -q",
     "typecheck": "tsgo -p tsconfig.json --noEmit",
     "check:version": "node scripts/check-version-consistency.cjs",
-    "dev": "vite",
+    "dev": "node scripts/dev.mjs",
     "build": "vite build",
     "package": "npm run build:tauri",
     "preview": "vite preview",
