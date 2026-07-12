@@ -95,9 +95,6 @@ Purpose: deterministic ownership mapping for every tracked file in this reposito
 - `components/AIAssistantModal.tsx` — Renderer-UI
 - `components/AISettingsPanel.tsx` — Renderer-UI
 - `components/AdvancedSearchBar.tsx` — Renderer-UI + Search/Index
-- `components/ApplicationCard.tsx` — Renderer-UI
-- `components/ApplicationCard/index.tsx` — Renderer-UI
-- `components/ApplicationCard/subcomponents.tsx` — Renderer-UI
 - `components/ApplicationFormUI.tsx` — Renderer-UI
 - `components/ApplicationList.tsx` — Renderer-UI
 - `components/ApplicationModal.tsx` — Renderer-UI
@@ -144,7 +141,6 @@ Purpose: deterministic ownership mapping for every tracked file in this reposito
 - `components/RecommenderSection.tsx` — Renderer-UI
 - `components/RecommendersView.tsx` — Renderer-UI
 - `components/RemindersSection.tsx` — Renderer-UI
-- `components/SearchFilters.tsx` — Renderer-UI + Search/Index
 - `components/SettingsModal.tsx` — Renderer-UI + Renderer-Commands
 - `components/SkeletonLoader.tsx` — Renderer-UI
 - `components/SortControls.tsx` — Renderer-UI
@@ -214,6 +210,7 @@ Purpose: deterministic ownership mapping for every tracked file in this reposito
 - `hooks/useAdvancedFilter.ts` — State/Hook + Persistence
 - `hooks/useAdvancedSearch.ts` — State/Hook + Search/Index + Persistence
 - `hooks/useAnimations.ts` — State/Hook
+- `hooks/useAcceptanceConfetti.ts` — State/Hook
 - `hooks/useAppCommands.ts` — Renderer-Commands + State/Hook
 - `hooks/useAppModals.ts` — State/Hook
 - `hooks/useApplicationForm.ts` — State/Hook + Desktop Runtime
@@ -242,6 +239,7 @@ Purpose: deterministic ownership mapping for every tracked file in this reposito
 - `hooks/useToast.ts` — State/Hook
 - `hooks/useUndoRedo.ts` — State/Hook
 - `hooks/useUniversityData.ts` — State/Hook + Data/Model
+- `hooks/useUniversityLogo.ts` — State/Hook
 - `hooks/useViewState.ts` — State/Hook + Persistence
 
 ## Services
@@ -269,7 +267,6 @@ Purpose: deterministic ownership mapping for every tracked file in this reposito
 - `utils/exportFormats.ts` — Data/Model
 - `utils/formatters.ts` — Data/Model
 - `utils/locationService.ts` — Data/Model
-- `utils/motion.ts` — Renderer-UI
 - `utils/searchIndex.ts` — Search/Index
 - `utils/searchIndex.worker.ts` — Search/Index
 - `utils/searchIndexWorker.ts` — Search/Index

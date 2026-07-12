@@ -286,9 +286,8 @@ class SemanticPipeline:
         }
 
     async def _stream_llm(self, model_id: str, prompt: str) -> AsyncIterator[str]:
-        stream = getattr(self.llm, "generate_stream", None)
-        if stream is not None:
-            async for token in stream(model_id, prompt):
+        if isinstance(self.llm, StreamingLLMBackend):
+            async for token in self.llm.generate_stream(model_id, prompt):
                 yield token
         else:  # backend without streaming support: emit the whole response once
             yield await self.llm.generate(model_id, prompt)

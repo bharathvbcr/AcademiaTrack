@@ -136,7 +136,7 @@ sequenceDiagram
 | Area | Primary Files | Notes |
 | --- | --- | --- |
 | App shell | `App.tsx`, `index.tsx`, `components/MainContent.tsx`, `components/Header.tsx`, `components/TitleBar.tsx` | Owns top-level composition, selected view, modal orchestration, and desktop chrome. |
-| Feature UI | `components/*View.tsx`, `components/ApplicationModal.tsx`, `components/ApplicationCard/*` | Renders application workflows and domain-specific panels. |
+| Feature UI | `components/*View.tsx`, `components/ApplicationModal.tsx`, `components/ApplicationList.tsx`, `components/KanbanCard.tsx` | Renders application workflows and domain-specific panels. |
 | State hooks | `hooks/useApplications.ts`, `hooks/useAppModals.ts`, `hooks/useAutomation.ts`, `hooks/useViewState.ts` | Owns app data state, automation, view preferences, and UI state. |
 | Persistence | `hooks/useApplications.ts`, `utils/dataMigration.ts`, `utils/browserStorage.ts`, `src-tauri/src/lib.rs`, `lib/desktopBridge.ts` | Loads, migrates, saves, backs up, imports, and exports local data. |
 | Search and filtering | `hooks/useSortAndFilter.ts`, `hooks/useAdvancedSearch.ts`, `hooks/useAdvancedFilter.ts`, `utils/searchIndex*` | Provides baseline filters, saved searches, advanced filters, and indexed search. |

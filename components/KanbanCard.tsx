@@ -2,6 +2,7 @@ import React from 'react';
 import { Draggable } from '@hello-pangea/dnd';
 import { Application } from '../types';
 import { getDeadlineInfo } from '../constants';
+import { useUniversityLogo } from '../hooks/useUniversityLogo';
 
 const DeadlineBadge: React.FC<{ deadline: string | null }> = ({ deadline }) => {
   const info = getDeadlineInfo(deadline);
@@ -21,6 +22,7 @@ interface KanbanCardProps {
 }
 
 const KanbanCard: React.FC<KanbanCardProps> = React.memo(({ application, index, onEdit, onUpdate, onDuplicate }) => {
+  const logoUrl = useUniversityLogo(application.universityName);
   const deadlineDate = React.useMemo(() => 
     application.deadline ? new Date(application.deadline) : null,
     [application.deadline]
@@ -46,13 +48,23 @@ const KanbanCard: React.FC<KanbanCardProps> = React.memo(({ application, index, 
           style={provided.draggableProps.style}
         >
           <div className="flex items-start justify-between">
-            <h4 className="font-bold text-[#f4f4f5] text-sm truncate flex-1">
+            <h4 className="font-bold text-[#f4f4f5] text-sm truncate flex-1 flex items-center gap-2 min-w-0">
+              {logoUrl && (
+                <img
+                  src={logoUrl}
+                  alt=""
+                  className="w-4 h-4 rounded-sm shrink-0 object-contain bg-white/10"
+                  onError={(e) => {
+                    (e.currentTarget as HTMLImageElement).style.display = 'none';
+                  }}
+                />
+              )}
               {application.isPinned && (
-                <span className="text-[#a1a1aa] mr-1 inline-block align-text-bottom">
+                <span className="text-[#a1a1aa] mr-1 inline-block align-text-bottom shrink-0">
                   <span className="material-symbols-outlined text-sm">push_pin</span>
                 </span>
               )}
-              {application.universityName}
+              <span className="truncate">{application.universityName}</span>
             </h4>
             <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity">
               {onDuplicate && (

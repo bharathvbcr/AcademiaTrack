@@ -17,7 +17,7 @@ from semantic_layer.compressor.rag_compressor import CompressedContext, RagChunk
 from semantic_layer.config import CacheBackend, ModelTier, SemanticLayerConfig
 from semantic_layer.embeddings import EmbeddingResult, FloatMatrix
 from semantic_layer.metrics import SemanticMetricsSnapshot
-from semantic_layer.orchestrator import LLMBackend, PipelineResult
+from semantic_layer.orchestrator import LLMBackend, PipelineResult, StreamingLLMBackend
 from semantic_layer.router.complexity_router import RoutingDecision
 from semantic_layer.threshold_tuner import CacheFeedbackRecord
 
@@ -38,4 +38,5 @@ __all__ = [
     "SemanticCache",
     "SemanticLayerConfig",
     "SemanticMetricsSnapshot",
+    "StreamingLLMBackend",
 ]

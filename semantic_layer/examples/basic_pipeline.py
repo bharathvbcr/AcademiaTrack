@@ -16,8 +16,9 @@ import hashlib
 
 import numpy as np
 
+from semantic_layer.types import RagChunk
 from semantic_layer.cache.faiss_cache import FaissSemanticCache
-from semantic_layer.compressor.rag_compressor import RagChunk, RagSemanticCompressor
+from semantic_layer.compressor.rag_compressor import RagSemanticCompressor
 from semantic_layer.metrics import SemanticMetrics
 from semantic_layer.pipeline import SemanticPipeline
 from semantic_layer.router.complexity_router import ComplexityRouter
@@ -68,24 +69,29 @@ async def demo_cache_hit() -> None:
     cache = FaissSemanticCache(threshold=0.85, margin=0.02)
     embedder = MockEmbedder()
     llm = MockLLMRegistry()
+    pipeline: SemanticPipeline | None = None
 
-    prompt = "What is AcademiaTrack?"
-    vec, _ = embedder.encode_one(prompt)
-    cache.store(prompt, "AcademiaTrack is a research productivity app.", vec)
+    try:
+        prompt = "What is AcademiaTrack?"
+        vec, _ = embedder.encode_one(prompt)
+        cache.store(prompt, "AcademiaTrack is a research productivity app.", vec)
 
-    pipeline = SemanticPipeline(
-        llm=llm,
-        cache=cache,
-        embedder=embedder,
-        enable_auto_tune=False,
-        metrics=SemanticMetrics(),
-    )
+        pipeline = SemanticPipeline(
+            llm=llm,
+            cache=cache,
+            embedder=embedder,
+            enable_auto_tune=False,
+            metrics=SemanticMetrics(),
+        )
 
-    result = await pipeline.run(prompt)
-    print(f"  cache_hit={result.cache_hit}, latency={result.semantic_latency_ms:.2f}ms")
-    print(f"  response={result.response}")
-    assert result.cache_hit
-    assert len(llm.calls) == 0
+        result = await pipeline.run(prompt)
+        print(f"  cache_hit={result.cache_hit}, latency={result.semantic_latency_ms:.2f}ms")
+        print(f"  response={result.response}")
+        assert result.cache_hit
+        assert len(llm.calls) == 0
+    finally:
+        if pipeline is not None:
+            pipeline.shutdown()
 
 
 async def demo_routing_and_rag() -> None:
@@ -95,34 +101,39 @@ async def demo_routing_and_rag() -> None:
     llm = MockLLMRegistry()
     router = ComplexityRouter(complexity_threshold=0.45)
     compressor = RagSemanticCompressor(embedder=embedder, max_chunks=3, max_tokens=512)
+    pipeline: SemanticPipeline | None = None
 
-    pipeline = SemanticPipeline(
-        llm=llm,
-        cache=cache,
-        router=router,
-        compressor=compressor,
-        embedder=embedder,
-        enable_auto_tune=False,
-        metrics=SemanticMetrics(),
-    )
+    try:
+        pipeline = SemanticPipeline(
+            llm=llm,
+            cache=cache,
+            router=router,
+            compressor=compressor,
+            embedder=embedder,
+            enable_auto_tune=False,
+            metrics=SemanticMetrics(),
+        )
 
-    prompt = (
-        "Analyze and compare trade-offs between semantic caching and exact-match "
-        "caching for LLM inference pipelines."
-    )
-    chunks = [
-        RagChunk("c1", "Semantic caches use embedding similarity instead of string equality.", "docs"),
-        RagChunk("c2", "Exact-match caches have zero false positives but near-zero hit rate.", "docs"),
-        RagChunk("c3", "Weather forecast for Seattle: rain likely.", "news"),
-    ]
+        prompt = (
+            "Analyze and compare trade-offs between semantic caching and exact-match "
+            "caching for LLM inference pipelines."
+        )
+        chunks = [
+            RagChunk("c1", "Semantic caches use embedding similarity instead of string equality.", "docs"),
+            RagChunk("c2", "Exact-match caches have zero false positives but near-zero hit rate.", "docs"),
+            RagChunk("c3", "Weather forecast for Seattle: rain likely.", "news"),
+        ]
 
-    result = await pipeline.run(prompt, rag_chunks=chunks, skip_cache=True)
-    print(f"  model_id={result.model_id}, cache_hit={result.cache_hit}")
-    print(f"  semantic_latency={result.semantic_latency_ms:.2f}ms")
-    print(f"  breakdown={result.breakdown_ms}")
-    print(f"  response={result.response[:100]}...")
-    assert not result.cache_hit
-    assert len(llm.calls) == 1
+        result = await pipeline.run(prompt, rag_chunks=chunks, skip_cache=True)
+        print(f"  model_id={result.model_id}, cache_hit={result.cache_hit}")
+        print(f"  semantic_latency={result.semantic_latency_ms:.2f}ms")
+        print(f"  breakdown={result.breakdown_ms}")
+        print(f"  response={result.response[:100]}...")
+        assert not result.cache_hit
+        assert len(llm.calls) == 1
+    finally:
+        if pipeline is not None:
+            pipeline.shutdown()
 
 
 async def demo_threshold_feedback() -> None:

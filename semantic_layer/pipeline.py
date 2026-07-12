@@ -11,6 +11,7 @@ from semantic_layer.orchestrator import (
     OllamaBackend,
     PipelineResult,
     SemanticPipeline,
+    StreamingLLMBackend,
     create_cache,
 )
 
@@ -19,5 +20,6 @@ __all__ = [
     "OllamaBackend",
     "PipelineResult",
     "SemanticPipeline",
+    "StreamingLLMBackend",
     "create_cache",
 ]

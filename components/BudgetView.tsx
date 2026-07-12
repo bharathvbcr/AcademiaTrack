@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { Application, StipendFrequency } from '../types';
 import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip } from 'recharts';
-import { MaterialIcon } from './ApplicationFormUI';
+import ComparisonView from './ComparisonView';
 
 interface BudgetViewProps {
     applications: Application[];
@@ -16,7 +16,6 @@ const BudgetView: React.FC<BudgetViewProps> = ({ applications }) => {
         totalCost,
         totalStipendPotential,
         costByUniversity,
-        financialOffers,
         scholarships,
         costPerChance
     } = useMemo(() => {
@@ -24,7 +23,6 @@ const BudgetView: React.FC<BudgetViewProps> = ({ applications }) => {
         let totalTestCosts = 0;
         let totalStipendPotential = 0;
         const costByUniversity: { name: string; value: number }[] = [];
-        const financialOffers: { university: string; stipend: number; waiver: number; net: number }[] = [];
         const scholarships: { name: string; amount: number; status: string; university: string }[] = [];
         const costPerChance: { name: string; fee: number; chance: number; costPerPercent: number }[] = [];
 
@@ -51,20 +49,13 @@ const BudgetView: React.FC<BudgetViewProps> = ({ applications }) => {
                 });
             }
 
-            // Financial Offers
+            // Financial Offers (stipend totals; detailed charts live in ComparisonView)
             if (app.financialOffer && app.financialOffer.received) {
                 let annualStipend = app.financialOffer.stipendAmount || 0;
                 if (app.financialOffer.stipendFrequency === StipendFrequency.Monthly) {
                     annualStipend *= 12; // Estimate annual
                 }
                 totalStipendPotential += annualStipend;
-
-                financialOffers.push({
-                    university: app.universityName,
-                    stipend: annualStipend,
-                    waiver: app.financialOffer.tuitionWaiver || 0,
-                    net: annualStipend // Simplified net value for now
-                });
             }
 
             // Scholarships
@@ -86,7 +77,6 @@ const BudgetView: React.FC<BudgetViewProps> = ({ applications }) => {
             totalCost: totalAppFees + totalTestCosts,
             totalStipendPotential,
             costByUniversity: costByUniversity.sort((a, b) => b.value - a.value),
-            financialOffers: financialOffers.sort((a, b) => b.stipend - a.stipend),
             scholarships,
             costPerChance: costPerChance.sort((a, b) => a.costPerPercent - b.costPerPercent)
         };
@@ -160,43 +150,8 @@ const BudgetView: React.FC<BudgetViewProps> = ({ applications }) => {
                     </div>
                 </div>
 
-                {/* Offer Comparison */}
-                <div className="liquid-glass-card p-6 rounded-3xl overflow-hidden">
-                    <h3 className="text-lg font-semibold text-[#f4f4f5] mb-6">Offer Comparison</h3>
-                    {financialOffers.length > 0 ? (
-                        <div className="overflow-x-auto">
-                            <table className="w-full text-sm text-left text-[#a1a1aa]/70">
-                                <thead className="text-xs text-[#f4f4f5] uppercase liquid-glass">
-                                    <tr>
-                                        <th scope="col" className="px-6 py-3 rounded-l-lg">University</th>
-                                        <th scope="col" className="px-6 py-3">Stipend (yr)</th>
-                                        <th scope="col" className="px-6 py-3 rounded-r-lg">Waiver</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {financialOffers.map((offer, index) => (
-                                        <tr key={index} className="border-b border-[#27272a]/30">
-                                            <td className="px-6 py-4 font-medium text-[#f4f4f5] whitespace-nowrap">
-                                                {offer.university}
-                                            </td>
-                                            <td className="px-6 py-4 text-[#10b981] font-medium">
-                                                ${offer.stipend.toLocaleString()}
-                                            </td>
-                                            <td className="px-6 py-4">
-                                                {offer.waiver}%
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
-                    ) : (
-                        <div className="flex flex-col items-center justify-center h-64 text-[#a1a1aa]/50">
-                            <MaterialIcon name="attach_money" className="text-4xl mb-2 opacity-50" />
-                            <p>No financial offers recorded yet.</p>
-                        </div>
-                    )}
-                </div>
+                {/* Offer Comparison charts (wired from formerly unwired ComparisonView) */}
+                <ComparisonView applications={applications} />
             </div>
 
             {/* Scholarships List */}
