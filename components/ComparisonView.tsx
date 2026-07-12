@@ -61,7 +61,7 @@ const ComparisonView: React.FC<ComparisonViewProps> = ({ applications }) => {
 
     if (acceptedApplications.length === 0) {
         return (
-            <div className="bg-[#18181b]/80 backdrop-blur-xl p-6 rounded-3xl shadow-lg border border-[#27272a] mb-6">
+            <div className="liquid-glass-card p-6 rounded-3xl mb-0">
                 <div className="text-center py-8">
                     <span className="material-symbols-outlined text-4xl text-[#a1a1aa] mb-4 block">compare_arrows</span>
                     <h3 className="text-lg font-semibold text-[#a1a1aa] mb-2">No Offers to Compare</h3>
@@ -74,7 +74,7 @@ const ComparisonView: React.FC<ComparisonViewProps> = ({ applications }) => {
     }
 
     return (
-        <div className="bg-[#18181b]/80 backdrop-blur-xl p-6 rounded-3xl shadow-lg border border-[#27272a] mb-6">
+        <div className="liquid-glass-card p-6 rounded-3xl mb-0">
             <div className="flex items-center justify-between mb-4">
                 <h2 className="text-lg font-semibold text-[#f4f4f5] flex items-center gap-2">
                     <span className="material-symbols-outlined">compare_arrows</span>

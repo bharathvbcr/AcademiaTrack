@@ -36,6 +36,7 @@ import { BulkSelectionProvider } from './contexts/BulkSelectionContext';
 import { ApplicationActionsProvider } from './contexts/ApplicationActionsContext';
 import { useAppCommands } from './hooks/useAppCommands';
 import { useAI } from './hooks/useAI';
+import { useAcceptanceConfetti } from './hooks/useAcceptanceConfetti';
 
 const ApplicationModal = lazy(() => import('./components/ApplicationModal'));
 const AIAssistantModal = lazy(() => import('./components/AIAssistantModal'));
@@ -70,6 +71,7 @@ const App: React.FC = () => {
     canUndo,
     canRedo,
   } = useApplications(showToast);
+  useAcceptanceConfetti(applications);
 
   const {
     isModalOpen,

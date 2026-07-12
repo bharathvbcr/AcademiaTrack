@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from typing import Any, AsyncIterator
 
 from semantic_layer.compressor.rag_compressor import RagChunk
+from semantic_layer.orchestrator import LLMBackend, StreamingLLMBackend
 
 
 @dataclass(frozen=True)
@@ -76,7 +77,7 @@ def messages_to_semantic_request(
 class BoundModelBackend:
     """Forces a single user-selected model regardless of router tier."""
 
-    def __init__(self, inner: Any, model_id: str) -> None:
+    def __init__(self, inner: LLMBackend, model_id: str) -> None:
         self._inner = inner
         self._model_id = model_id
 
@@ -86,5 +87,8 @@ class BoundModelBackend:
 
     async def generate_stream(self, model_id: str, prompt: str) -> AsyncIterator[str]:
         del model_id
-        async for token in self._inner.generate_stream(self._model_id, prompt):
-            yield token
+        if isinstance(self._inner, StreamingLLMBackend):
+            async for token in self._inner.generate_stream(self._model_id, prompt):
+                yield token
+        else:
+            yield await self._inner.generate(self._model_id, prompt)

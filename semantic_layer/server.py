@@ -26,6 +26,14 @@ def _is_enabled() -> bool:
     return CONFIG.enabled
 
 
+async def _shutdown_pipeline() -> None:
+    global _pipeline
+    if _pipeline is not None:
+        _pipeline.shutdown()
+        _pipeline = None
+        logger.info("SemanticPipeline shut down")
+
+
 async def _get_pipeline() -> SemanticPipeline:
     global _pipeline
     if _pipeline is not None:
@@ -274,9 +282,18 @@ def _port_in_use(host: str, port: int) -> bool:
 
 
 def create_app() -> Any:
+    from contextlib import asynccontextmanager
+
     from starlette.applications import Starlette
     from starlette.middleware.cors import CORSMiddleware
     from starlette.routing import Route
+
+    @asynccontextmanager
+    async def lifespan(_app: Any):
+        try:
+            yield
+        finally:
+            await _shutdown_pipeline()
 
     app = Starlette(
         routes=[
@@ -285,6 +302,7 @@ def create_app() -> Any:
             Route("/v1/chat/stream", _handle_chat_stream, methods=["POST"]),
             Route("/v1/feedback", _handle_feedback, methods=["POST"]),
         ],
+        lifespan=lifespan,
     )
     app.add_middleware(
         CORSMiddleware,

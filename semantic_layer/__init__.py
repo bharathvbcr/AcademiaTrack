@@ -21,6 +21,7 @@ from semantic_layer.pipeline import (
     OllamaBackend,
     PipelineResult,
     SemanticPipeline,
+    StreamingLLMBackend,
     create_cache,
 )
 from semantic_layer.router import ComplexityRouter, RoutingDecision
@@ -51,6 +52,7 @@ __all__ = [
     "SemanticMetrics",
     "SemanticMetricsSnapshot",
     "SemanticPipeline",
+    "StreamingLLMBackend",
     "ThresholdAutoTuner",
     "create_cache",
 ]
