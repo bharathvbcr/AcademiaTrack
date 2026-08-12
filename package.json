@@ -67,7 +67,7 @@
     "autoprefixer": "^10.4.23",
     "jsdom": "^27.4.0",
     "png2icons": "^2.0.1",
-    "postcss": "^8.5.6",
+    "postcss": "^8.5.26",
     "tailwindcss": "^4.1.18",
     "tsx": "^4.21.0",
     "typescript": "npm:@typescript/typescript6@^6.0.0",
