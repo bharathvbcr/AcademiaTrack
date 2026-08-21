@@ -33,6 +33,8 @@ Purpose: deterministic ownership mapping for every tracked file in this reposito
 - `.github/workflows/gemini-triage.yml` — Build/Operations
 - `.github/workflows/release.yml` — Build/Operations
 - `.claude/settings.local.json` — Build/Operations
+- `.devcouncil/config.yaml` — Build/Operations
+- `.env.example` — Build/Operations
 - `.env.local` — Build/Operations
 - `.gitignore` — Build/Operations
 - `.nvmrc` — Build/Operations
@@ -43,11 +45,14 @@ Purpose: deterministic ownership mapping for every tracked file in this reposito
 - `CHANGELOG.md` — Build/Operations
 - `CLAUDE.md` — Map/Maps
 - `COMMUNITY_MAP_SUBSYSTEM.md` — Map/Maps
+- `docs/semantic-layer/ARCHITECTURE.md` — Build/Operations
+- `examples/semantic_pipeline_demo.py` — Shell & App Compose
 - `IMPLEMENTATION_STATUS.md` — Build/Operations
 - `LICENSE` — Build/Operations
 - `lib/__tests__/desktopBridge.test.ts` — Testing
 - `OWNERSHIP_INVENTORY.md` — Map/Maps
 - `README.md` — Shell & App Compose
+- `requirements-semantic.txt` — Build/Operations
 - `SECURITY.md` — Build/Operations
 - `SIGNING.md` — Build/Operations
 - `assets/MicrosoftEdgeWebview2Setup.exe` — Build/Operations
@@ -59,21 +64,22 @@ Purpose: deterministic ownership mapping for every tracked file in this reposito
 - `index.html` — Shell & App Compose
 - `index.css` — Renderer-UI
 - `index.tsx` — Shell & App Compose
-- `build-profile.json` — Build/Operations
-- `build-timings.json` — Build/Operations
 - `metadata.json` — Data/Model
 - `package-lock.json` — Build/Operations
 - `package.json` — Build/Operations
 - `playwright.config.ts` — Testing
 - `public/AcademiaTrack.png` — Map/Maps
 - `public/favicon.ico` — Map/Maps
+- `public/social-preview.png` — Renderer-UI
 - `scripts/build-profiler.cjs` — Build/Operations
 - `scripts/check-version-consistency.cjs` — Build/Operations
+- `scripts/dev.mjs` — Build/Operations
 - `scripts/generate-release-notes.cjs` — Build/Operations
 - `scripts/import-apple-cert.sh` — Build/Operations
 - `scripts/log-analyzer.cjs` — Build/Operations
 - `scripts/measure-build.cjs` — Build/Operations
 - `scripts/verify-map-coverage.js` — Build/Operations + Map/Maps
+- `scripts/vite-plugin-semantic-sidecar.mjs` — Build/Operations
 - `src/data/universities.json` — Data/Model
 - `src/test/setup.ts` — Testing
 - `tsconfig.json` — Shell & App Compose
@@ -198,10 +204,13 @@ Purpose: deterministic ownership mapping for every tracked file in this reposito
 - `src-tauri/icons/icon.png` — Map/Maps
 - `src-tauri/src/lib.rs` — Desktop Runtime
 - `src-tauri/src/main.rs` — Desktop Runtime
+- `src-tauri/src/semantic_sidecar.rs` — Desktop Runtime
 - `src-tauri/tauri.conf.json` — Desktop Runtime
 
 ## Hooks
 
+- `hooks/__tests__/useAI.test.tsx` — Testing
+- `hooks/__tests__/useApplications.test.tsx` — Testing
 - `hooks/__tests__/useEscapeKey.test.tsx` — Testing
 - `hooks/__tests__/useKeyboardShortcuts.test.tsx` — Testing
 - `hooks/__tests__/useLocalStorage.test.tsx` — Testing
@@ -233,6 +242,7 @@ Purpose: deterministic ownership mapping for every tracked file in this reposito
 - `hooks/useKeyboardShortcuts.ts` — Renderer-Commands + State/Hook
 - `hooks/useLocalStorage.ts` — Persistence
 - `hooks/useLockBodyScroll.ts` — State/Hook
+- `hooks/useSemanticSidecar.ts` — State/Hook
 - `hooks/useSortAndFilter.ts` — State/Hook
 - `hooks/useTemplates.ts` — State/Hook + Persistence
 - `hooks/useThemeCustomization.ts` — State/Hook + Persistence
@@ -246,12 +256,46 @@ Purpose: deterministic ownership mapping for every tracked file in this reposito
 
 - `services/ai/__tests__/prompts.test.ts` — Testing
 - `services/ai/__tests__/providers.test.ts` — Testing
+- `services/ai/__tests__/semantic.test.ts` — Testing
+- `services/ai/__tests__/semanticSidecar.test.ts` — Testing
+- `services/ai/chat.ts` — Shell & App Compose
 - `services/ai/index.ts` — Data/Model
 - `services/ai/ollama.ts` — Data/Model
 - `services/ai/openaiCompatible.ts` — Data/Model
 - `services/ai/prompts.ts` — Data/Model
+- `services/ai/semanticBridge.ts` — Desktop Runtime
+- `services/ai/semanticSidecar.ts` — Desktop Runtime
 - `services/ai/stream.ts` — Data/Model
 - `services/ai/types.ts` — Data/Model
+
+## Semantic Layer (Python Sidecar)
+
+- `semantic_layer/__init__.py` — Shell & App Compose
+- `semantic_layer/__main__.py` — Shell & App Compose
+- `semantic_layer/adapters.py` — Shell & App Compose
+- `semantic_layer/benchmarks/__init__.py` — Testing
+- `semantic_layer/benchmarks/latency_benchmark.py` — Testing
+- `semantic_layer/cache/__init__.py` — Persistence
+- `semantic_layer/cache/base.py` — Persistence
+- `semantic_layer/cache/chroma_cache.py` — Persistence
+- `semantic_layer/cache/faiss_cache.py` — Persistence
+- `semantic_layer/compressor/__init__.py` — Data/Model
+- `semantic_layer/compressor/rag_compressor.py` — Data/Model
+- `semantic_layer/config.py` — Shell & App Compose
+- `semantic_layer/embeddings.py` — Search/Index
+- `semantic_layer/examples/__init__.py` — Shell & App Compose
+- `semantic_layer/examples/basic_pipeline.py` — Shell & App Compose
+- `semantic_layer/metrics.py` — Build/Operations
+- `semantic_layer/orchestrator.py` — Shell & App Compose
+- `semantic_layer/pipeline.py` — Shell & App Compose
+- `semantic_layer/requirements.txt` — Build/Operations
+- `semantic_layer/router/__init__.py` — Shell & App Compose
+- `semantic_layer/router/complexity_router.py` — Shell & App Compose
+- `semantic_layer/server.py` — Shell & App Compose
+- `semantic_layer/threshold.py` — Data/Model
+- `semantic_layer/threshold_tuner.py` — Data/Model
+- `semantic_layer/types.py` — Data/Model
+- `semantic_layer/vectortypes.py` — Data/Model
 
 ## Utils
 
@@ -277,6 +321,9 @@ Purpose: deterministic ownership mapping for every tracked file in this reposito
 - `tests/e2e/app-launch.spec.ts` — Testing
 - `tests/e2e/command-palette.spec.ts` — Testing
 - `tests/integration/module-linking.test.ts` — Testing
+- `tests/test_semantic_fixes.py` — Testing
+- `tests/test_semantic_layer.py` — Testing
+- `tests/test_semantic_server.py` — Testing
 
 ## Ownership Routing
 

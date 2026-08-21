@@ -11,9 +11,12 @@ describe('useAI', () => {
   it('only stops the generation owned by the caller', async () => {
     let activeSignal: AbortSignal | null = null;
     const fetchMock = vi.fn((_url: string, init?: RequestInit) => {
-      activeSignal = (init?.signal as AbortSignal | undefined) ?? null;
+      const signal = (init?.signal as AbortSignal | undefined) ?? null;
+      if (signal) {
+        activeSignal = signal;
+      }
       return new Promise<Response>((_resolve, reject) => {
-        activeSignal?.addEventListener('abort', () => {
+        signal?.addEventListener('abort', () => {
           reject(new DOMException('Aborted', 'AbortError'));
         });
       });
