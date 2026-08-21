@@ -1,26 +1,14 @@
 ## Patch Notes
 
-## [5.3.0] - 2026-06-03
+## [5.7.0] - 2026-08-21
 
-### Changed
-- **Desktop Runtime:** Tauri is now the mainstream desktop build path through `npm run dev:desktop`, `npm run build:desktop`, and `npm run package`.
-- **Legacy Electron:** Electron commands are retained only under `legacy:electron:*` and deprecated compatibility aliases.
-
-### Fixed
-- **Tauri Branding:** Regenerated the Tauri app, installer, and tile icons from the AcademiaTrack logo.
-- **Window Chrome:** Hardened the custom title bar so Tauri minimize, maximize/restore, and close controls appear when the desktop bridge is ready.
-
-## [5.1.0] - 2026-03-10
-
-### Changed
-- **Desktop Runtime:** Standardized the app-facing desktop bridge on `window.desktop` while preserving `window.electron` as a compatibility alias.
-- **Build Scripts:** Promoted `npm run dev:desktop` and `npm run build:desktop` as the primary Electrobun commands, with legacy Electron-named scripts kept as aliases.
+### Added
+- **Local Semantic Layer Sidecar:** Integrated a lightweight Python semantic sidecar for Ollama chat acceleration with intelligent complexity routing, vector caching (Chroma / FAISS), and RAG context compression.
+- **Tauri Sidecar Process Management:** Added native sidecar lifecycle management and health probing inside the desktop application shell.
+- **Local CI Automation:** Added `npm run ci:local` runner chaining version consistency checks, typechecking, test suites, map coverage, and production asset build.
+- **Social Preview Metadata:** Added Open Graph and Twitter Card metadata tags along with a branded social preview banner for web and preview distributions.
 
 ### Fixed
-- **TypeScript:** Resolved the remaining type errors across the command palette, desktop bridge, Electrobun RPC schema, and Bun main-process runtime wiring.
-- **Testing:** Updated the command palette and desktop smoke tests to match the current Electrobun runtime and Playwright expectations.
-
-### CI/CD
-- **GitHub Actions:** Split verification builds from tag-based releases so tagged versions publish packaged desktop artifacts through GitHub Releases.
+- **AI Abort Signal Propagation:** Hardened `useAI` generation abort handling to isolate caller session cancellations from background status probing.
 
 [Full changelog](https://github.com/bharathvbcr/AcademiaTrack/blob/main/CHANGELOG.md)
