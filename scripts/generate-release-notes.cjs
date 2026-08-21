@@ -17,7 +17,11 @@ const repositoryPath = (packageJson.repository?.url || '')
 const githubRepository = normalizeEnvValue(process.env.GITHUB_REPOSITORY) || repositoryPath;
 const githubServerUrl = normalizeEnvValue(process.env.GITHUB_SERVER_URL) || 'https://github.com';
 const changelogRef = normalizeEnvValue(process.env.GITHUB_SHA) || 'main';
-const tag = normalizeEnvValue(process.env.GITHUB_REF_NAME) || process.argv[2] || `v${packageVersion}`;
+const tag =
+  normalizeEnvValue(process.env.RELEASE_TAG) ||
+  process.argv[2] ||
+  (process.env.GITHUB_REF_TYPE === 'tag' ? normalizeEnvValue(process.env.GITHUB_REF_NAME) : '') ||
+  `v${packageVersion}`;
 const version = tag.replace(/^refs\/tags\//, '').replace(/^v/, '');
 
 if (!version) {
