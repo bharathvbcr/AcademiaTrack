@@ -9,7 +9,7 @@ import time
 import uuid
 from typing import Any
 
-from semantic_layer.cache.base import BaseSemanticCache, CacheLookupResult, Candidate
+from semantic_layer.cache.base import BaseSemanticCache, CacheLookupResult, Candidate, prepare_vector
 from semantic_layer.config import CONFIG
 from semantic_layer.vectortypes import FloatVector
 
@@ -35,8 +35,10 @@ class ChromaSemanticCache(BaseSemanticCache):
         persist_directory: str | None = None,
         threshold: float | None = None,
         margin: float | None = None,
+        dim: int | None = None,
     ) -> None:
         super().__init__(threshold=threshold, margin=margin)
+        self.dim = dim if dim is not None else CONFIG.embedding_dim
         self._client = None
         self._collection = None
         self._persist_directory = persist_directory or CONFIG.chroma_persist_directory
@@ -72,6 +74,7 @@ class ChromaSemanticCache(BaseSemanticCache):
         model_version: str | None = None,
     ) -> CacheLookupResult:
         t0 = time.perf_counter()
+        query_embedding = prepare_vector(query_embedding, self.dim, what="query embedding")
         self._ensure_collection()
         assert self._collection is not None
 
@@ -138,6 +141,7 @@ class ChromaSemanticCache(BaseSemanticCache):
         ttl_seconds: int | None = None,
         metadata: dict[str, Any] | None = None,
     ) -> str:
+        embedding = prepare_vector(embedding, self.dim, what="embedding")
         self._ensure_collection()
         assert self._collection is not None
 
@@ -149,7 +153,7 @@ class ChromaSemanticCache(BaseSemanticCache):
             "template_hash": template_hash,
             "prompt_hash": prompt_hash,
             "created_at": time.time(),
-            "ttl_seconds": ttl_seconds or CONFIG.cache_ttl_seconds,
+            "ttl_seconds": (CONFIG.cache_ttl_seconds if ttl_seconds is None else ttl_seconds),
         }
         if metadata:
             meta.update({k: str(v) for k, v in metadata.items()})

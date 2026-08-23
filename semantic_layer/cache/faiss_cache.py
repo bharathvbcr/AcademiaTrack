@@ -13,11 +13,53 @@ from typing import Any
 
 import numpy as np
 
-from semantic_layer.cache.base import BaseSemanticCache, CacheEntry, CacheLookupResult, Candidate
+from semantic_layer.cache.base import (
+    BaseSemanticCache,
+    CacheEntry,
+    CacheLookupResult,
+    Candidate,
+    prepare_vector,
+)
 from semantic_layer.config import CONFIG
 from semantic_layer.vectortypes import FloatVector
 
 logger = logging.getLogger(__name__)
+
+
+# Persistence format version. Bump when the .meta payload shape changes so an
+# older file is refused rather than silently misread.
+_PERSIST_FORMAT = 2
+
+_PICKLE_ALLOWED = {
+    ("numpy", "ndarray"),
+    ("numpy", "dtype"),
+    ("numpy", "_frombuffer"),
+    ("numpy.core.numeric", "_frombuffer"),
+    ("numpy._core.numeric", "_frombuffer"),
+    ("numpy.core.multiarray", "_reconstruct"),
+    ("numpy._core.multiarray", "_reconstruct"),
+    ("numpy.core.multiarray", "scalar"),
+    ("numpy._core.multiarray", "scalar"),
+    ("semantic_layer.cache.base", "CacheEntry"),
+}
+
+
+class _RestrictedUnpickler(pickle.Unpickler):
+    """Unpickler that refuses anything the cache does not legitimately store.
+
+    The .meta file is read back from disk with pickle, which will import and
+    call whatever the file names. A cache directory is ordinary user-writable
+    state, so anything able to write there could previously execute code inside
+    this process. Only the numpy array machinery and CacheEntry are needed.
+    """
+
+    def find_class(self, module: str, name: str):  # noqa: D102
+        if (module, name) in _PICKLE_ALLOWED:
+            return super().find_class(module, name)
+        raise pickle.UnpicklingError(
+            f"refusing to unpickle {module}.{name} from the semantic cache metadata"
+        )
+
 
 
 class FaissSemanticCache(BaseSemanticCache):
@@ -76,9 +118,8 @@ class FaissSemanticCache(BaseSemanticCache):
         self._ready = True
 
     def set_domain_centroid(self, centroid: FloatVector) -> None:
-        """Used for OOD gating."""
-        norm = float(np.linalg.norm(centroid))
-        self._domain_centroid = centroid / norm if norm > 0 else centroid.astype(np.float32)
+        """Used for OOD gating; the dot product below is only cosine if unit length."""
+        self._domain_centroid = prepare_vector(centroid, self.dim, what="domain centroid")
 
     def _is_ood(self, query: FloatVector) -> bool:
         if self._domain_centroid is None:
@@ -94,6 +135,7 @@ class FaissSemanticCache(BaseSemanticCache):
         model_version: str | None = None,
     ) -> CacheLookupResult:
         t0 = time.perf_counter()
+        query_embedding = prepare_vector(query_embedding, self.dim, what="query embedding")
 
         # Everything (search + candidate resolution + touch) happens under the
         # lock. Releasing it between search and resolution allowed a concurrent
@@ -168,12 +210,7 @@ class FaissSemanticCache(BaseSemanticCache):
         ttl_seconds: int | None = None,
         metadata: dict[str, Any] | None = None,
     ) -> str:
-        vec = np.asarray(embedding, dtype=np.float32).reshape(-1)
-        if vec.shape[0] != self.dim:
-            raise ValueError(
-                f"embedding dim {vec.shape[0]} != index dim {self.dim} "
-                f"(embedding_model changed without rebuilding the cache?)"
-            )
+        vec = prepare_vector(embedding, self.dim, what="embedding")
 
         entry_id = str(uuid.uuid4())
         prompt_hash = hashlib.sha256(prompt_text.encode()).hexdigest()[:16]
@@ -186,7 +223,7 @@ class FaissSemanticCache(BaseSemanticCache):
             embedding=vec,
             model_version=model_version,
             template_hash=template_hash,
-            ttl_seconds=ttl_seconds or CONFIG.cache_ttl_seconds,
+            ttl_seconds=(CONFIG.cache_ttl_seconds if ttl_seconds is None else ttl_seconds),
             metadata=metadata or {},
         )
 
@@ -266,7 +303,13 @@ class FaissSemanticCache(BaseSemanticCache):
         logger.info("Rebuilt FAISS index with %d live entries", len(live_entries))
 
     def save(self, path: str | None = None) -> None:
-        """Persist the index + entries so the warm cache survives a restart."""
+        """Persist the index + entries so the warm cache survives a restart.
+
+        Both files are written to temporaries and renamed, so a crash mid-write
+        leaves the previous pair intact instead of a half-written one. The two
+        renames still are not one atomic step, so the metadata records the row
+        count and dimension and load() refuses a pair that disagrees.
+        """
         target = path or self.persist_path
         if not target:
             return
@@ -279,13 +322,33 @@ class FaissSemanticCache(BaseSemanticCache):
             self._rebuild_index()  # compact tombstones before persisting
             if self._index is None:
                 return
-            faiss.write_index(self._index, f"{target}.index")
-            with open(f"{target}.meta", "wb") as fh:
-                pickle.dump({"id_order": self._id_order, "entries": self._entries}, fh)
+            tmp_index = f"{target}.index.tmp"
+            tmp_meta = f"{target}.meta.tmp"
+            faiss.write_index(self._index, tmp_index)
+            payload = {
+                "format": _PERSIST_FORMAT,
+                "dim": int(self.dim),
+                "ntotal": int(self._index.ntotal),
+                "id_order": self._id_order,
+                "entries": self._entries,
+            }
+            with open(tmp_meta, "wb") as fh:
+                pickle.dump(payload, fh, protocol=pickle.HIGHEST_PROTOCOL)
+                fh.flush()
+                os.fsync(fh.fileno())
+            os.replace(tmp_index, f"{target}.index")
+            os.replace(tmp_meta, f"{target}.meta")
         logger.info("Persisted FAISS cache to %s", target)
 
     def load(self, path: str | None = None) -> None:
-        """Restore a previously persisted index + entries."""
+        """Restore a previously persisted index + entries, or refuse and stay empty.
+
+        A cache that loads an inconsistent pair is worse than a cold one: the
+        FAISS row at position i and ``_id_order[i]`` would name different
+        entries, so a lookup returns a confidently wrong answer under a high
+        similarity score. Every disagreement below therefore fails closed --
+        the cache starts empty and says why -- rather than serving one.
+        """
         target = path or self.persist_path
         if not target or not os.path.exists(f"{target}.index"):
             return
@@ -295,13 +358,70 @@ class FaissSemanticCache(BaseSemanticCache):
             raise RuntimeError("pip install faiss-cpu") from exc
 
         with self._lock:
-            self._index = faiss.read_index(f"{target}.index")
+            def _start_empty(reason: str) -> None:
+                logger.error(
+                    "Refusing to load semantic cache from %s: %s. Starting empty.",
+                    target,
+                    reason,
+                )
+                self._index = faiss.IndexFlatIP(self.dim)
+                self._id_order = []
+                self._entries = {}
+                self._tombstones.clear()
+                self._ready = True
+
+            try:
+                index = faiss.read_index(f"{target}.index")
+            except Exception as exc:  # unreadable or corrupt index file
+                _start_empty(f"index unreadable ({type(exc).__name__}: {exc})")
+                return
+
+            if index.d != self.dim:
+                _start_empty(
+                    f"persisted dim {index.d} != configured dim {self.dim} "
+                    f"(embedding model changed?)"
+                )
+                return
+
             meta_path = f"{target}.meta"
-            if os.path.exists(meta_path):
+            if not os.path.exists(meta_path):
+                _start_empty("metadata file missing (torn write?)")
+                return
+
+            try:
                 with open(meta_path, "rb") as fh:
-                    meta = pickle.load(fh)
-                self._id_order = list(meta.get("id_order", []))
-                self._entries = dict(meta.get("entries", {}))
+                    meta = _RestrictedUnpickler(fh).load()
+            except Exception as exc:
+                _start_empty(f"metadata unreadable ({type(exc).__name__}: {exc})")
+                return
+
+            if not isinstance(meta, dict) or meta.get("format") != _PERSIST_FORMAT:
+                _start_empty(
+                    f"metadata format {meta.get('format') if isinstance(meta, dict) else '?'} "
+                    f"!= supported {_PERSIST_FORMAT}"
+                )
+                return
+
+            id_order = list(meta.get("id_order", []))
+            entries = dict(meta.get("entries", {}))
+
+            if meta.get("dim") != self.dim:
+                _start_empty(f"metadata dim {meta.get('dim')} != configured dim {self.dim}")
+                return
+            if len(id_order) != index.ntotal:
+                _start_empty(
+                    f"index holds {index.ntotal} rows but metadata names "
+                    f"{len(id_order)} ids (torn write?)"
+                )
+                return
+            missing = [eid for eid in id_order if eid not in entries]
+            if missing:
+                _start_empty(f"{len(missing)} ids in the index have no entry record")
+                return
+
+            self._index = index
+            self._id_order = id_order
+            self._entries = entries
             self._tombstones.clear()
             self._ready = True
         logger.info("Loaded FAISS cache from %s (%d entries)", target, len(self._entries))

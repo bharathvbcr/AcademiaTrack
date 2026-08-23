@@ -1,15 +1,15 @@
 {
   "results": {
     "cache_hit_p95_ms": 0.0,
-    "cache_miss_p95_ms": 0.8133340161293745,
+    "cache_miss_p95_ms": 0.7820010068826377,
     "iterations": 500.0,
-    "lookup_only_p95_ms": 0.07645797450095415,
-    "replay_hit_p50_ms": 0.05710450932383537,
-    "replay_hit_p95_ms": 0.09662500815466046,
+    "lookup_only_p95_ms": 0.1219160039909184,
+    "replay_hit_p50_ms": 0.07804148481227458,
+    "replay_hit_p95_ms": 0.140791991725564,
     "replay_hit_rate": 1.0,
-    "semantic_p50_ms": 0.16989550204016268,
-    "semantic_p95_ms": 0.8133340161293745,
-    "semantic_p99_ms": 2.053875010460615,
+    "semantic_p50_ms": 0.1690624631009996,
+    "semantic_p95_ms": 0.7820010068826377,
+    "semantic_p99_ms": 1.1413760366849601,
     "slo_pass": 1.0,
     "slo_target_ms": 15.0
   },

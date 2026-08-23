@@ -60,7 +60,7 @@ class ThresholdAutoTuner:
         with self._lock:
             records = list(self.window)
 
-        if len(records) < CONFIG.threshold_tune_min_samples:
+        if not records or len(records) < CONFIG.threshold_tune_min_samples:
             return None
 
         previous_threshold = self.cache.threshold
@@ -70,7 +70,7 @@ class ThresholdAutoTuner:
         tau = CONFIG.threshold_tune_tau_min
         while tau <= CONFIG.threshold_tune_tau_max:
             hits = [record for record in records if record.similarity >= tau]
-            if len(hits) < CONFIG.threshold_tune_min_hits:
+            if not hits or len(hits) < CONFIG.threshold_tune_min_hits:
                 tau += CONFIG.threshold_tune_tau_step
                 continue
 

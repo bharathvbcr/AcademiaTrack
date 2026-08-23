@@ -17,21 +17,29 @@ Pinned deps per `semantic_layer/requirements.txt`. 500 iterations per phase.
 
 | Metric | Mock embedder | Real MiniLM | SLO |
 |---|---|---|---|
-| `semantic_p50_ms` | 0.170 | **8.713** | — |
-| `semantic_p95_ms` | 0.813 | **139.134** | ≤ 15 |
-| `semantic_p99_ms` | 0.988 | 214.910 | — |
-| `replay_hit_p50_ms` | 0.057 | 6.464 | — |
-| `replay_hit_p95_ms` | 0.097 | 17.140 | — |
+| `semantic_p50_ms` | 0.169 | **11.284** | — |
+| `semantic_p95_ms` | 0.782 | **185.722** | ≤ 15 |
+| `semantic_p99_ms` | 1.141 | 231.208 | — |
+| `replay_hit_p50_ms` | 0.078 | 8.950 | — |
+| `replay_hit_p95_ms` | 0.141 | 19.722 | — |
 | `replay_hit_rate` | 100.0% | 71.6% | — |
-| `lookup_only_p95_ms` | 0.076 | 0.061 | — |
+| `lookup_only_p95_ms` | 0.122 | 0.132 | — |
 | `slo_pass` | PASS | **FAIL** | — |
+
+**Run-to-run variance is large in the tail and these are single runs.** Two
+runs of the identical real-embedder configuration produced p95 of 139.1 ms and
+185.7 ms — a 34% spread. The p50, the hit rate, and `lookup_only_p95_ms` are
+stable across runs; the p95 and p99 are not. Treat the tail figures as an
+order of magnitude, not a measurement, until this is run with repeats and
+intervals. The SLO verdict does not change either way: both runs fail by
+roughly an order of magnitude.
 
 ## What these say, and what they do not
 
-**The layer does not meet its own p95 SLO under a real embedder.** p50 is 8.7 ms
-and inside the 15 ms budget; p95 is 139 ms, roughly 9× over. The gap is
-embedding cost on CPU, not the cache: `lookup_only_p95_ms` is 0.061 ms, so
-FAISS lookup is ~0.04% of the p95 figure. Any quotable number here is the p50
+**The layer does not meet its own p95 SLO under a real embedder.** p50 is
+11.3 ms and inside the 15 ms budget; p95 is 186 ms, roughly 12× over. The gap
+is embedding cost on CPU, not the cache: `lookup_only_p95_ms` is 0.132 ms, so
+FAISS lookup is ~0.07% of the p95 figure. Any quotable number here is the p50
 or the isolated lookup — the end-to-end p95 is a failure and is recorded as one.
 
 **The 71.6% replay hit rate is the ambiguity guard, not a miss.** The hit phase

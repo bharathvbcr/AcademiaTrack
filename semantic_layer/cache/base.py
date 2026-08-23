@@ -7,10 +7,43 @@ import time
 from dataclasses import dataclass, field
 from typing import Any, Protocol, runtime_checkable
 
+import numpy as np
+
 from semantic_layer.config import CONFIG
 from semantic_layer.vectortypes import FloatVector
 
 logger = logging.getLogger(__name__)
+
+
+def prepare_vector(vec: Any, dim: int | None = None, *, what: str = "embedding") -> FloatVector:
+    """Validate and L2-normalize a vector so inner product really is cosine.
+
+    Both backends index with inner product and compare the result against a
+    similarity threshold in [0, 1]. That is only cosine if the vectors are unit
+    length, and nothing used to enforce it: storing a vector of norm 10 and
+    querying with it returned a self-similarity of 100.0, which clears every
+    threshold. Small-norm vectors fail every threshold for the same reason.
+
+    Normalizing here is idempotent for callers that already normalize, so it
+    changes no correct caller's behaviour. Non-finite and zero vectors are
+    rejected rather than normalized: NaN previously reached the index and came
+    back as a -3.4e38 similarity sentinel, and a zero vector has no direction
+    to compare against.
+    """
+    arr = np.asarray(vec, dtype=np.float32).reshape(-1)
+    if dim is not None and arr.shape[0] != dim:
+        raise ValueError(
+            f"{what} dim {arr.shape[0]} != expected {dim} "
+            f"(embedding_model changed without rebuilding the cache?)"
+        )
+    if not np.all(np.isfinite(arr)):
+        raise ValueError(f"{what} contains NaN or infinity")
+    norm = float(np.linalg.norm(arr))
+    if norm == 0.0:
+        raise ValueError(f"{what} is the zero vector and has no direction")
+    if abs(norm - 1.0) < 1e-6:
+        return arr
+    return (arr / norm).astype(np.float32)
 
 
 @dataclass
