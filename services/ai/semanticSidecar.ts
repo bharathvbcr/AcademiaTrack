@@ -10,6 +10,7 @@ import {
     resolveSemanticBaseUrl,
     resolveSemanticEnabled,
     SemanticHealthResponse,
+    setSemanticAuthToken,
 } from './semanticBridge';
 
 export type SemanticSidecarPhase =
@@ -27,6 +28,8 @@ export interface SemanticSidecarStatus {
     error?: string | null;
     healthEnabled: boolean;
     healthReady: boolean;
+    /** Secret for a sidecar this app started; absent for an external one. */
+    authToken?: string | null;
 }
 
 export interface SemanticRuntimeStatus {
@@ -50,6 +53,7 @@ interface RawSidecarStatus {
     error?: string | null;
     health_enabled: boolean;
     health_ready: boolean;
+    auth_token?: string | null;
 }
 
 function parsePortFromBaseUrl(baseUrl: string): number | undefined {
@@ -65,6 +69,11 @@ function parsePortFromBaseUrl(baseUrl: string): number | undefined {
 
 function normalizeSidecarStatus(raw: RawSidecarStatus): SemanticSidecarStatus {
     const phase = raw.phase as SemanticSidecarPhase;
+    // Single funnel for every status the launcher returns -- start, stop and
+    // poll all pass through here -- so the token the bridge sends is always the
+    // one belonging to the process currently running. A stop clears it, and an
+    // external sidecar reports none, which correctly leaves requests unsigned.
+    setSemanticAuthToken(raw.auth_token ?? null);
     return {
         phase: ['stopped', 'starting', 'running', 'external', 'failed'].includes(phase)
             ? phase
@@ -75,6 +84,7 @@ function normalizeSidecarStatus(raw: RawSidecarStatus): SemanticSidecarStatus {
         error: raw.error ?? null,
         healthEnabled: raw.health_enabled,
         healthReady: raw.health_ready,
+        authToken: raw.auth_token ?? null,
     };
 }
 

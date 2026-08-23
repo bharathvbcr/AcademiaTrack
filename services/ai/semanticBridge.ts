@@ -26,6 +26,54 @@ type SemanticSseEvent =
     | ({ type: 'done' } & SemanticChatResponse)
     | { type: 'error'; error?: string };
 
+
+/**
+ * Per-session secret for the sidecar we started, or null when there is none.
+ *
+ * The Rust launcher generates a token per spawn, passes it to the Python
+ * process, and returns it with the sidecar status; this holds it for the
+ * request helpers below. It is deliberately memory-only and never persisted:
+ * it is worth exactly one sidecar lifetime, and a new spawn issues a new one.
+ *
+ * Null is the normal state on loopback with no token configured, and also when
+ * the sidecar is external — we did not choose its secret and must not invent
+ * one.
+ */
+let semanticAuthToken: string | null = readDevSemanticToken();
+
+/**
+ * Dev-server token, if the developer opted into testing the auth path.
+ *
+ * The Tauri launcher hands its token over through the sidecar status, but the
+ * browser dev server has no such channel. Vite exposes VITE_-prefixed vars to
+ * the client, so setting VITE_SEMANTIC_AUTH_TOKEN lets `npm run dev` exercise
+ * an authenticated sidecar. Absent it, dev stays unauthenticated on loopback,
+ * which is the documented default.
+ */
+function readDevSemanticToken(): string | null {
+    try {
+        const value = import.meta.env?.VITE_SEMANTIC_AUTH_TOKEN;
+        return typeof value === 'string' && value.length > 0 ? value : null;
+    } catch {
+        return null;
+    }
+}
+
+export function setSemanticAuthToken(token: string | null | undefined): void {
+    semanticAuthToken = token ? token : null;
+}
+
+export function getSemanticAuthToken(): string | null {
+    return semanticAuthToken;
+}
+
+/** Attach the sidecar token when we hold one. */
+function withSemanticAuth(headers: Record<string, string>): Record<string, string> {
+    return semanticAuthToken
+        ? { ...headers, 'X-Semantic-Token': semanticAuthToken }
+        : headers;
+}
+
 /** Default sidecar URL — matches semantic_layer.config SemanticLayerConfig.server_port. */
 export const DEFAULT_SEMANTIC_BASE_URL = 'http://127.0.0.1:8765';
 
@@ -158,7 +206,7 @@ export async function chatViaSemanticLayer(
     try {
         res = await fetch(`${baseUrl}${endpoint}`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: withSemanticAuth({ 'Content-Type': 'application/json' }),
             signal: options.signal,
             body: JSON.stringify({
                 messages,
@@ -174,6 +222,13 @@ export async function chatViaSemanticLayer(
 
     if (res.status === 503) {
         throw new AIError('Semantic layer unavailable.');
+    }
+    if (res.status === 401) {
+        // Either the sidecar was started outside the app with its own token, or
+        // ours was restarted and this client still holds the previous one.
+        throw new AIError(
+            'Semantic layer rejected the session token. Restart the sidecar from Settings.',
+        );
     }
     if (!res.ok) {
         const detail = await res.text().catch(() => '');

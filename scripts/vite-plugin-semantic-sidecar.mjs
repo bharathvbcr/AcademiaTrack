@@ -66,6 +66,16 @@ export function semanticSidecarPlugin() {
         const python = resolvePythonExecutable();
         const port = process.env.SEMANTIC_SERVER_PORT || String(DEFAULT_PORT);
         const host = process.env.SEMANTIC_SERVER_HOST || DEFAULT_HOST;
+        const devAuthToken = process.env.VITE_SEMANTIC_AUTH_TOKEN || '';
+        if (!devAuthToken && process.env.SEMANTIC_AUTH_TOKEN) {
+            console.warn(
+                '[semantic] ignoring SEMANTIC_AUTH_TOKEN: the browser client cannot read it. '
+                + 'Use VITE_SEMANTIC_AUTH_TOKEN to test the authenticated path in dev.',
+            );
+        }
+        if (devAuthToken) {
+            console.log('[semantic] dev sidecar will require the VITE_SEMANTIC_AUTH_TOKEN secret');
+        }
 
         child = spawn(
             python,
@@ -78,6 +88,13 @@ export function semanticSidecarPlugin() {
                     SEMANTIC_SERVER_HOST: host,
                     SEMANTIC_SERVER_PORT: port,
                     PYTHONPATH: REPO_ROOT,
+                    // The browser client can only send a token Vite exposed to
+                    // it, i.e. a VITE_-prefixed one. Handing the child a bare
+                    // SEMANTIC_AUTH_TOKEN inherited from the shell would make
+                    // it demand a secret the page cannot produce, turning every
+                    // dev request into an unexplained 401. Keep the two in step
+                    // by deriving the child's token from the client's var.
+                    SEMANTIC_AUTH_TOKEN: devAuthToken,
                 },
                 stdio: ['ignore', 'pipe', 'pipe'],
             },

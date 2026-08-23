@@ -72,7 +72,11 @@ async def _handle_health(_request: Any) -> Any:
     if _is_enabled():
         try:
             pipeline = await _get_pipeline()
-            ready = pipeline.is_ready
+            # Coerce: this value is serialized straight into the response, and
+            # both launchers poll /health to decide whether startup succeeded.
+            # A backend whose is_ready is not a plain bool would turn the one
+            # endpoint they depend on into a 500.
+            ready = bool(pipeline.is_ready)
         except Exception:
             logger.exception("Health check failed")
     return JSONResponse(

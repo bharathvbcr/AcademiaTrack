@@ -30,6 +30,10 @@ pub struct SemanticSidecarStatus {
   pub error: Option<String>,
   pub health_enabled: bool,
   pub health_ready: bool,
+  /// Token for the process we spawned, so the webview can call it. Absent for
+  /// an external sidecar: we did not choose its secret and must not guess one.
+  #[serde(skip_serializing_if = "Option::is_none")]
+  pub auth_token: Option<String>,
 }
 
 impl SemanticSidecarStatus {
@@ -46,8 +50,31 @@ impl SemanticSidecarStatus {
       error,
       health_enabled: false,
       health_ready: false,
+      auth_token: None,
     }
   }
+}
+
+
+/// Bytes of entropy behind the sidecar's per-session token.
+const AUTH_TOKEN_BYTES: usize = 32;
+
+/// Generate a fresh auth token for one sidecar process.
+///
+/// The sidecar fronts a cache that can be both read and poisoned by anything
+/// able to reach its port, so the app gives each spawn its own secret rather
+/// than relying on the loopback bind alone. Hex keeps it header-safe: the
+/// server compares tokens as bytes, but a value that survives latin-1 header
+/// encoding unchanged avoids the question entirely.
+fn generate_auth_token() -> Option<String> {
+  let mut bytes = [0u8; AUTH_TOKEN_BYTES];
+  getrandom::fill(&mut bytes).ok()?;
+  let mut out = String::with_capacity(AUTH_TOKEN_BYTES * 2);
+  for byte in bytes {
+    use std::fmt::Write as _;
+    let _ = write!(out, "{byte:02x}");
+  }
+  Some(out)
 }
 
 pub struct SemanticSidecarState {
@@ -55,6 +82,10 @@ pub struct SemanticSidecarState {
   port: Mutex<u16>,
   last_error: Mutex<Option<String>>,
   bundled_root: Mutex<Option<PathBuf>>,
+  /// Secret handed to the process we spawned. None when no sidecar of ours is
+  /// running, including when we attached to an externally started one whose
+  /// token we cannot know.
+  auth_token: Mutex<Option<String>>,
 }
 
 impl SemanticSidecarState {
@@ -64,6 +95,7 @@ impl SemanticSidecarState {
       port: Mutex::new(DEFAULT_PORT),
       last_error: Mutex::new(None),
       bundled_root: Mutex::new(bundled_root),
+      auth_token: Mutex::new(None),
     }
   }
 }
@@ -94,6 +126,12 @@ fn reap_child(state: &SemanticSidecarState) {
 }
 
 fn stop_child(state: &SemanticSidecarState) {
+  // Drop the token with the process it belonged to. Holding it after the child
+  // is gone would let the next status call hand the webview a secret no
+  // running server accepts, and would keep a dead secret in memory.
+  if let Ok(mut token) = state.auth_token.lock() {
+    *token = None;
+  }
   let Ok(mut guard) = state.child.lock() else {
     return;
   };
@@ -317,6 +355,14 @@ fn build_status(state: &SemanticSidecarState, port: u16) -> SemanticSidecarStatu
     phase = SemanticSidecarPhase::Failed;
   }
 
+  // Only our own process gets a token back. An external sidecar chose its own
+  // secret (or none) and handing over ours would just produce 401s.
+  let auth_token = if spawned_by_app {
+    state.auth_token.lock().ok().and_then(|guard| guard.clone())
+  } else {
+    None
+  };
+
   SemanticSidecarStatus {
     phase,
     port,
@@ -325,6 +371,7 @@ fn build_status(state: &SemanticSidecarState, port: u16) -> SemanticSidecarStatu
     error: read_last_error(state),
     health_enabled: health.enabled,
     health_ready: health.ready,
+    auth_token,
   }
 }
 
@@ -382,6 +429,18 @@ fn spawn_sidecar(
     return Err(status);
   }
 
+  // A fresh secret per spawn. If the platform cannot give us entropy we start
+  // without one rather than with a guessable token: the socket is still bound
+  // to loopback, so this degrades to the previous posture instead of forging a
+  // false sense of authentication.
+  let auth_token = generate_auth_token();
+  if auth_token.is_none() {
+    log::warn!("No OS entropy for a sidecar auth token; starting unauthenticated on loopback");
+  }
+  if let Ok(mut guard) = state.auth_token.lock() {
+    *guard = auth_token.clone();
+  }
+
   let mut command = Command::new(&python);
   command
     .arg("-m")
@@ -393,6 +452,16 @@ fn spawn_sidecar(
     .env("PYTHONPATH", &root)
     .stdout(Stdio::null())
     .stderr(Stdio::null());
+  match auth_token.as_deref() {
+    Some(token) => {
+      command.env("SEMANTIC_AUTH_TOKEN", token);
+    }
+    // Clear any inherited value so the child cannot silently adopt a token the
+    // webview does not know and answer 401 to every request.
+    None => {
+      command.env_remove("SEMANTIC_AUTH_TOKEN");
+    }
+  }
 
   let child = command.spawn().map_err(|error| {
     let message = format!("Failed to start semantic sidecar: {error}");
@@ -498,6 +567,33 @@ mod tests {
   #[test]
   fn default_port_is_8765() {
     assert_eq!(DEFAULT_PORT, 8765);
+  }
+
+  #[test]
+  fn generated_tokens_are_long_and_distinct() {
+    let a = generate_auth_token().expect("entropy available");
+    let b = generate_auth_token().expect("entropy available");
+    // 32 bytes rendered as hex.
+    assert_eq!(a.len(), AUTH_TOKEN_BYTES * 2);
+    assert!(a.chars().all(|c| c.is_ascii_hexdigit()));
+    // Two spawns must not share a secret.
+    assert_ne!(a, b, "tokens repeated across calls");
+  }
+
+  #[test]
+  fn stopped_status_carries_no_token() {
+    let status = SemanticSidecarStatus::stopped(8765, None);
+    assert!(status.auth_token.is_none());
+  }
+
+  #[test]
+  fn token_is_omitted_from_json_when_absent() {
+    // The webview treats a missing field as "no token"; serializing an explicit
+    // null would be equivalent, but keeping it absent matches the other
+    // optional fields and keeps the secret out of logs when there is none.
+    let status = SemanticSidecarStatus::stopped(8765, None);
+    let json = serde_json::to_string(&status).expect("serializable");
+    assert!(!json.contains("auth_token"), "{json}");
   }
 
   #[test]
