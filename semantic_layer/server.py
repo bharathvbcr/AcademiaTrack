@@ -3,11 +3,23 @@ HTTP sidecar exposing SemanticPipeline to the AcademiaTrack desktop app.
 
 Run: python -m semantic_layer.server
 Enable: SEMANTIC_ENABLED=1
+
+Access control. On loopback the mutating endpoints are open: the OS already
+limits who can reach 127.0.0.1, and the desktop client sends no credential.
+Set SEMANTIC_AUTH_TOKEN to require a shared secret on /v1/chat,
+/v1/chat/stream and /v1/feedback, supplied as ``X-Semantic-Token: <token>`` or
+``Authorization: Bearer <token>``. Binding SEMANTIC_SERVER_HOST to anything
+other than loopback *without* a token is refused at startup, because the cache
+this fronts can be both read and poisoned by anyone who can reach the port.
+/health stays open in all configurations; it returns two booleans and the
+duplicate-instance check depends on it.
 """
 
 from __future__ import annotations
 
 import asyncio
+import hmac
+import ipaddress
 import json
 import logging
 import math
@@ -69,6 +81,53 @@ async def _handle_health(_request: Any) -> Any:
             "ready": ready,
         }
     )
+
+
+
+def _is_loopback_host(host: str) -> bool:
+    """True when binding to ``host`` keeps the socket reachable only locally."""
+    candidate = (host or "").strip().strip("[]").lower()
+    if candidate in ("localhost", ""):
+        return candidate == "localhost"
+    try:
+        return ipaddress.ip_address(candidate).is_loopback
+    except ValueError:
+        return False
+
+
+def _check_auth(request: Any) -> Any | None:
+    """Return a 401 response when a configured token is missing or wrong.
+
+    The sidecar has no other access control: any local process, and any page
+    served from a CORS-allowed origin, can otherwise read cached answers and
+    write new ones. Poisoning is the sharper risk -- a stored response is
+    served to every later prompt whose embedding lands near it.
+
+    A token is optional on loopback, where the OS already restricts reach, so
+    the existing desktop client keeps working untouched. ``main`` refuses to
+    bind a non-loopback interface without one.
+    """
+    from starlette.responses import JSONResponse
+
+    expected = CONFIG.auth_token
+    if not expected:
+        return None
+
+    provided = request.headers.get("x-semantic-token", "")
+    if not provided:
+        authorization = request.headers.get("authorization", "")
+        if authorization[:7].lower() == "bearer ":
+            provided = authorization[7:]
+
+    # compare_digest to keep the check independent of how much of the token
+    # matched, and never log or echo either side. Compare bytes, not str:
+    # compare_digest raises TypeError on non-ASCII strings, and a header is
+    # attacker-controlled, so a str comparison hands over a trivial crash.
+    if not hmac.compare_digest(
+        provided.encode("utf-8", "replace"), expected.encode("utf-8")
+    ):
+        return JSONResponse({"error": "unauthorized"}, status_code=401)
+    return None
 
 
 def _validate_ollama_base(url: str) -> str | None:
@@ -231,6 +290,10 @@ async def _build_request_pipeline(
 async def _handle_chat(request: Any) -> Any:
     from starlette.responses import JSONResponse
 
+    denied = _check_auth(request)
+    if denied is not None:
+        return denied
+
     if not _is_enabled():
         return JSONResponse({"error": "semantic layer disabled"}, status_code=503)
 
@@ -254,6 +317,10 @@ async def _handle_chat(request: Any) -> Any:
 
 async def _handle_chat_stream(request: Any) -> Any:
     from starlette.responses import JSONResponse, StreamingResponse
+
+    denied = _check_auth(request)
+    if denied is not None:
+        return denied
 
     if not _is_enabled():
         return JSONResponse({"error": "semantic layer disabled"}, status_code=503)
@@ -284,6 +351,10 @@ async def _handle_chat_stream(request: Any) -> Any:
 
 async def _handle_feedback(request: Any) -> Any:
     from starlette.responses import JSONResponse
+
+    denied = _check_auth(request)
+    if denied is not None:
+        return denied
 
     if not _is_enabled():
         return JSONResponse({"error": "semantic layer disabled"}, status_code=503)
@@ -336,16 +407,42 @@ def _probe_local_health() -> bool:
         return False
 
 
-def _port_in_use(host: str, port: int) -> bool:
+def _bind_listener(host: str, port: int) -> Any | None:
+    """Bind and hold the listening socket, or return None if the port is taken.
+
+    The previous shape bound a probe socket, closed it, and let uvicorn bind
+    again. Between those two binds the port was free, so two sidecars starting
+    together could both see it as available and one would die on the real bind.
+    Binding once and handing the live socket to uvicorn removes the window:
+    whoever wins the bind keeps it continuously.
+
+    getaddrinfo picks the family so an IPv6 server_host works as well as IPv4.
+    """
     import socket
 
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
-        sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    try:
+        infos = socket.getaddrinfo(
+            host, port, type=socket.SOCK_STREAM, flags=socket.AI_PASSIVE
+        )
+    except socket.gaierror:
+        logger.error("server_host %r does not resolve", host)
+        return None
+
+    for family, socktype, proto, _canon, sockaddr in infos:
+        sock = socket.socket(family, socktype, proto)
         try:
-            sock.bind((host, port))
-            return False
+            # SO_REUSEADDR clears TIME_WAIT leftovers; it does not permit a
+            # second bind while another process is actually listening, which is
+            # the case this function needs to detect.
+            sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            sock.bind(sockaddr)
+            sock.listen(128)
+            sock.set_inheritable(True)
+            return sock
         except OSError:
-            return True
+            sock.close()
+            continue
+    return None
 
 
 def create_app() -> Any:
@@ -398,7 +495,18 @@ def main() -> None:
             "SEMANTIC_ENABLED is off — sidecar will return 503 until enabled"
         )
 
-    if _port_in_use(CONFIG.server_host, CONFIG.server_port):
+    # Fail closed rather than expose an unauthenticated sidecar off-host.
+    if not _is_loopback_host(CONFIG.server_host) and not CONFIG.auth_token:
+        logger.error(
+            "Refusing to bind %s without SEMANTIC_AUTH_TOKEN: off-loopback the "
+            "sidecar has no access control, and its cache can be read and "
+            "poisoned by anyone who can reach the port.",
+            CONFIG.server_host,
+        )
+        sys.exit(2)
+
+    listener = _bind_listener(CONFIG.server_host, CONFIG.server_port)
+    if listener is None:
         if _probe_local_health():
             logger.info(
                 "Semantic sidecar already running on %s:%s — skipping duplicate startup",
@@ -412,12 +520,9 @@ def main() -> None:
         )
         sys.exit(1)
 
-    uvicorn.run(
-        create_app(),
-        host=CONFIG.server_host,
-        port=CONFIG.server_port,
-        log_level="info",
-    )
+    # Hand uvicorn the socket already bound above; it must not bind again.
+    server = uvicorn.Server(uvicorn.Config(create_app(), log_level="info"))
+    server.run(sockets=[listener])
 
 
 if __name__ == "__main__":

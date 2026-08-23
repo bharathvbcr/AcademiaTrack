@@ -1,9 +1,10 @@
 """Adversarial tests for the semantic sidecar's HTTP surface.
 
-The sidecar has no authentication: anything that can reach the port, including
-any page served from a CORS-allowed origin, can drive it. Input validation is
-therefore the whole of the trust boundary, and each test below corresponds to a
-request that previously crossed it.
+On loopback the sidecar is deliberately unauthenticated -- the OS bounds who
+can reach it and the desktop client sends no credential -- so input validation
+carries the whole trust boundary there. Off loopback a shared secret is
+mandatory and startup fails closed without one. Each test below corresponds to
+a request that previously crossed that boundary, or to the boundary itself.
 """
 
 from __future__ import annotations
@@ -198,3 +199,149 @@ class TestErrorHygiene:
         r = client.get("/health")
         assert r.status_code == 200
         assert set(r.json()) == {"enabled", "ready"}
+
+
+# --------------------------------------------------------------- auth gate
+
+
+class TestSharedSecretAuth:
+    """A token is optional on loopback and mandatory off it.
+
+    The desktop client talks to 127.0.0.1 and sends no credential, so requiring
+    one unconditionally would break it. The dangerous configuration is not an
+    unauthenticated loopback socket -- the OS bounds who can reach that -- it is
+    an unauthenticated socket on an interface other machines can see.
+    """
+
+    def test_no_token_configured_keeps_the_endpoints_open(self, client, enabled) -> None:
+        with patch.object(srv.CONFIG, "auth_token", ""):
+            with patch.object(srv, "_get_pipeline", new=AsyncMock(return_value=_pipeline_stub([]))):
+                r = client.post("/v1/feedback", json={"similarity": 0.5, "accepted": True})
+        assert r.status_code == 200, "the existing loopback client must keep working"
+
+    @pytest.mark.parametrize("path", ["/v1/chat", "/v1/chat/stream", "/v1/feedback"])
+    def test_configured_token_is_required_on_every_mutating_endpoint(
+        self, client, enabled, path
+    ) -> None:
+        with patch.object(srv.CONFIG, "auth_token", "s3cret"):
+            r = client.post(path, json={"messages": [{"role": "user", "content": "hi"}]})
+        assert r.status_code == 401
+
+    @pytest.mark.parametrize("header", ["x-semantic-token", "authorization"])
+    def test_correct_token_is_accepted_in_either_header(self, client, enabled, header) -> None:
+        value = "s3cret" if header == "x-semantic-token" else "Bearer s3cret"
+        recorded: list = []
+        with patch.object(srv.CONFIG, "auth_token", "s3cret"):
+            with patch.object(srv, "_get_pipeline", new=AsyncMock(return_value=_pipeline_stub(recorded))):
+                r = client.post(
+                    "/v1/feedback",
+                    json={"similarity": 0.5, "accepted": True},
+                    headers={header: value},
+                )
+        assert r.status_code == 200
+        assert recorded == [(0.5, True)]
+
+    @pytest.mark.parametrize("wrong", ["", "s3cre", "s3cret ", "S3CRET", "wrong"])
+    def test_near_miss_tokens_are_rejected(self, client, enabled, wrong) -> None:
+        with patch.object(srv.CONFIG, "auth_token", "s3cret"):
+            r = client.post(
+                "/v1/feedback",
+                json={"similarity": 0.5, "accepted": True},
+                headers={"x-semantic-token": wrong},
+            )
+        assert r.status_code == 401
+
+    def test_health_stays_open_so_the_duplicate_probe_works(self, client) -> None:
+        with patch.object(srv.CONFIG, "auth_token", "s3cret"):
+            r = client.get("/health")
+        assert r.status_code == 200
+
+
+class TestBindPolicy:
+    @pytest.mark.parametrize(
+        "host,loopback",
+        [
+            ("127.0.0.1", True),
+            ("::1", True),
+            ("[::1]", True),
+            ("localhost", True),
+            ("127.0.0.5", True),
+            ("0.0.0.0", False),
+            ("192.168.1.10", False),
+            ("example.com", False),
+            ("", False),
+        ],
+    )
+    def test_loopback_classification(self, host: str, loopback: bool) -> None:
+        assert srv._is_loopback_host(host) is loopback
+
+    def test_off_loopback_without_a_token_refuses_to_start(self, monkeypatch) -> None:
+        """Fail closed: never expose an unauthenticated cache to the network."""
+        monkeypatch.setattr(srv.CONFIG, "server_host", "0.0.0.0")
+        monkeypatch.setattr(srv.CONFIG, "auth_token", "")
+        monkeypatch.setattr(srv, "_is_enabled", lambda: True)
+        bound: list = []
+        monkeypatch.setattr(srv, "_bind_listener", lambda h, p: bound.append((h, p)))
+
+        with pytest.raises(SystemExit) as exc:
+            srv.main()
+        assert exc.value.code == 2
+        assert bound == [], "the socket must not be bound before the refusal"
+
+    def test_off_loopback_with_a_token_is_allowed_to_bind(self, monkeypatch) -> None:
+        monkeypatch.setattr(srv.CONFIG, "server_host", "0.0.0.0")
+        monkeypatch.setattr(srv.CONFIG, "auth_token", "s3cret")
+        monkeypatch.setattr(srv, "_is_enabled", lambda: True)
+        monkeypatch.setattr(srv, "_bind_listener", lambda h, p: None)
+        monkeypatch.setattr(srv, "_probe_local_health", lambda: True)
+        srv.main()  # binds, finds the port taken, stands down -- no SystemExit
+
+    def test_bind_listener_holds_the_socket_it_returns(self) -> None:
+        """The TOCTOU fix is only real if the returned socket is still bound."""
+        sock = srv._bind_listener("127.0.0.1", 0)
+        assert sock is not None
+        try:
+            port = sock.getsockname()[1]
+            assert port != 0
+            # A second bind of the same port must fail while the first is held.
+            assert srv._bind_listener("127.0.0.1", port) is None
+        finally:
+            sock.close()
+
+
+class TestAuthComparisonSafety:
+    """hmac.compare_digest raises TypeError on non-ASCII str inputs.
+
+    A header value is attacker-controlled and Starlette decodes it as latin-1,
+    so comparing as str turns one malformed byte into a 500. httpx will not
+    send such a header, so this is driven against _check_auth directly rather
+    than through the test client -- testing it over HTTP would only prove that
+    the client-side encoder rejects it.
+    """
+
+    @staticmethod
+    def _request(headers: dict) -> object:
+        class _Req:
+            def __init__(self, h):
+                self.headers = h
+
+        return _Req(headers)
+
+    @pytest.mark.parametrize("value", ["t\u00f6k\u00e9n", "\u00ff" * 8, "s3cret\u00e9"])
+    def test_non_ascii_token_is_rejected_without_raising(self, value: str) -> None:
+        with patch.object(srv.CONFIG, "auth_token", "s3cret"):
+            denied = srv._check_auth(self._request({"x-semantic-token": value}))
+        assert denied is not None
+        assert denied.status_code == 401
+
+    def test_non_ascii_bearer_token_is_rejected_without_raising(self) -> None:
+        with patch.object(srv.CONFIG, "auth_token", "s3cret"):
+            denied = srv._check_auth(
+                self._request({"authorization": "Bearer t\u00f6k\u00e9n"})
+            )
+        assert denied is not None
+        assert denied.status_code == 401
+
+    def test_correct_token_still_passes(self) -> None:
+        with patch.object(srv.CONFIG, "auth_token", "s3cret"):
+            assert srv._check_auth(self._request({"x-semantic-token": "s3cret"})) is None

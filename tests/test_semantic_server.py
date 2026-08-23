@@ -111,23 +111,32 @@ async def test_create_app_includes_cors_middleware() -> None:
 
 
 def test_main_skips_when_sidecar_already_running(monkeypatch) -> None:
+    """A second sidecar must stand down rather than fight for the port.
+
+    The mechanism changed with the TOCTOU fix: main() no longer probes with a
+    throwaway socket and then lets uvicorn bind again, it binds once and hands
+    the live socket over. So the test now stubs the bind rather than the probe.
+    The expectation is unchanged and slightly stronger -- the server must not
+    be started by any path.
+    """
     import uvicorn
 
     from semantic_layer import server
 
-    monkeypatch.setattr(server, "_port_in_use", lambda _host, _port: True)
+    monkeypatch.setattr(server, "_bind_listener", lambda _host, _port: None)
     monkeypatch.setattr(server, "_probe_local_health", lambda: True)
     monkeypatch.setattr(server, "_is_enabled", lambda: True)
 
-    called = {"uvicorn": False}
+    called = {"served": False}
 
-    def fake_uvicorn_run(*_args, **_kwargs):
-        called["uvicorn"] = True
+    def fake_run(_self, *_args, **_kwargs):
+        called["served"] = True
 
-    monkeypatch.setattr(uvicorn, "run", fake_uvicorn_run)
+    monkeypatch.setattr(uvicorn.Server, "run", fake_run)
+    monkeypatch.setattr(uvicorn, "run", lambda *a, **k: called.__setitem__("served", True))
 
     server.main()
-    assert called["uvicorn"] is False
+    assert called["served"] is False
 
 
 @pytest.mark.asyncio

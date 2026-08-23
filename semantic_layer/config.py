@@ -101,12 +101,17 @@ class SemanticLayerConfig(BaseSettings):
     ollama_base_url: str = "http://localhost:11434"
     ollama_timeout_seconds: float = 120.0
     # SSRF guard: request-supplied upstreams must be loopback or one of these hosts.
-    ollama_allowed_hosts: tuple[str, ...] = ("localhost", "127.0.0.1", "::1", "0.0.0.0")
+    ollama_allowed_hosts: tuple[str, ...] = ("localhost", "127.0.0.1", "::1")
     # Cap on a single request body. request.json() reads the whole payload
     # into memory, so without a bound one POST can exhaust the sidecar.
     max_request_bytes: int = 4 * 1024 * 1024
 
     # HTTP sidecar (AcademiaTrack bridge)
+    # Shared secret for the mutating endpoints. Empty is allowed only while the
+    # sidecar is bound to loopback, where the OS already limits reach to local
+    # processes; binding anywhere else without a token is refused at startup.
+    auth_token: str = ""
+
     enabled: bool = False
     server_host: str = "127.0.0.1"
     server_port: int = 8765
