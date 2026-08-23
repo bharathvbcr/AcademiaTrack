@@ -69,4 +69,5 @@ const releaseNotes = match
       `[Full changelog](${githubServerUrl}/${githubRepository}/blob/${changelogRef}/CHANGELOG.md)`,
     ].join('\n');
 
+fs.mkdirSync(path.dirname(outputPath), { recursive: true });
 fs.writeFileSync(outputPath, `${releaseNotes}\n`);

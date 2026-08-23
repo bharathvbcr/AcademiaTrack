@@ -257,6 +257,7 @@ Purpose: deterministic ownership mapping for every tracked file in this reposito
 - `services/ai/__tests__/prompts.test.ts` — Testing
 - `services/ai/__tests__/providers.test.ts` — Testing
 - `services/ai/__tests__/semantic.test.ts` — Testing
+- `services/ai/__tests__/semanticAuth.test.ts` — Testing
 - `services/ai/__tests__/semanticSidecar.test.ts` — Testing
 - `services/ai/chat.ts` — Shell & App Compose
 - `services/ai/index.ts` — Data/Model
@@ -275,6 +276,9 @@ Purpose: deterministic ownership mapping for every tracked file in this reposito
 - `semantic_layer/adapters.py` — Shell & App Compose
 - `semantic_layer/benchmarks/__init__.py` — Testing
 - `semantic_layer/benchmarks/latency_benchmark.py` — Testing
+- `semantic_layer/benchmarks/results/README.md` — Testing
+- `semantic_layer/benchmarks/results/mock_500.json` — Testing
+- `semantic_layer/benchmarks/results/real_minilm_500.json` — Testing
 - `semantic_layer/cache/__init__.py` — Persistence
 - `semantic_layer/cache/base.py` — Persistence
 - `semantic_layer/cache/chroma_cache.py` — Persistence
@@ -324,6 +328,8 @@ Purpose: deterministic ownership mapping for every tracked file in this reposito
 - `tests/test_semantic_fixes.py` — Testing
 - `tests/test_semantic_layer.py` — Testing
 - `tests/test_semantic_server.py` — Testing
+- `tests/test_semantic_server_stress.py` — Testing
+- `tests/test_semantic_stress.py` — Testing
 
 ## Ownership Routing
 

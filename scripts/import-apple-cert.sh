@@ -35,6 +35,7 @@ fi
 KEYCHAIN_PASSWORD="${KEYCHAIN_PASSWORD:-academiatrack-ci}"
 KEYCHAIN_PATH="${RUNNER_TEMP:-/tmp}/academiatrack-signing.keychain-db"
 CERT_PATH="${RUNNER_TEMP:-/tmp}/academiatrack-cert.p12"
+trap 'rm -f "${CERT_PATH}"' EXIT
 
 echo "Decoding certificate..."
 echo -n "${APPLE_CERTIFICATE}" | base64 --decode > "${CERT_PATH}"
