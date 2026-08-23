@@ -10,6 +10,7 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
+import math
 from typing import Any
 
 from semantic_layer.adapters import BoundModelBackend, messages_to_semantic_request
@@ -87,9 +88,47 @@ def _validate_ollama_base(url: str) -> str | None:
     host = (parsed.hostname or "").lower()
     if not host:
         return None
-    if host in CONFIG.ollama_allowed_hosts or host.endswith(".localhost"):
+    # Only the configured allowlist. The previous ``.localhost`` suffix rule
+    # admitted any name ending in that label -- http://evil.localhost/ passed --
+    # and resolvers do not uniformly pin that suffix to loopback, so it widened
+    # the guard past what the configuration says is allowed.
+    if host in CONFIG.ollama_allowed_hosts:
         return url
     return None
+
+
+
+async def _read_json_capped(request: Any) -> tuple[Any, Any | None]:
+    """Read a JSON body, refusing anything over ``CONFIG.max_request_bytes``.
+
+    ``request.json()`` buffers the whole payload before parsing, so an
+    unbounded POST is a memory exhaustion path on a service that otherwise has
+    no authentication. Content-Length is checked first when present, and the
+    stream is capped regardless in case it lies or is absent (chunked).
+    """
+    from starlette.responses import JSONResponse
+
+    limit = CONFIG.max_request_bytes
+    declared = request.headers.get("content-length")
+    if declared is not None:
+        try:
+            if int(declared) > limit:
+                return None, JSONResponse({"error": "request body too large"}, status_code=413)
+        except ValueError:
+            return None, JSONResponse({"error": "invalid content-length"}, status_code=400)
+
+    chunks: list[bytes] = []
+    total = 0
+    async for chunk in request.stream():
+        total += len(chunk)
+        if total > limit:
+            return None, JSONResponse({"error": "request body too large"}, status_code=413)
+        chunks.append(chunk)
+
+    try:
+        return json.loads(b"".join(chunks) or b"null"), None
+    except (json.JSONDecodeError, UnicodeDecodeError):
+        return None, JSONResponse({"error": "invalid JSON body"}, status_code=400)
 
 
 def _result_payload(result: Any) -> dict[str, Any]:
@@ -106,10 +145,9 @@ def _result_payload(result: Any) -> dict[str, Any]:
 async def _parse_chat_body(request: Any) -> tuple[dict[str, Any] | None, Any | None]:
     from starlette.responses import JSONResponse
 
-    try:
-        body = await request.json()
-    except json.JSONDecodeError:
-        return None, JSONResponse({"error": "invalid JSON body"}, status_code=400)
+    body, err = await _read_json_capped(request)
+    if err is not None:
+        return None, err
 
     if not isinstance(body, dict):
         return None, JSONResponse({"error": "invalid JSON body"}, status_code=400)
@@ -117,6 +155,14 @@ async def _parse_chat_body(request: Any) -> tuple[dict[str, Any] | None, Any | N
     messages = body.get("messages")
     if not isinstance(messages, list) or not messages:
         return None, JSONResponse({"error": "messages required"}, status_code=400)
+
+    # The adapter calls .get() on every element. A non-mapping element used to
+    # raise AttributeError and surface as a 500 with an internal error string;
+    # a malformed request is the client's mistake and must read as a 400.
+    if not all(isinstance(m, dict) for m in messages):
+        return None, JSONResponse(
+            {"error": "each message must be an object"}, status_code=400
+        )
 
     model = str(body.get("model") or CONFIG.large_model_id).strip()
     if not model:
@@ -168,7 +214,10 @@ async def _build_request_pipeline(
         )
     except Exception as exc:
         logger.exception("Pipeline build failed")
-        return None, None, JSONResponse({"error": str(exc)}, status_code=500)
+        del exc  # logged with traceback; not echoed to the client
+        return None, None, JSONResponse(
+            {"error": "pipeline unavailable"}, status_code=500
+        )
 
     run_kwargs = {
         "prompt": semantic_req.prompt,
@@ -197,7 +246,8 @@ async def _handle_chat(request: Any) -> Any:
         result = await pipeline.run(**run_kwargs)
     except Exception as exc:
         logger.exception("Semantic chat failed")
-        return JSONResponse({"error": str(exc)}, status_code=500)
+        del exc
+        return JSONResponse({"error": "semantic chat failed"}, status_code=500)
 
     return JSONResponse(_result_payload(result))
 
@@ -222,7 +272,8 @@ async def _handle_chat_stream(request: Any) -> Any:
                 yield f"data: {json.dumps(event)}\n\n"
         except Exception as exc:
             logger.exception("Semantic chat stream failed")
-            yield f"data: {json.dumps({'type': 'error', 'error': str(exc)})}\n\n"
+            del exc
+            yield f"data: {json.dumps({'type': 'error', 'error': 'stream failed'})}\n\n"
 
     return StreamingResponse(
         event_stream(),
@@ -237,19 +288,35 @@ async def _handle_feedback(request: Any) -> Any:
     if not _is_enabled():
         return JSONResponse({"error": "semantic layer disabled"}, status_code=503)
 
+    body, err = await _read_json_capped(request)
+    if err is not None:
+        return err
+    if not isinstance(body, dict):
+        return JSONResponse({"error": "invalid feedback payload"}, status_code=400)
+
+    # This value feeds the auto-tuner's window, and the tuner moves the live
+    # cache threshold. NaN compares False against every tau and silently skews
+    # the hit and false-positive rates it is fitted on; a similarity outside
+    # [-1, 1] is not a cosine at all. Both used to be accepted from an
+    # unauthenticated endpoint, which made the threshold externally steerable.
     try:
-        body = await request.json()
         similarity = float(body.get("similarity", 0.0))
         accepted = bool(body.get("accepted", True))
-    except (json.JSONDecodeError, TypeError, ValueError):
+    except (TypeError, ValueError):
         return JSONResponse({"error": "invalid feedback payload"}, status_code=400)
+
+    if not math.isfinite(similarity) or not (-1.0 <= similarity <= 1.0):
+        return JSONResponse(
+            {"error": "similarity must be a finite number in [-1, 1]"}, status_code=400
+        )
 
     try:
         pipeline = await _get_pipeline()
         pipeline.record_feedback(similarity, accepted)
     except Exception as exc:
         logger.exception("Feedback recording failed")
-        return JSONResponse({"error": str(exc)}, status_code=500)
+        del exc
+        return JSONResponse({"error": "feedback recording failed"}, status_code=500)
 
     return JSONResponse({"ok": True})
 
