@@ -74,10 +74,19 @@ def _percentile(values: list[float], pct: float) -> float:
     return sorted_vals[idx]
 
 
-def _seed_cache(cache: FaissSemanticCache, n: int = 1000, dim: int = 384) -> None:
+def _seed_cache(cache: FaissSemanticCache, embedder, n: int = 1000) -> None:
+    """Seed the cache using the same embedder the pipeline will query with.
+
+    This previously always stored _deterministic_vector() mock vectors. Under
+    --real-embedder that put the cache in a different vector space than the
+    queries, so nothing could clear the similarity threshold: every run
+    reported a 0% hit rate and timed a miss path against a cache that could
+    not hit. The seed and the query must share an encoder for the hit-path
+    numbers to mean anything.
+    """
     for i in range(n):
         prompt = f"seed prompt {i}"
-        vec = _deterministic_vector(prompt, dim)
+        vec, _ = embedder.encode_one(prompt)
         cache.store(prompt, f"seed response {i}", vec)
 
 
@@ -95,7 +104,7 @@ async def run_pipeline_benchmark(
         embedder = MockEmbedder()
 
     cache = FaissSemanticCache(threshold=0.85, margin=0.02)
-    _seed_cache(cache, n=min(5000, iterations * 2))
+    _seed_cache(cache, embedder, n=min(5000, iterations * 2))
 
     pipeline = SemanticPipeline(
         llm=NoOpLLM(),
@@ -130,6 +139,24 @@ async def run_pipeline_benchmark(
         else:
             miss_latencies.append(result.semantic_latency_ms)
 
+    # Dedicated hit-path phase: replay prompts that ARE in the cache.
+    #
+    # The loop above queries "benchmark query iteration N" against a cache
+    # seeded with "seed prompt N". Those are unrelated strings, so no query
+    # could ever clear the similarity threshold and cache_hit_p95_ms was
+    # structurally 0.000 -- reported in the same shape as a measured value.
+    # Replaying seeded prompts verbatim is what makes the hit path observable.
+    hit_latencies: list[float] = []
+    hit_count = 0
+    seeded = min(5000, iterations * 2)
+    for i in range(iterations):
+        result = await pipeline.run(
+            f"seed prompt {i % seeded}", rag_chunks=None, skip_cache=False
+        )
+        hit_latencies.append(result.semantic_latency_ms)
+        if result.cache_hit:
+            hit_count += 1
+
     # Dedicated cache lookup micro-benchmark (embed + lookup only)
     lookup_only: list[float] = []
     vec, _ = embedder.encode_one("micro lookup probe")
@@ -145,6 +172,9 @@ async def run_pipeline_benchmark(
         "semantic_p99_ms": _percentile(latencies, 99),
         "cache_hit_p95_ms": _percentile(cache_latencies, 95) if cache_latencies else 0.0,
         "cache_miss_p95_ms": _percentile(miss_latencies, 95) if miss_latencies else 0.0,
+        "replay_hit_p50_ms": statistics.median(hit_latencies),
+        "replay_hit_p95_ms": _percentile(hit_latencies, 95),
+        "replay_hit_rate": hit_count / iterations if iterations else 0.0,
         "lookup_only_p95_ms": _percentile(lookup_only, 95),
         "slo_target_ms": CONFIG.semantic_layer_p95_ms,
         "slo_pass": float(_percentile(latencies, 95) <= CONFIG.semantic_layer_p95_ms),
@@ -159,6 +189,10 @@ def main() -> None:
         action="store_true",
         help="Use sentence-transformers (downloads model on first run)",
     )
+    parser.add_argument(
+        "--json-out",
+        help="Write the report to this path as JSON, with run metadata",
+    )
     args = parser.parse_args()
 
     print(f"Running {args.iterations} iterations (real_embedder={args.real_embedder})...")
@@ -172,8 +206,29 @@ def main() -> None:
             print(f"  {key}: {'PASS' if value else 'FAIL'}")
         elif key == "iterations":
             print(f"  {key}: {int(value)}")
+        elif key == "replay_hit_rate":
+            print(f"  {key}: {value:.1%}")
         else:
             print(f"  {key}: {value:.3f} ms")
+
+    if args.json_out:
+        import json
+        import platform
+
+        payload = {
+            "results": results,
+            "run": {
+                "real_embedder": args.real_embedder,
+                "iterations": args.iterations,
+                "python": platform.python_version(),
+                "platform": platform.platform(),
+                "machine": platform.machine(),
+            },
+        }
+        with open(args.json_out, "w", encoding="utf-8") as fh:
+            json.dump(payload, fh, indent=2, sort_keys=True)
+            fh.write("\n")
+        print(f"\nWrote {args.json_out}")
 
     if not results["slo_pass"]:
         print(

@@ -1,0 +1,23 @@
+{
+  "results": {
+    "cache_hit_p95_ms": 0.0,
+    "cache_miss_p95_ms": 0.8133340161293745,
+    "iterations": 500.0,
+    "lookup_only_p95_ms": 0.07645797450095415,
+    "replay_hit_p50_ms": 0.05710450932383537,
+    "replay_hit_p95_ms": 0.09662500815466046,
+    "replay_hit_rate": 1.0,
+    "semantic_p50_ms": 0.16989550204016268,
+    "semantic_p95_ms": 0.8133340161293745,
+    "semantic_p99_ms": 2.053875010460615,
+    "slo_pass": 1.0,
+    "slo_target_ms": 15.0
+  },
+  "run": {
+    "iterations": 500,
+    "machine": "arm64",
+    "platform": "macOS-27.0-arm64-arm-64bit",
+    "python": "3.12.13",
+    "real_embedder": false
+  }
+}
