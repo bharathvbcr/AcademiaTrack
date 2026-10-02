@@ -24,12 +24,6 @@ function collect() {
   // package.json
   sources.push({ source: 'package.json', version: readJson('package.json').version });
 
-  // package-lock.json (top-level version)
-  const lock = readJson('package-lock.json');
-  if (lock.version) {
-    sources.push({ source: 'package-lock.json', version: lock.version });
-  }
-
   // src-tauri/tauri.conf.json
   sources.push({
     source: 'src-tauri/tauri.conf.json',
@@ -109,7 +103,7 @@ function main() {
       console.error(`  ${s.source}: ${s.version}`);
     }
     console.error(
-      'All of package.json, package-lock.json, src-tauri/tauri.conf.json, ' +
+      'All of package.json, src-tauri/tauri.conf.json, ' +
         'Cargo.toml and Cargo.lock must declare the same version.'
     );
     process.exit(1);

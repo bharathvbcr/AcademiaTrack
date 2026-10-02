@@ -178,7 +178,7 @@ Additional persisted UI/runtime keys include `active-theme-id`, `font-size`, `fo
 ## Prerequisites
 
 - Node.js `>=20 <26`
-- npm v10 or newer
+- Bun 1.4 or newer (package manager and script runner; the tools themselves still run on Node.js)
 - Rust stable and the platform prerequisites required by Tauri
 - A desktop environment capable of running Tauri
 
@@ -187,7 +187,7 @@ This repo uses the native TypeScript 7 beta compiler through `tsgo` for typechec
 ## Install
 
 ```bash
-npm install
+bun install
 ```
 
 ## Run In Development
@@ -195,7 +195,7 @@ npm install
 Tauri desktop development:
 
 ```bash
-npm run dev:tauri
+bun run dev:tauri
 ```
 
 This starts Vite on `http://localhost:3000` through the Tauri CLI and launches the Tauri desktop shell.
@@ -203,7 +203,7 @@ This starts Vite on `http://localhost:3000` through the Tauri CLI and launches t
 Renderer-only development:
 
 ```bash
-npm run dev
+bun run dev
 ```
 
 Use renderer-only mode when you only need the web UI. Desktop-only APIs fall back where supported, but file attachment, native dialogs, backups, notifications, updates, and window controls require Tauri.
@@ -213,13 +213,13 @@ Use renderer-only mode when you only need the web UI. Desktop-only APIs fall bac
 Build the Vite renderer:
 
 ```bash
-npm run build
+bun run build
 ```
 
 Package the Tauri desktop app:
 
 ```bash
-npm run build:tauri
+bun run build:tauri
 ```
 
 Tauri writes packaged artifacts under `src-tauri/target/release/bundle/`. Legacy Electron scripts remain available under `legacy:electron:*` and deprecated `*:electron` aliases, but they are not the mainstream build path.
@@ -252,37 +252,37 @@ described in [SIGNING.md](SIGNING.md).
 Typecheck the primary Tauri renderer path:
 
 ```bash
-npm run typecheck
+bun run typecheck
 ```
 
 Run the deprecated Electron compatibility typecheck only when changing legacy Electron files:
 
 ```bash
-npm run typecheck:electron
+bun run typecheck:electron
 ```
 
 Run unit and integration tests:
 
 ```bash
-npm run test:run
+bun run test:run
 ```
 
 After a Tauri package build, run the packaged launch smoke:
 
 ```bash
-npx playwright test tests/e2e/app-launch.spec.ts
+bunx playwright test tests/e2e/app-launch.spec.ts
 ```
 
 Run Vitest in watch mode:
 
 ```bash
-npm test
+bun run test
 ```
 
 Run the map coverage check after ownership-boundary edits:
 
 ```bash
-npm run map:verify
+bun run map:verify
 ```
 
 ## Knowledge Graph And Code Maps
@@ -290,7 +290,7 @@ npm run map:verify
 This repo includes two code navigation layers:
 
 - Graphify generated graph artifacts under `graphify-out/`.
-- GitNexus generated index artifacts under `.gitnexus/`.
+- DevMap code-intelligence index under `.devcouncil/` (per-worktree, gitignored; requires the `devmap` CLI).
 
 It also includes deterministic code maps at the repository root:
 
@@ -299,21 +299,21 @@ It also includes deterministic code maps at the repository root:
 - `graphify-out/GRAPH_TREE.html` - collapsible file-tree view.
 - `graphify-out/graph.html` - interactive graph.
 - `graphify-out/graph.json` - graph query data.
-- `.gitnexus/` - GitNexus repository index.
+- `.devcouncil/` - DevMap index store and generated repo map.
 - `COMMUNITY_MAP_SUBSYSTEM.md` - subsystem ownership map.
 - `OWNERSHIP_INVENTORY.md` - file-by-file ownership index.
 - `CALL_CHAIN_PERSISTENCE.md` - user-action to persistence path map.
 
-When changing architecture or ownership boundaries, start with GitNexus status plus the community and ownership maps, then verify with:
+When changing architecture or ownership boundaries, start with DevMap status plus the community and ownership maps, then verify with:
 
 ```bash
-npm run map:status
+bun run map:status
 ```
 
-If GitNexus artifacts are stale after code changes, refresh GitNexus and verify static map coverage:
+If the DevMap index is stale after code changes, rebuild it and verify static map coverage:
 
 ```bash
-npm run map:refresh
+bun run map:refresh
 ```
 
 If Graphify graph content is stale, rebuild it with the `/graphify . --update` skill workflow. The installed `graphify` shell CLI supports graph queries and hook management, but does not expose `graphify update`.
@@ -321,11 +321,10 @@ If Graphify graph content is stale, rebuild it with the `/graphify . --update` s
 Individual commands are also available:
 
 ```bash
-npm run gitnexus:status
-npm run gitnexus:analyze
-npm run gitnexus:wiki
-npm run graphify:hook-status
-npm run map:verify
+devmap status --json
+devmap build --manifest
+bun run graphify:hook-status
+bun run map:verify
 ```
 
 ## Important Implementation Notes

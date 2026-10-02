@@ -21,7 +21,7 @@ const hasAssignedPort =
 const port = hasAssignedPort ? String(parsedPort) : String(DEFAULT_PORT);
 const viteArgs = ['vite', '--port', port, '--strictPort', hasAssignedPort ? 'true' : 'false'];
 
-const child = spawn('npx', viteArgs, {
+const child = spawn('bunx', viteArgs, {
   cwd: repoRoot,
   env: process.env,
   stdio: 'inherit',

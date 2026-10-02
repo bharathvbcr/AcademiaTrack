@@ -1,4 +1,4 @@
-# GitNexus-Style Community Map: AcademiaTrack Subsystems
+# Community Map: AcademiaTrack Subsystems
 
 Goal: expose subsystem ownership and wiring so agents can jump directly to the right files.
 

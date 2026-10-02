@@ -83,22 +83,11 @@ jobs:
           else
             echo "::warning::CHANGELOG.md is missing; release notes will fall back to generated content."
           fi
-          if [ ! -f "package-lock.json" ]; then
-            echo "::warning::package-lock.json is missing; skipping lockfile version validation."
-          fi
 
           PACKAGE_VERSION="$(node -p "require('./package.json').version")"
           if [[ "$VERSION" != "$PACKAGE_VERSION" ]]; then
             echo "::error::Tag version ${VERSION} must match package.json version ${PACKAGE_VERSION}."
             exit 1
-          fi
-
-          if [ -f "package-lock.json" ]; then
-            LOCK_VERSION="$(node -p "JSON.parse(require('fs').readFileSync('package-lock.json','utf8')).version || ''")"
-            if [[ -n "${LOCK_VERSION}" && "${VERSION}" != "${LOCK_VERSION}" ]]; then
-              echo "::error::Tag version ${VERSION} must match package-lock.json version ${LOCK_VERSION}."
-              exit 1
-            fi
           fi
 
           if [ -n "${GITHUB_API_URL}" ] && [ -n "${GITHUB_REPOSITORY}" ] && [ -n "${GH_TOKEN}" ]; then
@@ -166,8 +155,9 @@ jobs:
         uses: actions/setup-node@v6
         with:
           node-version-file: ".nvmrc"
-          cache: 'npm'
-          cache-dependency-path: package-lock.json
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
 
       - name: Verify Node Version
         shell: bash
@@ -182,13 +172,13 @@ jobs:
           esac
 
       - name: Install Dependencies
-        run: npm ci
+        run: bun install --frozen-lockfile
 
       - name: Typecheck
-        run: npm run typecheck
+        run: bun run typecheck
 
       - name: Run Tests
-        run: npm run test:run
+        run: bun run test:run
 
   build:
     name: Build Desktop App
@@ -202,9 +192,9 @@ jobs:
       matrix:
         include:
           - os: windows-latest
-            build_cmd: npm run build:tauri
+            build_cmd: bun run build:tauri
           - os: macos-latest
-            build_cmd: npm run build:mac
+            build_cmd: bun run build:mac
 
     steps:
       - name: Checkout Code
@@ -214,8 +204,9 @@ jobs:
         uses: actions/setup-node@v6
         with:
           node-version-file: ".nvmrc"
-          cache: 'npm'
-          cache-dependency-path: package-lock.json
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
 
       - name: Verify Node Version
         shell: bash
@@ -230,7 +221,7 @@ jobs:
           esac
 
       - name: Install Dependencies
-        run: npm ci
+        run: bun install --frozen-lockfile
 
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable

@@ -25,7 +25,7 @@ AcademiaTrack already integrates this layer as a **Python sidecar** (`semantic_l
                                 ▼
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │  semantic_layer/server.py (Starlette sidecar, SEMANTIC_ENABLED=1)           │
-│  npm run semantic:serve                                                     │
+│  bun run semantic:serve                                                     │
 └───────────────────────────────┬─────────────────────────────────────────────┘
                                 │
                                 ▼
@@ -242,7 +242,7 @@ python -m semantic_layer.benchmarks.latency_benchmark --iterations 200 --real-em
 
 Metrics exported via `SemanticMetrics.get_snapshot()` and optional Prometheus (`SEMANTIC_ENABLE_PROMETHEUS=1`).
 
-Unit tests: `npm run semantic:test` or `pytest tests/test_semantic_layer.py`.
+Unit tests: `bun run semantic:test` or `pytest tests/test_semantic_layer.py`.
 
 ---
 
@@ -258,7 +258,7 @@ Unit tests: `npm run semantic:test` or `pytest tests/test_semantic_layer.py`.
 | Prompts | `services/ai/prompts.ts` | System prompts (unchanged by semantic layer) |
 | Sidecar | `semantic_layer/server.py` | `/health`, `/v1/chat`, `/v1/chat/stream`, `/v1/feedback` |
 | Config | `semantic_layer/config.py` | `server_port=8765` matches `DEFAULT_SEMANTIC_BASE_URL` |
-| NPM | `package.json` | `semantic:serve`, `semantic:test` scripts |
+| Scripts | `package.json` | `semantic:serve`, `semantic:test` scripts |
 
 ### Environment variables
 
@@ -294,7 +294,7 @@ pip install -r semantic_layer/requirements.txt
 python -m semantic_layer.examples.basic_pipeline
 
 # Start sidecar for frontend integration
-SEMANTIC_ENABLED=1 npm run semantic:serve
+SEMANTIC_ENABLED=1 bun run semantic:serve
 ```
 
 ---

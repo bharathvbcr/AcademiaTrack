@@ -14,7 +14,7 @@ Purpose: deterministic ownership mapping for every tracked file in this reposito
 - **Search/Index**: search indexing/query execution.
 - **Testing**: unit/e2e/integration test surfaces.
 - **Build/Operations**: scripts, CI, releases, and release-adjacent docs.
-- **Map/Maps**: GitNexus/agent-reference artifacts.
+- **Map/Maps**: agent-reference map artifacts.
 
 ## Root Files
 
@@ -23,8 +23,10 @@ Purpose: deterministic ownership mapping for every tracked file in this reposito
 - `.github/commands/gemini-review.toml` — Build/Operations
 - `.github/commands/gemini-scheduled-triage.toml` — Build/Operations
 - `.github/commands/gemini-triage.toml` — Build/Operations
+- `.github/dependabot.yml` — Build/Operations
 - `.github/release-notes.md` — Build/Operations
 - `.github/workflows/build.yml` — Build/Operations
+- `.github/workflows/bun-audit.yml` — Build/Operations
 - `.github/workflows/gemini-dispatch.yml` — Build/Operations
 - `.github/workflows/gemini-invoke.yml` — Build/Operations
 - `.github/workflows/gemini-plan-execute.yml` — Build/Operations
@@ -55,6 +57,8 @@ Purpose: deterministic ownership mapping for every tracked file in this reposito
 - `requirements-semantic.txt` — Build/Operations
 - `SECURITY.md` — Build/Operations
 - `SIGNING.md` — Build/Operations
+- `bun.lock` — Build/Operations
+- `bunfig.toml` — Build/Operations
 - `assets/MicrosoftEdgeWebview2Setup.exe` — Build/Operations
 - `assets/entitlements.mac.plist` — Build/Operations
 - `assets/icon.icns` — Map/Maps
@@ -65,7 +69,6 @@ Purpose: deterministic ownership mapping for every tracked file in this reposito
 - `index.css` — Renderer-UI
 - `index.tsx` — Shell & App Compose
 - `metadata.json` — Data/Model
-- `package-lock.json` — Build/Operations
 - `package.json` — Build/Operations
 - `playwright.config.ts` — Testing
 - `public/AcademiaTrack.png` — Map/Maps

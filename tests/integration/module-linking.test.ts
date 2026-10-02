@@ -28,9 +28,9 @@ describe('Module Linking & Dependency Integrity', () => {
     });
 
     it('should make Tauri the only desktop build path with no Electron remnants', () => {
-        expect(packageJson.scripts['package']).toBe('npm run build:tauri');
-        expect(packageJson.scripts['dev:desktop']).toBe('npm run dev:tauri');
-        expect(packageJson.scripts['build:desktop']).toBe('npm run build:tauri');
+        expect(packageJson.scripts['package']).toBe('bun run build:tauri');
+        expect(packageJson.scripts['dev:desktop']).toBe('bun run dev:tauri');
+        expect(packageJson.scripts['build:desktop']).toBe('bun run build:tauri');
         expect(packageJson.scripts['dev:tauri']).toBe('tauri dev');
         expect(packageJson.scripts['build:tauri']).toBe('tauri build');
         expect(packageJson.scripts['typecheck']).toBe('tsgo -p tsconfig.json --noEmit');
