@@ -1,7 +1,7 @@
 # Semantic layer runtime dependencies (CPU-friendly, pinned for reproducibility).
 # Install: python -m pip install -r semantic_layer/requirements.txt
 
-sentence-transformers==5.7.0
+sentence-transformers==6.1.0
 faiss-cpu==1.10.0
 numpy==2.2.4
 pydantic==2.11.3
@@ -10,7 +10,7 @@ pydantic-settings==2.8.1
 # Optional backends and sidecar (see requirements-semantic.txt at repo root)
 # No patched release through 1.5.9 (GHSA-36p7-vc44-83pf and the tenant auth bugs).
 # Default cache is FAISS; this pin is the embedded client, not the Chroma server.
-chromadb==0.6.3
+chromadb==1.5.9
 httpx==0.28.1
 prometheus-client==0.21.1
 starlette==1.3.1
