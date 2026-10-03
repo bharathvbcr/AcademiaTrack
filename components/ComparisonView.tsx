@@ -113,7 +113,7 @@ const ComparisonView: React.FC<ComparisonViewProps> = ({ applications }) => {
                                         <XAxis type="number" tickFormatter={(value) => `$${(value / 1000).toFixed(0)}k`} stroke="#a1a1aa" tick={{ fill: '#a1a1aa', fontSize: 12 }} />
                                         <YAxis type="category" dataKey="name" width={120} tick={{ fontSize: 12, fill: '#a1a1aa' }} />
                                         <Tooltip
-                                            formatter={(value: number) => [`$${value.toLocaleString()}`, 'Annual Stipend']}
+                                            formatter={(value) => [`$${(typeof value === 'number' ? value : Number(value ?? 0)).toLocaleString()}`, 'Annual Stipend']}
                                             contentStyle={{
                                                 backgroundColor: '#18181b',
                                                 borderRadius: '0.75rem',
@@ -138,7 +138,7 @@ const ComparisonView: React.FC<ComparisonViewProps> = ({ applications }) => {
                                         <XAxis type="number" tickFormatter={(value) => `$${(value / 1000).toFixed(0)}k`} stroke="#a1a1aa" tick={{ fill: '#a1a1aa', fontSize: 12 }} />
                                         <YAxis type="category" dataKey="name" width={120} tick={{ fontSize: 12, fill: '#a1a1aa' }} />
                                         <Tooltip
-                                            formatter={(value: number) => [`$${value.toLocaleString()}`, 'Package Value']}
+                                            formatter={(value) => [`$${(typeof value === 'number' ? value : Number(value ?? 0)).toLocaleString()}`, 'Package Value']}
                                             contentStyle={{
                                                 backgroundColor: '#18181b',
                                                 borderRadius: '0.75rem',

@@ -197,9 +197,9 @@ const BudgetView: React.FC<BudgetViewProps> = ({ applications }) => {
                                 />
                                 <YAxis type="category" dataKey="name" width={100} tick={{ fontSize: 11 }} />
                                 <Tooltip
-                                    formatter={(value: number, _name: string, props: any) => [
-                                        `$${value.toFixed(2)} per 1%`,
-                                        `Fee: $${props.payload.fee} | Chance: ${props.payload.chance}%`
+                                    formatter={(value, _name, item) => [
+                                        `$${(typeof value === 'number' ? value : Number(value ?? 0)).toFixed(2)} per 1%`,
+                                        `Fee: $${item?.payload?.fee} | Chance: ${item?.payload?.chance}%`
                                     ]}
                                     contentStyle={{
                                         backgroundColor: 'rgba(255, 255, 255, 0.95)',
