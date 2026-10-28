@@ -27,7 +27,7 @@ Goal: expose subsystem ownership and wiring so agents can jump directly to the r
 `hooks/useAdvancedAnalytics.ts`, `hooks/useAdvancedFilter.ts`, `hooks/useAdvancedSearch.ts`, `hooks/useAnimations.ts`, `hooks/useAppCommands.ts`, `hooks/useApplicationForm.ts`, `hooks/useApplications.ts`, `hooks/useAppModals.ts`, `hooks/useAutoComplete.ts`, `hooks/useAutomation.ts`, `hooks/useBulkSelection.ts`, `hooks/useClickOutside.ts`, `hooks/useCommandPalette.ts`, `hooks/useConfirmation.ts`, `hooks/useCustomFields.ts`, `hooks/useDarkMode.ts`, `hooks/useDataValidation.ts`, `hooks/useDebounce.ts`, `hooks/useEnhancedDragDrop.ts`, `hooks/useEnhancedKeyboardShortcuts.ts`, `hooks/useFocusManagement.ts`, `hooks/useKanbanConfig.ts`, `hooks/useKeyboardShortcuts.ts`, `hooks/useLocalStorage.ts`, `hooks/useLockBodyScroll.ts`, `hooks/useSortAndFilter.ts`, `hooks/useTemplates.ts`, `hooks/useThemeCustomization.ts`, `hooks/useToast.ts`, `hooks/useUndoRedo.ts`, `hooks/useUniversityData.ts`, `hooks/useViewState.ts`, `hooks/__tests__/useKeyboardShortcuts.test.tsx`
 
 ### C4 Persistence & Data Model
-`hooks/useApplications.ts`, `utils/dataMigration.ts`, `utils/browserStorage.ts`, `utils/exportFields.ts`, `utils/exportFormats.ts`, `utils/formatters.ts`, `utils/calendarExport.ts`, `types/interfaces.ts`, `types/automation.ts`, `types/commands.ts`, `types/enums.ts`, `types/vendor.d.ts`, `hooks/useAdvancedFilter.ts`, `hooks/useAdvancedSearch.ts`, `hooks/useCustomFields.ts`, `hooks/useKanbanConfig.ts`, `hooks/useTemplates.ts`, `hooks/useThemeCustomization.ts`, `hooks/useViewState.ts`
+`hooks/useApplications.ts`, `utils/dataMigration.ts`, `utils/applicationDefaults.ts`, `utils/browserStorage.ts`, `utils/exportFields.ts`, `utils/exportFormats.ts`, `utils/formatters.ts`, `utils/calendarExport.ts`, `types/interfaces.ts`, `types/automation.ts`, `types/commands.ts`, `types/enums.ts`, `types/vendor.d.ts`, `hooks/useAdvancedFilter.ts`, `hooks/useAdvancedSearch.ts`, `hooks/useCustomFields.ts`, `hooks/useKanbanConfig.ts`, `hooks/useTemplates.ts`, `hooks/useThemeCustomization.ts`, `hooks/useViewState.ts`, `src-tauri/src/store.rs`
 
 ### C5 Search & Index Runtime
 `components/AdvancedSearchBar.tsx`, `hooks/useAdvancedSearch.ts`, `hooks/useAutoComplete.ts`, `hooks/useSortAndFilter.ts`, `utils/searchIndex.ts`, `utils/searchIndex.worker.ts`, `utils/searchIndexWorker.ts`, `utils/searchIndexWrapper.ts`
@@ -36,13 +36,13 @@ Goal: expose subsystem ownership and wiring so agents can jump directly to the r
 `components/CommandPalette.tsx`, `contexts/CommandContext.tsx`, `hooks/useAppCommands.ts`, `hooks/useEnhancedKeyboardShortcuts.ts`, `hooks/useKeyboardShortcuts.ts`, `hooks/useCommandPalette.ts`, `types/commands.ts`, `components/SettingsModal.tsx`, `contexts/__tests__/CommandContext.test.tsx`, `utils.ts`
 
 ### C7 Desktop Runtime Bridge
-`src-tauri/src/lib.rs`, `src-tauri/src/main.rs`, `src-tauri/tauri.conf.json`, `src-tauri/capabilities/default.json`, `electron/main.ts`, `electron/preload.ts`, `electron/preload.cjs`, `electron/tsconfig.json`, `lib/desktopBridge.ts`, `types/interfaces.ts`, `components/TitleBar.tsx`, `components/ErrorBoundary.tsx`, `hooks/useApplications.ts`, `hooks/useApplicationForm.ts`
+`src-tauri/src/lib.rs`, `src-tauri/src/main.rs`, `src-tauri/src/store.rs`, `src-tauri/src/cli.rs`, `src-tauri/src/bin/academiatrack.rs`, `src-tauri/tauri.conf.json`, `src-tauri/capabilities/default.json`, `electron/main.ts`, `electron/preload.ts`, `electron/preload.cjs`, `electron/tsconfig.json`, `lib/desktopBridge.ts`, `types/interfaces.ts`, `components/TitleBar.tsx`, `components/ErrorBoundary.tsx`, `hooks/useApplications.ts`, `hooks/useApplicationForm.ts`, `skills/cli-anything-academiatrack/SKILL.md`
 
 ### C8 Settings & Profile Customization
 `hooks/useThemeCustomization.ts`, `hooks/useTemplates.ts`, `hooks/useCustomFields.ts`, `hooks/useViewState.ts`, `hooks/useKanbanConfig.ts`, `hooks/useEnhancedKeyboardShortcuts.ts`, `hooks/useAutomation.ts`, `components/SettingsModal.tsx`, `components/ViewPresetModal.tsx`, `components/AutomationRulesModal.tsx`, `components/ColumnConfigModal.tsx`, `components/Toast.tsx`
 
 ### C9 Testing, Tooling, CI
-`tests/e2e/app-launch.spec.ts`, `tests/e2e/command-palette.spec.ts`, `tests/integration/module-linking.test.ts`, `components/__tests__/CommandPalette.test.tsx`, `components/__tests__/FacultyContactModal.test.tsx`, `components/__tests__/QuickCaptureModal.test.tsx`, `contexts/__tests__/CommandContext.test.tsx`, `hooks/__tests__/useKeyboardShortcuts.test.tsx`, `utils/__tests__/browserStorage.test.tsx`, `AGENTS.md`, `vite.config.ts`, `vitest.config.ts`, `playwright.config.ts`, `.github/workflows/build.yml`, `.github/workflows/release.yml`, `.github/release-notes.md`, scripts
+`tests/e2e/app-launch.spec.ts`, `tests/e2e/command-palette.spec.ts`, `tests/integration/module-linking.test.ts`, `components/__tests__/CommandPalette.test.tsx`, `components/__tests__/FacultyContactModal.test.tsx`, `components/__tests__/QuickCaptureModal.test.tsx`, `contexts/__tests__/CommandContext.test.tsx`, `hooks/__tests__/useKeyboardShortcuts.test.tsx`, `utils/__tests__/browserStorage.test.tsx`, `utils/__tests__/dataMigration.test.ts`, `src-tauri/tests/cli_e2e.rs`, `src-tauri/tests/TEST.md`, `AGENTS.md`, `vite.config.ts`, `vitest.config.ts`, `playwright.config.ts`, `.github/workflows/build.yml`, `.github/workflows/release.yml`, `.github/release-notes.md`, scripts
 
 ### C10 Reference Data & Static Assets
 `src/data/universities.json`, `hooks/useUniversityData.ts`, `components/UniversitySearchInput.tsx`, `assets/entitlements.mac.plist`, `assets/icon.icns`, `assets/icon.ico.ico`, `assets/icon.png`, `assets/MicrosoftEdgeWebview2Setup.exe`, `public/AcademiaTrack.png`, `public/favicon.ico`, `AcademiaTrack.png`
@@ -72,5 +72,6 @@ Goal: expose subsystem ownership and wiring so agents can jump directly to the r
 ## Stability Notes
 
 - `C7` runtime bridge contracts are strongly coupled with the desktop application lifecycle and require either the Tauri runtime or the legacy Electron process.
-- `C4` contains the canonical migration boundary for `Application` schema changes (`CURRENT_DATA_VERSION = 3`).
+- `C4` contains the canonical migration boundary for `Application` schema changes (`CURRENT_DATA_VERSION = 3` in `utils/dataMigration.ts`, shared by `src-tauri/src/store.rs`).
+- `C7` also owns the `academiatrack` CLI. It writes the desktop file, not browser `localStorage`.
 - `C6` has dynamic command registration; stale command nodes in shared hooks/components should be expected as the application state changes.

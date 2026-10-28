@@ -2,37 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { Application, FacultyContact, ApplicationStatus, ApplicationFeeWaiverStatus, TestStatus, ProgramType, DocumentStatus } from '../types';
 import { useDebounce } from './useDebounce';
 import { migrateData, wrapInSchema } from '../utils/dataMigration';
+import { ensureApplicationDefaults } from '../utils/applicationDefaults';
 import { useUndoRedo } from './useUndoRedo';
 import { getStorageItem, readJsonFromStorage, writeJsonToStorageOrThrow } from '../utils/browserStorage';
 import { getDaysUntil } from '../utils/dateUtils';
 import { ToastType } from './useToast';
-
-// Imported records (especially hand-edited or third-party JSON) may be missing
-// required nested structures that UI components dereference without guards
-// (documents.cv.required, gre, englishTest, facultyContacts, ...). Merge each
-// imported app over safe defaults so a partial record degrades gracefully
-// instead of crashing the whole view.
-const ensureApplicationDefaults = (app: Application): Application => {
-  const blankDoc = () => ({ required: false, status: DocumentStatus.NotStarted, submitted: null });
-  const existingDocs = (app.documents ?? {}) as Partial<Application['documents']>;
-  return {
-    ...app,
-    facultyContacts: Array.isArray(app.facultyContacts) ? app.facultyContacts : [],
-    reminders: Array.isArray(app.reminders) ? app.reminders : [],
-    statusHistory: Array.isArray(app.statusHistory) ? app.statusHistory : [],
-    documents: {
-      cv: existingDocs.cv ?? blankDoc(),
-      statementOfPurpose: existingDocs.statementOfPurpose ?? blankDoc(),
-      transcripts: existingDocs.transcripts ?? blankDoc(),
-      lor1: existingDocs.lor1 ?? blankDoc(),
-      lor2: existingDocs.lor2 ?? blankDoc(),
-      lor3: existingDocs.lor3 ?? blankDoc(),
-      writingSample: existingDocs.writingSample ?? blankDoc(),
-    },
-    gre: app.gre ?? { status: TestStatus.NotApplicable },
-    englishTest: app.englishTest ?? { type: 'Not Required', status: TestStatus.NotApplicable },
-  };
-};
 
 export const useApplications = (showToast?: (type: ToastType, message: string, title?: string) => void) => {
   const { state: applications, setState: setApplications, undo, redo, canUndo, canRedo, reset } = useUndoRedo<Application[]>([]);
@@ -261,8 +235,8 @@ export const useApplications = (showToast?: (type: ToastType, message: string, t
     const appToDuplicate = applications.find(app => app.id === id);
     if (!appToDuplicate) return;
 
-    // Deep copy to avoid reference issues
-    const newApp: Application = JSON.parse(JSON.stringify(appToDuplicate));
+    // Deep copy to avoid reference issues. Defaults first so a sparse row has documents.
+    const newApp = ensureApplicationDefaults(JSON.parse(JSON.stringify(appToDuplicate)));
 
     setCanPersist(true);
     newApp.id = crypto.randomUUID();
@@ -321,7 +295,7 @@ export const useApplications = (showToast?: (type: ToastType, message: string, t
         reminders: [],
         customProgramType: '',
       };
-      setApplications(apps => [...apps, newApplication]);
+      setApplications(apps => [...apps, ensureApplicationDefaults(newApplication)]);
     } else {
       // Case-insensitive search for existing application
       const appToUpdate = applications.find(app => app.universityName.toLowerCase() === universityName.toLowerCase());

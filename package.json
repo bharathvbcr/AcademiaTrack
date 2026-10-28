@@ -36,7 +36,8 @@
     "tauri": "tauri",
     "dev:tauri": "tauri dev",
     "build:tauri": "tauri build",
-    "build:mac": "tauri build --target universal-apple-darwin"
+    "build:mac": "tauri build --target universal-apple-darwin",
+    "cli": "cargo run --manifest-path src-tauri/Cargo.toml --bin academiatrack --"
   },
   "dependencies": {
     "@fontsource/inter": "^5.3.0",

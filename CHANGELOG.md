@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## [Unreleased]
+
+### Added
+- **Agent CLI:** Added the `academiatrack` binary beside the desktop app. It reads and writes the same `data.json` store, with JSON output, undo, backups, and a REPL. `bun run cli -- --json status` starts it. The desktop app takes `desktop.lock` while it is open so a CLI write is refused instead of being overwritten by the in-memory window.
+- **Agent CLI fields:** `application update` sets fee waiver, decision deadline, admission chance, and one document slot. Import fills the form's application shape, keeps unknown keys, and rejects a duplicate id.
+
+### Fixed
+- **Partial records:** Loading an unversioned object that already has an applications array keeps that array and its extra root keys. The loader fills missing form fields, including the financial offer, so a partial row can open.
+
 ## [5.7.0] - 2026-08-21
 
 ### Added

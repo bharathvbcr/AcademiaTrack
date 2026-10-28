@@ -205,9 +205,12 @@ Purpose: deterministic ownership mapping for every tracked file in this reposito
 - `src-tauri/icons/icon.icns` — Map/Maps
 - `src-tauri/icons/icon.ico` — Map/Maps
 - `src-tauri/icons/icon.png` — Map/Maps
+- `src-tauri/src/bin/academiatrack.rs` — Desktop Runtime
+- `src-tauri/src/cli.rs` — Desktop Runtime
 - `src-tauri/src/lib.rs` — Desktop Runtime
 - `src-tauri/src/main.rs` — Desktop Runtime
 - `src-tauri/src/semantic_sidecar.rs` — Desktop Runtime
+- `src-tauri/src/store.rs` — Desktop Runtime
 - `src-tauri/tauri.conf.json` — Desktop Runtime
 
 ## Hooks
@@ -307,11 +310,13 @@ Purpose: deterministic ownership mapping for every tracked file in this reposito
 ## Utils
 
 - `utils/__tests__/browserStorage.test.ts` — Testing
+- `utils/__tests__/dataMigration.test.ts` — Testing
 - `utils/__tests__/dateUtils.test.ts` — Testing
 - `utils/__tests__/getDeadlineInfo.test.ts` — Testing
 - `utils/__tests__/parseCSV.test.ts` — Testing
 - `utils/browserStorage.ts` — Persistence
 - `utils/calendarExport.ts` — Data/Model
+- `utils/applicationDefaults.ts` — Persistence
 - `utils/dataMigration.ts` — Persistence
 - `utils/dateUtils.ts` — Data/Model
 - `utils/exportFields.ts` — Data/Model
@@ -333,9 +338,13 @@ Purpose: deterministic ownership mapping for every tracked file in this reposito
 - `tests/test_semantic_server.py` — Testing
 - `tests/test_semantic_server_stress.py` — Testing
 - `tests/test_semantic_stress.py` — Testing
+- `src-tauri/tests/cli_e2e.rs` — Testing
+- `src-tauri/tests/TEST.md` — Testing
+- `skills/cli-anything-academiatrack/SKILL.md` — Desktop Runtime
 
 ## Ownership Routing
 
 - UI-triggered persistence flow ownership: `components/*` → `hooks/*` → `utils/dataMigration.ts` + `utils/browserStorage.ts` (web) or `lib/desktopBridge.ts` + Tauri Rust commands (Tauri desktop).
 - Command flow ownership: `components/CommandPalette.tsx` → `hooks/useAppCommands.ts` / `hooks/useCommandPalette.ts` → `contexts/CommandContext.tsx` → component handlers.
-- Desktop file APIs: `hooks/useApplicationForm.ts` + `hooks/useApplications.ts` → `lib/desktopBridge.ts` → Tauri Rust commands.
+- Desktop file APIs: `hooks/useApplicationForm.ts` + `hooks/useApplications.ts` → `lib/desktopBridge.ts` → Tauri Rust commands in `src-tauri/src/lib.rs` → `src-tauri/src/store.rs`.
+- Agent CLI: the academiatrack binary → `src-tauri/src/cli.rs` → `src-tauri/src/store.rs` → the desktop data file. Skill: `skills/cli-anything-academiatrack/SKILL.md`.

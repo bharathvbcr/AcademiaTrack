@@ -64,6 +64,17 @@ AcademiaTrack is a desktop-first academic application tracker for managing unive
 - Backup APIs for create, list, restore, delete, and automatic backup.
 - Renderer-only development remains usable through browser storage fallbacks where desktop APIs are unavailable.
 
+### Command line
+
+`academiatrack` is an agent CLI for the desktop `data.json` store. It is a second binary in `src-tauri` and uses the same atomic writer as the Tauri app. The browser `localStorage` key `phd-applications` is a separate store.
+
+```bash
+bun run cli -- --json status
+bun run cli -- --json application list
+```
+
+Close the AcademiaTrack window before a write. An open window keeps applications in memory and will overwrite the file on its next edit. The CLI refuses mutations while that process holds `desktop.lock`. `skills/cli-anything-academiatrack/SKILL.md` is the command reference. CSV export from the CLI is a fixed column set; the in-app export modal still chooses fields. Import writes the form's application shape and keeps unknown keys. `application update` accepts `--fee-waiver`, `--decision-deadline`, `--chance`, and `--document`.
+
 ## Project Diagram
 
 ```mermaid

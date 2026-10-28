@@ -18,10 +18,28 @@ const migrations: Record<number, MigrationFn> = {
     // Version 0 -> 1: Initial migration from raw array to versioned schema
     // This handles legacy data that was just an array of applications
     0: (data: unknown): DataSchema => {
-        const applications = Array.isArray(data) ? data : [];
+        if (Array.isArray(data)) {
+            return {
+                version: 1,
+                applications: data as Application[],
+                lastUpdated: new Date().toISOString(),
+            };
+        }
+        // An unversioned object that already holds the list is a document, not garbage.
+        // Spreading keeps extra root keys. Later steps spread again so they survive to v3.
+        if (data && typeof data === 'object' && Array.isArray((data as { applications?: unknown }).applications)) {
+            const schema = data as DataSchema;
+            const lastUpdated = typeof schema.lastUpdated === 'string' ? schema.lastUpdated : new Date().toISOString();
+            return {
+                ...schema,
+                version: 1,
+                applications: schema.applications,
+                lastUpdated,
+            };
+        }
         return {
             version: 1,
-            applications: applications as Application[],
+            applications: [],
             lastUpdated: new Date().toISOString(),
         };
     },
@@ -36,6 +54,7 @@ const migrations: Record<number, MigrationFn> = {
             admissionChance: app.admissionChance ?? undefined,
         }));
         return {
+            ...schema,
             version: 2,
             applications: migratedApps,
             lastUpdated: new Date().toISOString(),
@@ -50,6 +69,7 @@ const migrations: Record<number, MigrationFn> = {
             decisionDeadline: app.decisionDeadline ?? undefined,
         }));
         return {
+            ...schema,
             version: 3,
             applications: migratedApps,
             lastUpdated: new Date().toISOString(),

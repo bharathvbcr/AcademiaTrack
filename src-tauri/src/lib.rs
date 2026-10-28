@@ -1,6 +1,9 @@
+mod cli;
 mod semantic_sidecar;
+mod store;
 
-use chrono::{DateTime, Utc};
+pub use cli::cli_main;
+
 use semantic_sidecar::{
   get_semantic_sidecar_status, init as init_semantic_sidecar, shutdown as shutdown_semantic_sidecar,
   start_semantic_sidecar, stop_semantic_sidecar, SemanticSidecarState,
@@ -73,6 +76,10 @@ fn app_data_dir(app: &AppHandle) -> Result<PathBuf, String> {
   app.path().app_data_dir().map_err(|error| error.to_string())
 }
 
+fn open_store(app: &AppHandle) -> Result<store::Store, String> {
+  store::Store::open(app_data_dir(app)?)
+}
+
 fn ensure_dirs(app: &AppHandle) -> Result<(PathBuf, PathBuf, PathBuf), String> {
   let user_data_path = app_data_dir(app)?;
   let documents_dir = user_data_path.join("documents");
@@ -98,20 +105,6 @@ fn assert_within_app_data(app: &AppHandle, path: &Path) -> Result<(), String> {
   Ok(())
 }
 
-/// Validates that restored/backup JSON has a structure the app can load.
-/// Accepts either the legacy bare-array format (schema version 0) or the
-/// current `{ version, applications: [...] }` wrapper. Anything else (a number,
-/// string, or an object without an `applications` array) would corrupt the app
-/// state on next load, so it is rejected before any live data is overwritten.
-fn is_loadable_data_schema(value: &Value) -> bool {
-  if value.is_array() {
-    return true;
-  }
-  value
-    .get("applications")
-    .map_or(false, |applications| applications.is_array())
-}
-
 fn backup_result_error(error: impl ToString) -> BackupResult {
   BackupResult {
     success: false,
@@ -124,27 +117,12 @@ fn backup_result_error(error: impl ToString) -> BackupResult {
 
 #[tauri::command]
 fn load_data(app: AppHandle) -> Result<Option<Value>, String> {
-  let (data_file_path, _, _) = ensure_dirs(&app)?;
-  if !data_file_path.exists() {
-    return Ok(None);
-  }
-
-  let data = fs::read_to_string(data_file_path).map_err(|error| error.to_string())?;
-  serde_json::from_str(&data).map(Some).map_err(|error| error.to_string())
+  open_store(&app)?.load_raw()
 }
 
 #[tauri::command]
 fn save_data(app: AppHandle, data: Value) -> Result<bool, String> {
-  let (data_file_path, _, _) = ensure_dirs(&app)?;
-  let temp_path = data_file_path.with_extension("json.tmp");
-  let serialized = serde_json::to_string_pretty(&data).map_err(|error| error.to_string())?;
-  const MAX_BYTES: usize = 50 * 1024 * 1024;
-  if serialized.len() > MAX_BYTES {
-    return Err("Data exceeds maximum allowed size (50 MB)".to_string());
-  }
-  fs::write(&temp_path, serialized).map_err(|error| error.to_string())?;
-  fs::rename(&temp_path, &data_file_path).map_err(|error| error.to_string())?;
-
+  open_store(&app)?.save_raw(&data)?;
   Ok(true)
 }
 
@@ -322,22 +300,15 @@ fn delete_document_impl(file_path: &str) -> Result<(), String> {
 
 #[tauri::command]
 fn create_backup(app: AppHandle) -> BackupResult {
-  let (data_file_path, _, backup_dir) = match ensure_dirs(&app) {
-    Ok(paths) => paths,
+  let store = match open_store(&app) {
+    Ok(store) => store,
     Err(error) => return backup_result_error(error),
   };
-
-  if !data_file_path.exists() {
-    return backup_result_error("No data to backup");
-  }
-
-  let timestamp = Utc::now().to_rfc3339().replace([':', '.'], "-");
-  let backup_path = backup_dir.join(format!("backup-{timestamp}.json"));
-  match fs::copy(&data_file_path, &backup_path) {
-    Ok(_) => BackupResult {
+  match store.create_backup() {
+    Ok((path, timestamp)) => BackupResult {
       success: true,
       error: None,
-      path: Some(path_to_string(&backup_path)),
+      path: Some(path_to_string(&path)),
       timestamp: Some(timestamp),
       data: None,
     },
@@ -347,147 +318,65 @@ fn create_backup(app: AppHandle) -> BackupResult {
 
 #[tauri::command]
 fn list_backups(app: AppHandle) -> Vec<BackupInfo> {
-  let (_, _, backup_dir) = match ensure_dirs(&app) {
-    Ok(paths) => paths,
+  let store = match open_store(&app) {
+    Ok(store) => store,
     Err(_) => return Vec::new(),
   };
-
-  let mut backups: Vec<BackupInfo> = fs::read_dir(backup_dir)
-    .ok()
+  let entries = match store.list_backups() {
+    Ok(entries) => entries,
+    Err(_) => return Vec::new(),
+  };
+  let mut backups: Vec<BackupInfo> = entries
     .into_iter()
-    .flat_map(|entries| entries.filter_map(Result::ok))
-    .filter_map(|entry| {
-      let path = entry.path();
-      let filename = path.file_name()?.to_string_lossy().into_owned();
-      if !filename.starts_with("backup-") || !filename.ends_with(".json") {
-        return None;
-      }
-
-      let metadata = entry.metadata().ok()?;
-      let modified = metadata.modified().ok()?;
-      let timestamp = DateTime::<Utc>::from(modified).to_rfc3339();
-      Some(BackupInfo {
-        filename: filename.clone(),
-        path: filename,
-        timestamp,
-        size: metadata.len(),
-      })
+    .map(|entry| BackupInfo {
+      path: entry.filename.clone(),
+      filename: entry.filename,
+      timestamp: entry.timestamp,
+      size: entry.size,
     })
     .collect();
-
-  backups.sort_by(|a, b| b.timestamp.cmp(&a.timestamp));
+  backups.sort_by(|left, right| right.timestamp.cmp(&left.timestamp));
   backups
 }
 
 #[tauri::command]
 fn restore_backup(app: AppHandle, filename: String) -> BackupResult {
-  let (data_file_path, _, backup_dir) = match ensure_dirs(&app) {
-    Ok(paths) => paths,
+  let store = match open_store(&app) {
+    Ok(store) => store,
     Err(error) => return backup_result_error(error),
   };
-
-  let source = backup_dir.join(&filename);
-  let canonical_backup_dir = match fs::canonicalize(&backup_dir) {
-    Ok(p) => p,
-    Err(e) => return backup_result_error(e),
-  };
-  let canonical_source = match fs::canonicalize(&source) {
-    Ok(p) => p,
-    Err(_) => return backup_result_error("Backup file not found"),
-  };
-  if !canonical_source.starts_with(&canonical_backup_dir) {
-    return backup_result_error("Access denied: path outside backup directory");
-  }
-
-  // Validate the backup BEFORE touching live data. Reading + parsing + a schema
-  // check up front guarantees that an unparseable or structurally-broken backup
-  // can never overwrite the user's current data.
-  let contents = match fs::read_to_string(&canonical_source) {
-    Ok(c) => c,
-    Err(error) => return backup_result_error(error),
-  };
-  let parsed: Value = match serde_json::from_str(&contents) {
-    Ok(value) => value,
-    Err(_) => return backup_result_error("Backup file is not valid JSON"),
-  };
-  if !is_loadable_data_schema(&parsed) {
-    return backup_result_error("Backup file has an unrecognized or corrupted structure");
-  }
-
-  // Snapshot the current live data so the user can recover if anything downstream
-  // goes wrong.
-  if data_file_path.exists() {
-    let safety_path = backup_dir.join(format!("pre-restore-{}.json", Utc::now().timestamp_millis()));
-    if let Err(error) = fs::copy(&data_file_path, safety_path) {
-      return backup_result_error(error);
-    }
-  }
-
-  // Write atomically (temp + rename) using the already-validated contents.
-  let temp_path = data_file_path.with_extension("json.tmp");
-  if let Err(error) = fs::write(&temp_path, &contents) {
-    return backup_result_error(error);
-  }
-  if let Err(error) = fs::rename(&temp_path, &data_file_path) {
-    let _ = fs::remove_file(&temp_path);
-    return backup_result_error(error);
-  }
-
-  BackupResult {
-    success: true,
-    error: None,
-    path: None,
-    timestamp: None,
-    data: Some(parsed),
+  match store.restore_backup(&filename) {
+    Ok(data) => BackupResult {
+      success: true,
+      error: None,
+      path: None,
+      timestamp: None,
+      data: Some(data),
+    },
+    Err(error) => backup_result_error(error),
   }
 }
 
 #[tauri::command]
 fn delete_backup(app: AppHandle, filename: String) -> BackupResult {
-  let (_, _, backup_dir) = match ensure_dirs(&app) {
-    Ok(paths) => paths,
+  let store = match open_store(&app) {
+    Ok(store) => store,
     Err(error) => return backup_result_error(error),
   };
-  let path = backup_dir.join(&filename);
-  let canonical_backup_dir = match fs::canonicalize(&backup_dir) {
-    Ok(p) => p,
-    Err(e) => return backup_result_error(e),
-  };
-  let canonical_path = match fs::canonicalize(&path) {
-    Ok(p) => p,
-    Err(_) => return backup_result_error("Backup file not found"),
-  };
-  if !canonical_path.starts_with(&canonical_backup_dir) {
-    return backup_result_error("Access denied: path outside backup directory");
+  match store.delete_backup(&filename) {
+    Ok(()) => BackupResult { success: true, error: None, path: None, timestamp: None, data: None },
+    Err(error) => backup_result_error(error),
   }
-  if path.exists() {
-    if let Err(error) = fs::remove_file(&path) {
-      return backup_result_error(error);
-    }
-  }
-  BackupResult { success: true, error: None, path: None, timestamp: None, data: None }
 }
 
 #[tauri::command]
 fn auto_backup(app: AppHandle) -> BackupResult {
-  let (data_file_path, _, backup_dir) = match ensure_dirs(&app) {
-    Ok(paths) => paths,
+  let store = match open_store(&app) {
+    Ok(store) => store,
     Err(error) => return backup_result_error(error),
   };
-
-  if !data_file_path.exists() {
-    return backup_result_error("No data to backup");
-  }
-
-  let auto_backup_path = backup_dir.join("auto-backup.json");
-  match fs::copy(&data_file_path, auto_backup_path) {
-    Ok(_) => BackupResult {
-      success: true,
-      error: None,
-      path: None,
-      timestamp: None,
-      data: None,
-    },
+  match store.auto_backup() {
+    Ok(()) => BackupResult { success: true, error: None, path: None, timestamp: None, data: None },
     Err(error) => backup_result_error(error),
   }
 }
@@ -538,6 +427,17 @@ pub fn run() {
       }
 
       init_semantic_sidecar(app.handle());
+      match app.path().app_data_dir() {
+        Ok(dir) => match store::Store::open(dir) {
+          Ok(store) => {
+            if let Err(error) = store.acquire_desktop_session() {
+              eprintln!("AcademiaTrack could not write desktop.lock: {error}");
+            }
+          }
+          Err(error) => eprintln!("AcademiaTrack could not open its data directory: {error}"),
+        },
+        Err(error) => eprintln!("AcademiaTrack could not resolve its data directory: {error}"),
+      }
 
       // The window is created hidden (`"visible": false`) so we can finish
       // styling it before the first paint, avoiding a flash of the wrong frame.
@@ -582,6 +482,11 @@ pub fn run() {
       if let RunEvent::Exit = event {
         if let Some(state) = app_handle.try_state::<SemanticSidecarState>() {
           shutdown_semantic_sidecar(&state);
+        }
+        if let Ok(dir) = app_handle.path().app_data_dir() {
+          if let Ok(store) = store::Store::open(dir) {
+            store.release_desktop_session();
+          }
         }
       }
     });

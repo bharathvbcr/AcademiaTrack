@@ -108,12 +108,29 @@ P --> M["Tauri commands + legacy Electron handlers"]
 M --> FS["filesystem methods in src-tauri/src/lib.rs or electron/main.ts"]
 ```
 
-- `createBackup`, `listBackups`, `restoreBackup`, `deleteBackup`, `autoBackup` are implemented in `src-tauri/src/lib.rs` for Tauri and retained in `electron/main.ts` for the legacy Electron path.
+- `createBackup`, `listBackups`, `restoreBackup`, `deleteBackup`, `autoBackup` are Tauri commands in `src-tauri/src/lib.rs`. The file work lives in `src-tauri/src/store.rs`. The legacy Electron path remains in `electron/main.ts`.
 - Current renderer code path does not consistently invoke backup/update APIs, so these are available surface area rather than active call chains.
 
 ## 7) One-Loop Data Freshness Rule
 
 - Loader path:
-  - `hooks/useApplications` mounts, calls `window.desktop.loadData` (desktop) or `readJsonFromStorage('phd-applications')` (web), then `migrateData`.
+  - `hooks/useApplications` mounts, calls `window.desktop.loadData` (desktop) or `readJsonFromStorage('phd-applications')` (web), then `migrateData`, then `ensureApplicationDefaults` from `utils/applicationDefaults.ts`.
   - All edits route through `useUndoRedo`, then persist through debounced `saveData`.
 - All application mutations with durable state are expected to reach this writer path unless they are temporary UI state (e.g., selected filters in memory).
+
+## 8) Agent CLI
+
+```mermaid
+flowchart LR
+Agent["academiatrack --json"] --> Store["src-tauri/src/store.rs"]
+Desktop["Tauri save_data / load_data / backup commands"] --> Store
+Store --> File["data.json in the app data directory"]
+Desktop --> Lock["desktop.lock while the window is open"]
+Lock --> Store
+```
+
+- `src-tauri/src/bin/academiatrack.rs` calls `cli_main` in `src-tauri/src/cli.rs`.
+- CLI mutations and Tauri `save_data` both go through `Store`. `save_data` does not record CLI undo history.
+- A CLI write checks `desktop.lock` and refuses while that pid is alive, because the open window would overwrite `data.json` from memory on its next save.
+- Browser `localStorage` (`phd-applications`) is not this file. The CLI does not read it.
+- Every CLI mutation fills missing application fields to that same form shape before writing. An unversioned object that already contains an applications array is migrated and keeps its extra root keys.
