@@ -32,10 +32,11 @@ interface ApplicationModalProps {
   onClose: () => void;
   applicationToEdit?: Application;
   onSave: (app: Application) => void;
+  onDelete?: (id: string) => void;
   applications: Application[];
 }
 
-const ApplicationModal: React.FC<ApplicationModalProps> = ({ isOpen, onClose, applicationToEdit, onSave, applications }) => {
+const ApplicationModal: React.FC<ApplicationModalProps> = ({ isOpen, onClose, applicationToEdit, onSave, onDelete, applications }) => {
   const {
     universitySuggestions,
     showSuggestions,
@@ -426,8 +427,20 @@ const ApplicationModal: React.FC<ApplicationModalProps> = ({ isOpen, onClose, ap
                 />
               </div>
               <div className="flex items-center justify-between p-4 border-t border-[#27272a] rounded-b-3xl">
-                <div className="text-xs text-[#a1a1aa]/70" aria-label="Keyboard shortcut">
-                  <kbd className="px-1.5 py-0.5 bg-[#27272a] rounded text-xs text-[#a1a1aa]" aria-label="Command key">⌘</kbd> + <kbd className="px-1.5 py-0.5 bg-[#27272a] rounded text-xs text-[#a1a1aa]" aria-label="Enter key">Enter</kbd> to save
+                <div className="flex items-center gap-3">
+                  {applicationToEdit && onDelete && (
+                    <button
+                      type="button"
+                      onClick={() => onDelete(applicationToEdit.id)}
+                      className="px-4 py-2 text-sm font-medium text-red-300 rounded-full hover:bg-red-500/10 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                      aria-label={`Delete ${applicationToEdit.universityName}`}
+                    >
+                      Delete
+                    </button>
+                  )}
+                  <div className="text-xs text-[#a1a1aa]/70" aria-label="Keyboard shortcut">
+                    <kbd className="px-1.5 py-0.5 bg-[#27272a] rounded text-xs text-[#a1a1aa]" aria-label="Command key">⌘</kbd> + <kbd className="px-1.5 py-0.5 bg-[#27272a] rounded text-xs text-[#a1a1aa]" aria-label="Enter key">Enter</kbd> to save
+                  </div>
                 </div>
                 <div className="flex space-x-3">
                   <button

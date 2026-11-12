@@ -1,9 +1,12 @@
 import React, { createContext, useContext } from 'react';
-import { Application } from '../types';
+import { Application, ApplicationStatus } from '../types';
 
 interface ApplicationActionsContextType {
     openModal: (app: Application | null) => void;
     requestDelete: (id: string) => void;
+    requestDeleteUniversity: (universityName: string) => void;
+    requestRenameUniversity: (universityName: string) => void;
+    requestSetUniversityStatus: (universityName: string, status: ApplicationStatus) => void;
     updateApplication: (app: Application) => void;
     duplicateApplication: (id: string) => void;
 }

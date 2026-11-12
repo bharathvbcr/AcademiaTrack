@@ -23,11 +23,13 @@ import { DropResult } from '@hello-pangea/dnd';
 import { exportToCSV, parseCSV } from './utils';
 import { ApplicationSearchIndexWrapper } from './utils/searchIndexWrapper';
 import { DESKTOP_BRIDGE_READY_EVENT, isDesktopRuntime } from './lib/desktopBridge';
-import { TAG_REMOVE_PREFIX } from './constants';
+import { planUniversityRename, planUniversityStatus, universityKey } from './utils/universityBatch';
+import { STATUS_LABELS, TAG_REMOVE_PREFIX } from './constants';
 
 import Header from './components/Header';
 import TitleBar from './components/TitleBar';
 import ConfirmationModal from './components/ConfirmationModal';
+import UniversityNameDialog from './components/UniversityNameDialog';
 import MainContent from './components/MainContent';
 import CommandPalette from './components/CommandPalette';
 import LoadingSpinner from './components/LoadingSpinner';
@@ -61,7 +63,8 @@ const App: React.FC = () => {
     applications,
     addApplication,
     updateApplication,
-    deleteApplication,
+    deleteApplications,
+    replaceApplications,
     addFacultyContact,
     duplicateApplication,
     importApplications,
@@ -94,6 +97,7 @@ const App: React.FC = () => {
     getSelectedApplications,
   } = useBulkSelection(applications);
 
+  const [renameUniversityName, setRenameUniversityName] = React.useState<string | null>(null);
   const [isComparisonOpen, setIsComparisonOpen] = React.useState(false);
   const [isHelpOpen, setIsHelpOpen] = React.useState(false);
   const [isBulkOperationsOpen, setIsBulkOperationsOpen] = React.useState(false);
@@ -341,16 +345,133 @@ const App: React.FC = () => {
     canRedo,
   });
 
-  const requestDelete = React.useCallback((id: string) => {
-    deleteApplication(id);
-    if (selectedIds.has(id)) {
+  const removeApplications = React.useCallback((ids: string[]) => {
+    const removed = deleteApplications(ids);
+    if (removed === 0) {
+      return;
+    }
+    const removedIds = new Set(ids);
+    if ([...selectedIds].some(id => removedIds.has(id))) {
       clearSelection();
     }
-    if (editingApplication?.id === id) {
+    if (editingApplication && removedIds.has(editingApplication.id)) {
       closeModal();
       showToast('warning', 'The application you were editing was deleted.');
     }
-  }, [deleteApplication, selectedIds, clearSelection, editingApplication, closeModal, showToast]);
+    const noun = removed === 1 ? 'application' : 'applications';
+    showToast('success', `Deleted ${removed} ${noun}. Undo with Ctrl+Z.`);
+  }, [deleteApplications, selectedIds, clearSelection, editingApplication, closeModal, showToast]);
+
+  const requestDelete = React.useCallback((id: string) => {
+    const app = applications.find(item => item.id === id);
+    const label = app ? `${app.universityName} — ${app.programName}` : 'this application';
+    showConfirmation(
+      'Delete application',
+      `Delete ${label}? You can undo with Ctrl+Z.`,
+      () => removeApplications([id]),
+      true,
+    );
+  }, [applications, showConfirmation, removeApplications]);
+
+  const requestDeleteUniversity = React.useCallback((universityName: string) => {
+    const key = universityName.trim().toLowerCase();
+    const matches = applications.filter(app => app.universityName.trim().toLowerCase() === key);
+    if (matches.length === 0) {
+      showToast('warning', `No applications found for ${universityName}.`);
+      return;
+    }
+    const school = matches[0].universityName;
+    const programs = matches.map(app => app.programName).join(', ');
+    const message = matches.length === 1
+      ? `Delete ${school} (${programs})? You can undo with Ctrl+Z.`
+      : `Delete all ${matches.length} programs at ${school}? ${programs}. You can undo with Ctrl+Z.`;
+    showConfirmation(
+      'Delete university',
+      message,
+      () => removeApplications(matches.map(app => app.id)),
+      true,
+    );
+  }, [applications, showConfirmation, showToast, removeApplications]);
+
+  const applyApplicationBatch = React.useCallback((replacements: Application[], message: string) => {
+    const count = replaceApplications(replacements);
+    if (count === 0) return;
+    const replacedIds = new Set(replacements.map(app => app.id));
+    const closedEditor = Boolean(editingApplication && replacedIds.has(editingApplication.id));
+    if (closedEditor) closeModal();
+    const editorNote = closedEditor ? ' Closed the editor so it would not overwrite this change.' : '';
+    showToast('success', `${message}${editorNote} Undo with Ctrl+Z.`);
+  }, [replaceApplications, editingApplication, closeModal, showToast]);
+
+  const requestRenameUniversity = React.useCallback((universityName: string) => {
+    setRenameUniversityName(universityName);
+  }, []);
+
+  const submitUniversityRename = React.useCallback((nextName: string) => {
+    if (renameUniversityName === null) return;
+    const plan = planUniversityRename(applications, renameUniversityName, nextName);
+    if (!plan.ok) {
+      if (plan.reason === 'missing') {
+        showToast('warning', 'No applications found for that university.');
+      } else if (plan.reason === 'unchanged') {
+        showToast('info', 'That name is already on these programs.');
+      }
+      if (plan.reason !== 'empty' && plan.reason !== 'too-long') {
+        setRenameUniversityName(null);
+      }
+      return;
+    }
+
+    const apply = () => {
+      setRenameUniversityName(null);
+      const replacements = plan.changed.map(app => ({ ...app, universityName: plan.nextName }));
+      const noun = replacements.length === 1 ? 'program' : 'programs';
+      applyApplicationBatch(replacements, `Renamed ${replacements.length} ${noun} to ${plan.nextName}.`);
+    };
+
+    if (plan.mergeCount > 0) {
+      setRenameUniversityName(null);
+      const existingName = plan.mergeName ?? plan.nextName;
+      const existingNoun = plan.mergeCount === 1 ? 'program is' : 'programs are';
+      const movingNoun = plan.changed.length === 1 ? 'program' : 'programs';
+      showConfirmation(
+        'Group with existing university',
+        `${plan.mergeCount} ${existingNoun} already named ${existingName}. Rename ${plan.changed.length} ${movingNoun} to ${plan.nextName}? You can undo with Ctrl+Z.`,
+        apply,
+      );
+      return;
+    }
+    apply();
+  }, [renameUniversityName, applications, showToast, showConfirmation, applyApplicationBatch]);
+
+  const requestSetUniversityStatus = React.useCallback((universityName: string, status: ApplicationStatus) => {
+    const plan = planUniversityStatus(applications, universityName, status);
+    const label = STATUS_LABELS[status];
+    if (!plan.ok) {
+      showToast(
+        plan.reason === 'missing' ? 'warning' : 'info',
+        plan.reason === 'missing'
+          ? `No applications found for ${universityName.trim() || 'that university'}.`
+          : `Those programs are already ${label}.`,
+      );
+      return;
+    }
+    showConfirmation(
+      'Set university status',
+      plan.changed.length === 1
+        ? `Mark ${plan.school} as ${label}? You can undo with Ctrl+Z.`
+        : `Mark all ${plan.changed.length} programs at ${plan.school} as ${label}? You can undo with Ctrl+Z.`,
+      () => {
+        const replacements = plan.changed.map(app => {
+          const withStatus = { ...app, status };
+          const auto = executeRules(withStatus, 'status_changed', { newStatus: status, oldStatus: app.status });
+          return auto ? { ...withStatus, ...auto } : withStatus;
+        });
+        const noun = replacements.length === 1 ? 'program' : 'programs';
+        applyApplicationBatch(replacements, `Updated ${replacements.length} ${noun} at ${plan.school} to ${label}.`);
+      },
+    );
+  }, [applications, showConfirmation, showToast, executeRules, applyApplicationBatch]);
 
   const handleBulkStatusChange = React.useCallback((status: ApplicationStatus) => {
     const selected = getSelectedApplications();
@@ -376,21 +497,14 @@ const App: React.FC = () => {
       return;
     }
 
+    const appsToDelete = getSelectedApplications();
     showConfirmation(
       'Delete Selected Applications',
-      `Delete ${selectedCount} selected application(s)?`,
-      () => {
-        const appsToDelete = getSelectedApplications();
-        appsToDelete.forEach(app => deleteApplication(app.id));
-        if (editingApplication && appsToDelete.some(app => app.id === editingApplication.id)) {
-          closeModal();
-          showToast('warning', 'The application you were editing was deleted.');
-        }
-        clearSelection();
-      },
+      `Delete ${appsToDelete.length} selected application(s)? You can undo with Ctrl+Z.`,
+      () => removeApplications(appsToDelete.map(app => app.id)),
       true
     );
-  }, [clearSelection, deleteApplication, getSelectedApplications, selectedCount, showConfirmation, editingApplication, closeModal, showToast]);
+  }, [getSelectedApplications, selectedCount, showConfirmation, removeApplications]);
 
   const handleBulkCompare = React.useCallback(() => {
     if (selectedCount > 0) {
@@ -663,6 +777,9 @@ const App: React.FC = () => {
           <ApplicationActionsProvider value={{
             openModal,
             requestDelete,
+            requestDeleteUniversity,
+            requestRenameUniversity,
+            requestSetUniversityStatus,
             updateApplication,
             duplicateApplication,
           }}>
@@ -700,12 +817,20 @@ const App: React.FC = () => {
         message={confirmation.message}
         isDanger={confirmation.isDanger}
       />
+      <UniversityNameDialog
+        isOpen={renameUniversityName !== null}
+        currentName={renameUniversityName ?? ''}
+        programCount={renameUniversityName === null ? 0 : applications.filter(app => universityKey(app.universityName) === universityKey(renameUniversityName)).length}
+        onClose={() => setRenameUniversityName(null)}
+        onSubmit={submitUniversityRename}
+      />
 
       <Suspense fallback={<div className="flex justify-center py-12"><LoadingSpinner text="Loading…" /></div>}>
         <ApplicationModal
           isOpen={isModalOpen}
           onClose={closeModal}
           onSave={handleSave}
+          onDelete={requestDelete}
           applicationToEdit={editingApplication || undefined}
           applications={applications}
         />

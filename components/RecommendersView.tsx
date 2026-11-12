@@ -3,6 +3,8 @@ import { Application, Recommender, RecommenderStatus } from '../types';
 import { RECOMMENDER_STATUS_OPTIONS, RECOMMENDER_STATUS_COLORS } from '../constants';
 import { formatLocalDate } from '../utils/dateUtils';
 import { MaterialIcon, formInputClass, formActionBtnClass } from './ApplicationFormUI';
+import { useConfirmation } from '../hooks/useConfirmation';
+import ConfirmationModal from './ConfirmationModal';
 
 interface RecommendersViewProps {
     applications: Application[];
@@ -18,6 +20,7 @@ interface RecommenderWithContext extends Recommender {
 }
 
 const RecommendersView: React.FC<RecommendersViewProps> = ({ applications, updateApplication, openModal }) => {
+    const { confirmation, showConfirmation, closeConfirmation } = useConfirmation();
     const [searchQuery, setSearchQuery] = useState('');
     const [statusFilter, setStatusFilter] = useState<RecommenderStatus | 'all'>('all');
     const [sortBy, setSortBy] = useState<'name' | 'university' | 'status' | 'deadline'>('deadline');
@@ -110,6 +113,22 @@ const RecommendersView: React.FC<RecommendersViewProps> = ({ applications, updat
             ...app,
             recommenders: updatedRecommenders,
         });
+    };
+
+    const handleDelete = (recommender: RecommenderWithContext) => {
+        const app = applications.find(a => a.id === recommender.applicationId);
+        if (!app) return;
+        showConfirmation(
+            'Delete recommender',
+            `Remove ${recommender.name} from ${recommender.universityName}?`,
+            () => {
+                updateApplication({
+                    ...app,
+                    recommenders: (app.recommenders || []).filter(item => item.id !== recommender.id),
+                });
+            },
+            true,
+        );
     };
 
     // Navigate to parent application
@@ -296,11 +315,22 @@ const RecommendersView: React.FC<RecommendersViewProps> = ({ applications, updat
                                         </td>
                                         <td className="px-4 py-3 text-right">
                                             <button
+                                                type="button"
                                                 onClick={() => handleViewApplication(recommender)}
-                                                className="p-1.5 text-[#a1a1aa] hover:text-[#a1a1aa] hover:text-[#f4f4f5] rounded-lg hover:bg-[#27272a] transition-colors"
+                                                className="p-1.5 text-[#a1a1aa] hover:text-[#f4f4f5] rounded-lg hover:bg-[#27272a] transition-colors"
                                                 title="View Application"
+                                                aria-label={`View application for ${recommender.name}`}
                                             >
                                                 <MaterialIcon name="visibility" className="text-lg" />
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => handleDelete(recommender)}
+                                                className="p-1.5 text-[#a1a1aa] hover:text-red-400 rounded-lg hover:bg-red-500/10 transition-colors"
+                                                title="Delete recommender"
+                                                aria-label={`Delete ${recommender.name}`}
+                                            >
+                                                <MaterialIcon name="delete" className="text-lg" />
                                             </button>
                                         </td>
                                     </tr>
@@ -310,6 +340,15 @@ const RecommendersView: React.FC<RecommendersViewProps> = ({ applications, updat
                     </div>
                 </div>
             )}
+            <ConfirmationModal
+                isOpen={confirmation.isOpen}
+                onClose={closeConfirmation}
+                onConfirm={confirmation.onConfirm}
+                title={confirmation.title}
+                message={confirmation.message}
+                isDanger={confirmation.isDanger}
+                confirmLabel="Delete"
+            />
         </div>
     );
 };

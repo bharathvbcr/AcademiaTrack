@@ -214,21 +214,53 @@ export const useApplications = (showToast?: (type: ToastType, message: string, t
     }
   };
 
-  const deleteApplication = (id: string) => {
+  const deleteApplications = (ids: string[]): number => {
     try {
-      setCanPersist(true);
-      setApplications(apps => {
-        const exists = apps.some(app => app.id === id);
-        if (!exists) {
-          console.warn(`Application with id ${id} not found for deletion`);
-          return apps;
+      const idSet = new Set(ids);
+      const removed = applications.filter(app => idSet.has(app.id)).length;
+      if (removed === 0) {
+        if (ids.length > 0) {
+          console.warn('No applications found for deletion');
         }
-        return apps.filter(app => app.id !== id);
+        return 0;
+      }
+      setCanPersist(true);
+      // One history entry so undo restores the whole set, including a university.
+      setApplications(apps => {
+        const next = apps.filter(app => !idSet.has(app.id));
+        return next.length === apps.length ? apps : next;
       });
+      return removed;
     } catch (error) {
       console.error('Failed to delete application:', error);
       throw new Error('Failed to delete application. Please try again.');
     }
+  };
+
+  const deleteApplication = (id: string) => {
+    deleteApplications([id]);
+  };
+
+  const replaceApplications = (updated: Application[]): number => {
+    const byId = new Map(updated.map(app => [app.id, app]));
+    const changed = applications.filter(app => {
+      const next = byId.get(app.id);
+      return next !== undefined && next !== app;
+    }).length;
+    if (changed === 0) return 0;
+    setCanPersist(true);
+    // One history entry so undo restores every program in the batch.
+    setApplications(apps => {
+      let didChange = false;
+      const next = apps.map(app => {
+        const replacement = byId.get(app.id);
+        if (!replacement || replacement === app) return app;
+        didChange = true;
+        return replacement;
+      });
+      return didChange ? next : apps;
+    });
+    return changed;
   };
 
   const duplicateApplication = (id: string) => {
@@ -375,6 +407,8 @@ export const useApplications = (showToast?: (type: ToastType, message: string, t
     addApplication,
     updateApplication,
     deleteApplication,
+    deleteApplications,
+    replaceApplications,
     duplicateApplication,
     addFacultyContact,
     importApplications,

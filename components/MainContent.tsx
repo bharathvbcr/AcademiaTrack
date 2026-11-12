@@ -12,6 +12,7 @@ import { SkeletonCard } from './SkeletonLoader';
 import DataValidationPanel from './DataValidationPanel';
 import AdvancedAnalyticsPanel from './AdvancedAnalyticsPanel';
 import { getStorageItem } from '../utils/browserStorage';
+import { useLocalStorage } from '../hooks/useLocalStorage';
 import { ViewMode } from '../hooks/useViewState';
 import { UseAIReturn } from '../hooks/useAI';
 import { useBulkSelectionContext } from '../contexts/BulkSelectionContext';
@@ -84,7 +85,8 @@ const MainContent: React.FC<MainContentProps> = ({
     onConfigureAI,
 }) => {
     const { isSelectionMode, selectedIds, onToggleSelection, onEnterSelectionMode } = useBulkSelectionContext();
-    const { openModal, requestDelete, updateApplication, duplicateApplication } = useApplicationActionsContext();
+    const { openModal, requestDelete, requestDeleteUniversity, requestRenameUniversity, requestSetUniversityStatus, updateApplication, duplicateApplication } = useApplicationActionsContext();
+    const [groupByUniversity, setGroupByUniversity] = useLocalStorage('list-group-by-university', false);
     // Read + parse the persisted view-state once and keep a stable reference so
     // memoized children (ApplicationList) aren't re-rendered by a new array on
     // every parent render.
@@ -111,12 +113,18 @@ const MainContent: React.FC<MainContentProps> = ({
                                 requestSort={requestSort}
                                 searchQuery={searchQuery}
                                 onSearchChange={setSearchQuery}
+                                groupByUniversity={groupByUniversity}
+                                onToggleGroupByUniversity={() => setGroupByUniversity(value => !value)}
                             />
                         )}
                         <ApplicationList
                             applications={filteredAndSortedApplications}
                             onEdit={openModal}
                             onDelete={requestDelete}
+                            onDeleteUniversity={requestDeleteUniversity}
+                            onRenameUniversity={requestRenameUniversity}
+                            onSetUniversityStatus={requestSetUniversityStatus}
+                            groupByUniversity={groupByUniversity}
                             onUpdate={updateApplication}
                             onDuplicate={duplicateApplication}
                             hasActiveFilter={searchQuery.length > 0 || hasActiveAdvancedSearch}
@@ -137,6 +145,7 @@ const MainContent: React.FC<MainContentProps> = ({
                             onEdit={openModal}
                             onUpdate={updateApplication}
                             onDuplicate={duplicateApplication}
+                            onDelete={requestDelete}
                         />
                     </Suspense>
                 );

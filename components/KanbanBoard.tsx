@@ -11,9 +11,10 @@ interface KanbanBoardProps {
     onEdit: (app: Application) => void;
     onUpdate?: (app: Application) => void;
     onDuplicate: (id: string) => void;
+    onDelete?: (id: string) => void;
 }
 
-const KanbanBoard: React.FC<KanbanBoardProps> = React.memo(({ applications, onDragEnd, onEdit, onUpdate, onDuplicate }) => {
+const KanbanBoard: React.FC<KanbanBoardProps> = React.memo(({ applications, onDragEnd, onEdit, onUpdate, onDuplicate, onDelete }) => {
     const { statusConfig } = useKanbanConfig();
     
     // Use configured statuses, fallback to default if config is empty
@@ -62,6 +63,7 @@ const KanbanBoard: React.FC<KanbanBoardProps> = React.memo(({ applications, onDr
                             onEdit={onEdit}
                             onUpdate={onUpdate}
                             onDuplicate={onDuplicate}
+                            onDelete={onDelete}
                             statusConfig={statusConfig}
                         />
                     ))}
@@ -74,6 +76,7 @@ const KanbanBoard: React.FC<KanbanBoardProps> = React.memo(({ applications, onDr
                             onEdit={onEdit}
                             onUpdate={onUpdate}
                             onDuplicate={onDuplicate}
+                            onDelete={onDelete}
                         />
                     )}
                 </div>

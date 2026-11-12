@@ -13,6 +13,8 @@ interface ListControlsProps {
   requestSort: (key: SortKey) => void;
   searchQuery: string;
   onSearchChange: (query: string) => void;
+  groupByUniversity?: boolean;
+  onToggleGroupByUniversity?: () => void;
 }
 
 const SortChip: React.FC<{
@@ -42,7 +44,14 @@ const SortChip: React.FC<{
 };
 
 
-const ListControls: React.FC<ListControlsProps> = ({ sortConfig, requestSort, searchQuery, onSearchChange }) => {
+const ListControls: React.FC<ListControlsProps> = ({
+  sortConfig,
+  requestSort,
+  searchQuery,
+  onSearchChange,
+  groupByUniversity = false,
+  onToggleGroupByUniversity,
+}) => {
   return (
     <div className="mb-6 p-3.5 liquid-glass-card rounded-2xl flex items-center justify-between flex-wrap gap-3">
         <div className="flex items-center flex-wrap gap-3">
@@ -52,6 +61,21 @@ const ListControls: React.FC<ListControlsProps> = ({ sortConfig, requestSort, se
                 <SortChip label="University" sortKey="universityName" sortConfig={sortConfig} requestSort={requestSort} />
                 <SortChip label="Status" sortKey="status" sortConfig={sortConfig} requestSort={requestSort} />
             </div>
+            {onToggleGroupByUniversity && (
+              <button
+                type="button"
+                onClick={onToggleGroupByUniversity}
+                aria-pressed={groupByUniversity}
+                className={`flex items-center gap-1.5 px-3.5 py-1.5 text-sm font-medium rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#dc2626] focus:ring-offset-2 focus:ring-offset-[#09090b] ${
+                  groupByUniversity
+                    ? 'bg-[#dc2626]/20 text-[#fca5a5] border border-[#dc2626]/30'
+                    : 'bg-[#18181b] text-[#a1a1aa] border border-[#27272a] hover:bg-[#27272a] hover:text-[#f4f4f5]'
+                }`}
+              >
+                <MaterialIcon name="account_balance" className="text-sm" aria-hidden="true" />
+                Group by university
+              </button>
+            )}
         </div>
         <div className="relative">
           <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">

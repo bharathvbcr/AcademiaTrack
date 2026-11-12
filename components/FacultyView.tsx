@@ -3,6 +3,8 @@ import { Application, FacultyContact, FacultyContactStatus } from '../types';
 import { FACULTY_CONTACT_STATUS_OPTIONS, FACULTY_CONTACT_STATUS_COLORS } from '../constants';
 import { sanitizeURL } from '../utils';
 import { MaterialIcon, formInputClass, formActionBtnClass } from './ApplicationFormUI';
+import { useConfirmation } from '../hooks/useConfirmation';
+import ConfirmationModal from './ConfirmationModal';
 
 interface FacultyViewProps {
     applications: Application[];
@@ -17,6 +19,7 @@ interface FacultyWithContext extends FacultyContact {
 }
 
 const FacultyView: React.FC<FacultyViewProps> = ({ applications, updateApplication, openModal }) => {
+    const { confirmation, showConfirmation, closeConfirmation } = useConfirmation();
     const [searchQuery, setSearchQuery] = useState('');
     const [statusFilter, setStatusFilter] = useState<FacultyContactStatus | 'all'>('all');
     const [sortBy, setSortBy] = useState<'name' | 'university' | 'status' | 'contactDate'>('university');
@@ -108,6 +111,22 @@ const FacultyView: React.FC<FacultyViewProps> = ({ applications, updateApplicati
             ...app,
             facultyContacts: updatedContacts,
         });
+    };
+
+    const handleDelete = (faculty: FacultyWithContext) => {
+        const app = applications.find(a => a.id === faculty.applicationId);
+        if (!app) return;
+        showConfirmation(
+            'Delete faculty contact',
+            `Remove ${faculty.name} from ${faculty.universityName}?`,
+            () => {
+                updateApplication({
+                    ...app,
+                    facultyContacts: app.facultyContacts.filter(contact => contact.id !== faculty.id),
+                });
+            },
+            true,
+        );
     };
 
     // Navigate to parent application
@@ -305,11 +324,22 @@ const FacultyView: React.FC<FacultyViewProps> = ({ applications, updateApplicati
                                                     </a>
                                                 )}
                                                 <button
+                                                    type="button"
                                                     onClick={() => handleViewApplication(faculty)}
-                                                    className="p-1.5 text-[#a1a1aa] hover:text-[#a1a1aa] hover:text-[#f4f4f5] rounded-lg hover:bg-[#27272a] transition-colors"
+                                                    className="p-1.5 text-[#a1a1aa] hover:text-[#f4f4f5] rounded-lg hover:bg-[#27272a] transition-colors"
                                                     title="View Application"
+                                                    aria-label={`View application for ${faculty.name}`}
                                                 >
                                                     <MaterialIcon name="visibility" className="text-lg" />
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => handleDelete(faculty)}
+                                                    className="p-1.5 text-[#a1a1aa] hover:text-red-400 rounded-lg hover:bg-red-500/10 transition-colors"
+                                                    title="Delete contact"
+                                                    aria-label={`Delete ${faculty.name}`}
+                                                >
+                                                    <MaterialIcon name="delete" className="text-lg" />
                                                 </button>
                                             </div>
                                         </td>
@@ -323,6 +353,15 @@ const FacultyView: React.FC<FacultyViewProps> = ({ applications, updateApplicati
                     </div>
                 </div>
             )}
+            <ConfirmationModal
+                isOpen={confirmation.isOpen}
+                onClose={closeConfirmation}
+                onConfirm={confirmation.onConfirm}
+                title={confirmation.title}
+                message={confirmation.message}
+                isDanger={confirmation.isDanger}
+                confirmLabel="Delete"
+            />
         </div>
     );
 };

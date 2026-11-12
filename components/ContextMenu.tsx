@@ -11,6 +11,10 @@ interface ContextMenuProps {
     onClose: () => void;
     onEdit: (app: Application) => void;
     onDelete: (id: string) => void;
+    onDeleteUniversity?: (universityName: string) => void;
+    onRenameUniversity?: (universityName: string) => void;
+    onSetUniversityStatus?: (universityName: string, status: ApplicationStatus) => void;
+    universityProgramCount?: number;
     onUpdate: (app: Application) => void;
     onStatusChange: (app: Application, status: ApplicationStatus) => void;
 }
@@ -25,11 +29,16 @@ const ContextMenu: React.FC<ContextMenuProps> = ({
     onClose,
     onEdit,
     onDelete,
+    onDeleteUniversity,
+    onRenameUniversity,
+    onSetUniversityStatus,
+    universityProgramCount = 1,
     onUpdate,
     onStatusChange,
 }) => {
     const menuRef = useRef<HTMLDivElement>(null);
     const [showStatusSubmenu, setShowStatusSubmenu] = React.useState(false);
+    const [showUniversityStatusSubmenu, setShowUniversityStatusSubmenu] = React.useState(false);
 
     useEffect(() => {
         const handleClickOutside = (e: MouseEvent) => {
@@ -49,7 +58,7 @@ const ContextMenu: React.FC<ContextMenuProps> = ({
         };
     }, [onClose]);
 
-    const adjustedY = Math.min(y, window.innerHeight - 300);
+    const adjustedY = Math.min(y, window.innerHeight - 420);
     const adjustedX = Math.min(x, window.innerWidth - 200);
 
     const handleCopyName = () => {
@@ -83,7 +92,10 @@ const ContextMenu: React.FC<ContextMenuProps> = ({
 
             <div className="relative">
                 <button
-                    onClick={() => setShowStatusSubmenu(!showStatusSubmenu)}
+                    onClick={() => {
+                        setShowStatusSubmenu(open => !open);
+                        setShowUniversityStatusSubmenu(false);
+                    }}
                     className={`${menuItemClass} justify-between`}
                 >
                     <span className="flex items-center gap-3">
@@ -128,12 +140,68 @@ const ContextMenu: React.FC<ContextMenuProps> = ({
 
             <hr className="my-1 border-[#27272a]" />
 
+            {onRenameUniversity && (
+                <button
+                    type="button"
+                    onClick={() => { onRenameUniversity(application.universityName); onClose(); }}
+                    className={menuItemClass}
+                >
+                    <MaterialIcon name="edit" className="text-lg text-[#a1a1aa]" aria-hidden="true" />
+                    Rename university
+                </button>
+            )}
+
+            {onSetUniversityStatus && universityProgramCount > 1 && (
+                <div className="relative">
+                    <button
+                        type="button"
+                        onClick={() => {
+                            setShowUniversityStatusSubmenu(open => !open);
+                            setShowStatusSubmenu(false);
+                        }}
+                        className={`${menuItemClass} justify-between`}
+                    >
+                        <span className="flex items-center gap-3">
+                            <MaterialIcon name="swap_horiz" className="text-lg text-purple-400" aria-hidden="true" />
+                            {`University status (${universityProgramCount})`}
+                        </span>
+                        <MaterialIcon name={showUniversityStatusSubmenu ? 'expand_less' : 'chevron_right'} className="text-sm text-[#a1a1aa]" aria-hidden="true" />
+                    </button>
+                    {showUniversityStatusSubmenu && (
+                        <div className="absolute left-full top-0 ml-1 w-44 liquid-glass-modal-content rounded-lg shadow-xl py-1 max-h-60 overflow-y-auto custom-scrollbar">
+                            {STATUS_OPTIONS.map(status => (
+                                <button
+                                    key={status}
+                                    type="button"
+                                    onClick={() => { onSetUniversityStatus(application.universityName, status); onClose(); }}
+                                    className="w-full text-left px-3 py-2 text-sm text-[#a1a1aa] hover:bg-[#27272a] transition-colors"
+                                >
+                                    {STATUS_LABELS[status]}
+                                </button>
+                            ))}
+                        </div>
+                    )}
+                </div>
+            )}
+
+            {onDeleteUniversity && (
+                <button
+                    type="button"
+                    onClick={() => { onDeleteUniversity(application.universityName); onClose(); }}
+                    className="w-full text-left px-4 py-2.5 text-sm text-red-400 hover:bg-red-500/10 flex items-center gap-3 transition-colors"
+                >
+                    <MaterialIcon name="domain_disabled" className="text-lg" aria-hidden="true" />
+                    Delete university{universityProgramCount > 1 ? ` (${universityProgramCount})` : ''}
+                </button>
+            )}
+
             <button
+                type="button"
                 onClick={() => { onDelete(application.id); onClose(); }}
                 className="w-full text-left px-4 py-2.5 text-sm text-red-400 hover:bg-red-500/10 flex items-center gap-3 transition-colors"
             >
-                <MaterialIcon name="delete" className="text-lg" />
-                Delete
+                <MaterialIcon name="delete" className="text-lg" aria-hidden="true" />
+                Delete application
             </button>
         </div>
     );

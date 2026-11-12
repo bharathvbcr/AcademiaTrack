@@ -12,10 +12,11 @@ interface KanbanColumnProps {
     onEdit: (app: Application) => void;
     onUpdate?: (app: Application) => void;
     onDuplicate: (id: string) => void;
+    onDelete?: (id: string) => void;
     statusConfig?: KanbanStatusConfig;
 }
 
-const KanbanColumn: React.FC<KanbanColumnProps> = React.memo(({ status, applications, onEdit, onUpdate, onDuplicate, statusConfig }) => {
+const KanbanColumn: React.FC<KanbanColumnProps> = React.memo(({ status, applications, onEdit, onUpdate, onDuplicate, onDelete, statusConfig }) => {
     // Use statusConfig if provided, otherwise fallback to defaults
     const statusName = statusConfig?.name || STATUS_LABELS[status] || status;
     const statusColor = statusConfig?.color || STATUS_COLORS[status] || 'bg-[#27272a] text-[#a1a1aa] border-[#3f3f46]';
@@ -54,6 +55,7 @@ const KanbanColumn: React.FC<KanbanColumnProps> = React.memo(({ status, applicat
                                         onEdit={onEdit}
                                         onUpdate={onUpdate}
                                         onDuplicate={onDuplicate}
+                                        onDelete={onDelete}
                                     />
                                 )}
                             />
@@ -66,6 +68,7 @@ const KanbanColumn: React.FC<KanbanColumnProps> = React.memo(({ status, applicat
                                     onEdit={onEdit}
                                     onUpdate={onUpdate}
                                     onDuplicate={onDuplicate}
+                                    onDelete={onDelete}
                                 />
                             ))
                         )}

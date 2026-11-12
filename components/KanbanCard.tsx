@@ -19,9 +19,10 @@ interface KanbanCardProps {
   onEdit: (app: Application) => void;
   onUpdate?: (app: Application) => void;
   onDuplicate?: (id: string) => void;
+  onDelete?: (id: string) => void;
 }
 
-const KanbanCard: React.FC<KanbanCardProps> = React.memo(({ application, index, onEdit, onUpdate, onDuplicate }) => {
+const KanbanCard: React.FC<KanbanCardProps> = React.memo(({ application, index, onEdit, onUpdate, onDuplicate, onDelete }) => {
   const logoUrl = useUniversityLogo(application.universityName);
   const deadlineDate = React.useMemo(() => 
     application.deadline ? new Date(application.deadline) : null,
@@ -66,7 +67,20 @@ const KanbanCard: React.FC<KanbanCardProps> = React.memo(({ application, index, 
               )}
               <span className="truncate">{application.universityName}</span>
             </h4>
-            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity">
+            <div className="flex items-center gap-1">
+              {onDelete && (
+                <button
+                  type="button"
+                  onPointerDown={(e) => e.stopPropagation()}
+                  onClick={(e) => { e.stopPropagation(); onDelete(application.id); }}
+                  className="p-1 rounded-full text-[#a1a1aa] hover:text-red-400 hover:bg-red-500/10"
+                  title="Delete"
+                  aria-label={`Delete ${application.universityName}`}
+                >
+                  <span className="material-symbols-outlined text-sm">delete</span>
+                </button>
+              )}
+              <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 max-sm:opacity-100 transition-opacity">
               {onDuplicate && (
                 <button
                   onClick={(e) => { e.stopPropagation(); onDuplicate(application.id); }}
@@ -90,6 +104,7 @@ const KanbanCard: React.FC<KanbanCardProps> = React.memo(({ application, index, 
                   <span className="material-symbols-outlined text-sm">push_pin</span>
                 </button>
               )}
+              </div>
             </div>
           </div>
           <p className="text-xs text-[#a1a1aa] truncate mb-2">

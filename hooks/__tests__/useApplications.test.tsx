@@ -114,4 +114,66 @@ describe('useApplications', () => {
     expect(saveData).toHaveBeenCalledTimes(1);
     expect(autoBackup).toHaveBeenCalledTimes(1);
   });
+
+  it('removes every program at a university in one undo step', () => {
+    localStorage.clear();
+    const { result } = renderHook(() => useApplications());
+
+    act(() => {
+      result.current.addApplication({ ...createApplication(), universityName: 'Stanford', programName: 'CS' });
+      result.current.addApplication({ ...createApplication(), universityName: 'Stanford', programName: 'EE' });
+      result.current.addApplication({ ...createApplication(), universityName: 'MIT', programName: 'CS' });
+    });
+
+    const stanfordIds = result.current.applications
+      .filter(app => app.universityName === 'Stanford')
+      .map(app => app.id);
+
+    let removed = 0;
+    act(() => {
+      removed = result.current.deleteApplications(stanfordIds);
+    });
+
+    expect(removed).toBe(2);
+    expect(result.current.applications.map(app => app.universityName)).toEqual(['MIT']);
+
+    act(() => {
+      result.current.undo();
+    });
+
+    expect(result.current.applications.filter(app => app.universityName === 'Stanford')).toHaveLength(2);
+    expect(result.current.applications).toHaveLength(3);
+  });
+
+  it('renames every program at a university in one undo step and ignores an unchanged batch', () => {
+    localStorage.clear();
+    const { result } = renderHook(() => useApplications());
+
+    act(() => {
+      result.current.addApplication({ ...createApplication(), universityName: 'Stanford', programName: 'CS' });
+      result.current.addApplication({ ...createApplication(), universityName: 'Stanford', programName: 'EE' });
+      result.current.addApplication({ ...createApplication(), universityName: 'MIT', programName: 'CS' });
+    });
+
+    const unchanged = result.current.replaceApplications([result.current.applications[0]]);
+    expect(unchanged).toBe(0);
+
+    const renamed = result.current.applications
+      .filter(app => app.universityName === 'Stanford')
+      .map(app => ({ ...app, universityName: 'Leland Stanford' }));
+
+    let changed = 0;
+    act(() => {
+      changed = result.current.replaceApplications(renamed);
+    });
+
+    expect(changed).toBe(2);
+    expect(result.current.applications.map(app => app.universityName)).toEqual(['Leland Stanford', 'Leland Stanford', 'MIT']);
+
+    act(() => {
+      result.current.undo();
+    });
+
+    expect(result.current.applications.map(app => app.universityName)).toEqual(['Stanford', 'Stanford', 'MIT']);
+  });
 });
