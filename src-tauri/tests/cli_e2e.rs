@@ -3,7 +3,7 @@
 use serde_json::Value;
 use std::fs;
 use std::path::{Path, PathBuf};
-use std::process::{Child, Command, Stdio};
+use std::process::{Command, Stdio};
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::time::{SystemTime, UNIX_EPOCH};
 
@@ -13,15 +13,6 @@ struct Output {
   code: i32,
   stdout: String,
   stderr: String,
-}
-
-struct KillOnDrop(Child);
-
-impl Drop for KillOnDrop {
-  fn drop(&mut self) {
-    let _ = self.0.kill();
-    let _ = self.0.wait();
-  }
 }
 
 fn temp_dir() -> PathBuf {
@@ -182,7 +173,10 @@ fn live_desktop_lock_blocks_and_a_dead_lock_is_recovered() {
 
   let child = Command::new("sleep").arg("30").stdin(Stdio::null()).spawn().expect("spawn sleep");
   let pid = child.id();
-  let child = KillOnDrop(child);
+  let child = std::mem::DropGuard::new(child, |mut child| {
+    let _ = child.kill();
+    let _ = child.wait();
+  });
   fs::write(&lock, format!("{pid}\n")).unwrap();
   let blocked = academiatrack(Some(&dir), &["--json", "application", "add", "--university", "Other", "--program", "CS"]);
   assert_eq!(blocked.code, 1, "{}", blocked.stdout);

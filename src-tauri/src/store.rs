@@ -198,6 +198,9 @@ struct HistoryEntry {
   expect_fp: String,
 }
 
+// Each platform's branch is a `#[cfg]` block, which cannot be a tail expression, so the `return`
+// in the branch compiled for the current target is not redundant in source terms.
+#[allow(clippy::needless_return)]
 pub fn default_data_dir() -> Result<PathBuf, String> {
   if let Some(dir) = std::env::var_os("ACADEMIATRACK_DATA_DIR") {
     if !dir.is_empty() {
@@ -1787,8 +1790,7 @@ mod tests {
     raw.as_object_mut().unwrap().insert("extraRoot".to_string(), json!(true));
     raw["applications"][0].as_object_mut().unwrap().insert("customNote".to_string(), json!("keep"));
     store.save_raw(&raw).unwrap();
-    let mut patch = ApplicationPatch::default();
-    patch.status = Some("submitted".to_string());
+    let patch = ApplicationPatch { status: Some("submitted".to_string()), ..ApplicationPatch::default() };
     let updated = store.update_application(&id, patch).unwrap();
     assert_eq!(updated["status"], "Submitted");
     assert_eq!(updated["customNote"], "keep");
@@ -1835,8 +1837,7 @@ mod tests {
     let original = fs::read(store.data_path()).unwrap();
     let added = store.load_raw().unwrap().unwrap();
     let id = added["applications"][0]["id"].as_str().unwrap().to_string();
-    let mut patch = ApplicationPatch::default();
-    patch.notes = Some("changed".to_string());
+    let patch = ApplicationPatch { notes: Some("changed".to_string()), ..ApplicationPatch::default() };
     store.update_application(&id, patch).unwrap();
     store.undo().unwrap();
     assert_eq!(fs::read(store.data_path()).unwrap(), original);
@@ -1987,13 +1988,15 @@ mod tests {
     let store = dir.store();
     let added = store.add_application(sample("MIT", "EECS PhD")).unwrap();
     let id = added["id"].as_str().unwrap().to_string();
-    let mut patch = ApplicationPatch::default();
-    patch.fee_waiver = Some("granted".to_string());
-    patch.decision_deadline = FieldChange::Set("2030-04-15".to_string());
-    patch.chance = FieldChange::Set(40.0);
-    patch.document = Some("cv".to_string());
-    patch.document_status = Some("ready to submit".to_string());
-    patch.document_required = Some(true);
+    let patch = ApplicationPatch {
+      fee_waiver: Some("granted".to_string()),
+      decision_deadline: FieldChange::Set("2030-04-15".to_string()),
+      chance: FieldChange::Set(40.0),
+      document: Some("cv".to_string()),
+      document_status: Some("ready to submit".to_string()),
+      document_required: Some(true),
+      ..ApplicationPatch::default()
+    };
     let updated = store.update_application(&id, patch).unwrap();
     assert_eq!(updated["feeWaiverStatus"], "Granted");
     assert_eq!(updated["decisionDeadline"], "2030-04-15");

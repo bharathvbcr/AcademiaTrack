@@ -345,28 +345,29 @@ fn new_application_from(parsed: &Parsed) -> Result<NewApplication, String> {
 }
 
 fn patch_from(parsed: &Parsed) -> Result<ApplicationPatch, String> {
-  let mut patch = ApplicationPatch::default();
-  patch.university = optional_one(parsed, "university")?;
-  patch.program = optional_one(parsed, "program")?;
-  patch.program_type = optional_one(parsed, "program-type")?;
-  patch.department = optional_one(parsed, "department")?;
-  patch.location = optional_one(parsed, "location")?;
-  patch.status = optional_one(parsed, "status")?;
-  patch.portal = optional_one(parsed, "portal")?;
-  patch.notes = optional_one(parsed, "notes")?;
-  patch.fee = optional_fee(parsed)?;
-  patch.deadline = field_change(parsed, "deadline")?;
-  patch.term = field_change(parsed, "term")?;
-  patch.year = field_change(parsed, "year")?;
-  patch.add_tags = parsed.values.get("tag").cloned().unwrap_or_default();
-  patch.remove_tags = parsed.values.get("untag").cloned().unwrap_or_default();
-  patch.pinned = optional_bool(parsed, "pinned")?;
-  patch.fee_waiver = optional_one(parsed, "fee-waiver")?;
-  patch.decision_deadline = field_change(parsed, "decision-deadline")?;
-  patch.chance = optional_chance(parsed)?;
-  patch.document = optional_one(parsed, "document")?;
-  patch.document_status = optional_one(parsed, "document-status")?;
-  patch.document_required = optional_bool(parsed, "document-required")?;
+  let patch = ApplicationPatch {
+    university: optional_one(parsed, "university")?,
+    program: optional_one(parsed, "program")?,
+    program_type: optional_one(parsed, "program-type")?,
+    department: optional_one(parsed, "department")?,
+    location: optional_one(parsed, "location")?,
+    status: optional_one(parsed, "status")?,
+    portal: optional_one(parsed, "portal")?,
+    notes: optional_one(parsed, "notes")?,
+    fee: optional_fee(parsed)?,
+    deadline: field_change(parsed, "deadline")?,
+    term: field_change(parsed, "term")?,
+    year: field_change(parsed, "year")?,
+    add_tags: parsed.values.get("tag").cloned().unwrap_or_default(),
+    remove_tags: parsed.values.get("untag").cloned().unwrap_or_default(),
+    pinned: optional_bool(parsed, "pinned")?,
+    fee_waiver: optional_one(parsed, "fee-waiver")?,
+    decision_deadline: field_change(parsed, "decision-deadline")?,
+    chance: optional_chance(parsed)?,
+    document: optional_one(parsed, "document")?,
+    document_status: optional_one(parsed, "document-status")?,
+    document_required: optional_bool(parsed, "document-required")?,
+  };
   if patch.document.is_none() && (patch.document_status.is_some() || patch.document_required.is_some()) {
     return Err("--document is required".to_string());
   }
