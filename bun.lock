@@ -11,7 +11,7 @@
         "canvas-confetti": "^1.9.4",
         "date-fns": "^4.4.0",
         "framer-motion": "^14.14.0",
-        "material-symbols": "^0.45.10",
+        "material-symbols": "^0.48.1",
         "react": "^19.3.1",
         "react-dom": "^19.3.1",
         "react-markdown": "^10.1.0",
@@ -592,7 +592,7 @@
 
     "markdown-table": ["markdown-table@3.1.0", "", {}, "sha512-xpeSCdM+B+6P3ncfgaB7FoDbtJ30xAe6Z18TGT7AgXJsHqCElCICZovQqdRMm7kHgpTyYv36EupqewoFFSB8vw=="],
 
-    "material-symbols": ["material-symbols@0.45.10", "", {}, "sha512-2A2mgdfZO4es9DFpIOSMAx3d/7erCLQWRm7zGxA3iXt9jV8e2vNLOszbG3kxzYQ6qp5GAWXVl13de8lS2oHVng=="],
+    "material-symbols": ["material-symbols@0.48.3", "", {}, "sha512-usgMIp78cFFuxREnkNHRYBLAI152vJlnKqFCBiiwtNQfozlpIN2i00zrPBBkOxMLNTFaR7uPcJLWXlmMDOI+WA=="],
 
     "mdast-util-find-and-replace": ["mdast-util-find-and-replace@3.0.4", "", { "dependencies": { "@types/mdast": "^4.0.0", "escape-string-regexp": "^5.0.0", "unist-util-is": "^6.0.0", "unist-util-visit-parents": "^6.1.0" } }, "sha512-z4B5c6jrnJ1ltOQemhWYPBSAo6y42Z8Gt2yEgfgNTMcLSU59B8bfj8Z8AnAlJrBGLnqkdAUZ7jdDEqQw3KuipQ=="],
 
