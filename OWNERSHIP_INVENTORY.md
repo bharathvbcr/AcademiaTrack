@@ -34,8 +34,11 @@ Purpose: deterministic ownership mapping for every tracked file in this reposito
 - `.github/workflows/gemini-scheduled-triage.yml` — Build/Operations
 - `.github/workflows/gemini-triage.yml` — Build/Operations
 - `.github/workflows/release.yml` — Build/Operations
+- `.claude/launch.json` — Build/Operations
+- `.claude/settings.json` — Build/Operations
 - `.claude/settings.local.json` — Build/Operations
 - `.devcouncil/config.yaml` — Build/Operations
+- `.devcouncil-skills.json` — Build/Operations
 - `.env.example` — Build/Operations
 - `.env.local` — Build/Operations
 - `.gitignore` — Build/Operations
@@ -159,6 +162,7 @@ Purpose: deterministic ownership mapping for every tracked file in this reposito
 - `components/TitleBar.tsx` — Renderer-UI + Desktop Runtime
 - `components/Toast.tsx` — Renderer-UI
 - `components/Tooltip.tsx` — Renderer-UI
+- `components/UniversityNameDialog.tsx` — Renderer-UI
 - `components/UniversitySearchInput.tsx` — Renderer-UI + Search/Index
 - `components/ViewPresetModal.tsx` — Renderer-UI
 - `components/VirtualizedList.tsx` — Renderer-UI
@@ -170,6 +174,7 @@ Purpose: deterministic ownership mapping for every tracked file in this reposito
 - `components/__tests__/FacultyContactModal.test.tsx` — Testing
 - `components/__tests__/Header.view-switching.test.tsx` — Testing
 - `components/__tests__/QuickCaptureModal.test.tsx` — Testing
+- `components/__tests__/row-delete.test.tsx` — Testing
 - `components/__tests__/SettingsWiring.test.tsx` — Testing
 
 ## Contexts
@@ -182,6 +187,7 @@ Purpose: deterministic ownership mapping for every tracked file in this reposito
 ## Desktop Runtime
 
 - `lib/desktopBridge.ts` — Desktop Runtime
+- `src-tauri/.cargo/config.toml` — Build/Operations
 - `src-tauri/.gitignore` — Build/Operations
 - `src-tauri/Cargo.lock` — Build/Operations
 - `src-tauri/Cargo.toml` — Build/Operations
@@ -314,6 +320,7 @@ Purpose: deterministic ownership mapping for every tracked file in this reposito
 - `utils/__tests__/dateUtils.test.ts` — Testing
 - `utils/__tests__/getDeadlineInfo.test.ts` — Testing
 - `utils/__tests__/parseCSV.test.ts` — Testing
+- `utils/__tests__/universityBatch.test.ts` — Testing
 - `utils/browserStorage.ts` — Persistence
 - `utils/calendarExport.ts` — Data/Model
 - `utils/applicationDefaults.ts` — Persistence
@@ -327,6 +334,7 @@ Purpose: deterministic ownership mapping for every tracked file in this reposito
 - `utils/searchIndex.worker.ts` — Search/Index
 - `utils/searchIndexWorker.ts` — Search/Index
 - `utils/searchIndexWrapper.ts` — Search/Index
+- `utils/universityBatch.ts` — Data/Model
 
 ## Test Suites
 
